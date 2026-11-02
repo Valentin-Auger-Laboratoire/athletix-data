@@ -1,0 +1,12 @@
+# Configuration pour l'extension Wokwi de VS Code uniquement.
+# Inutile si tu utilises la simulation en ligne sur https://wokwi.com (voir README.md de ce dossier).
+#
+# L'extension ne compile pas le code : elle charge un firmware déjà compilé.
+# Compile d'abord le sketch avec arduino-cli (le dossier doit porter le nom du .ino) :
+#   mkdir sketch && cp sketch.ino sketch/
+#   arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir build sketch
+# Les deux fichiers ci-dessous sont alors créés dans hardware/build/ (ignoré par Git).
+[wokwi]
+version = 1
+firmware = 'build/sketch.ino.bin'
+elf = 'build/sketch.ino.elf'
