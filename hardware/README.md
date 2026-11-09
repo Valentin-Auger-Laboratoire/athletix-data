@@ -1,5 +1,7 @@
 # Partie électronique — capteur cardiaque (photopléthysmographe)
 
+> **Première piste du projet.** La version finale du brassard mesure l'activité musculaire (MyoWare 2.0 + ESP32-S3) : voir le [README principal](../README.md) et la [simulation Simulink de la chaîne EMG](simulation-emg/README.md). Ce dossier garde le travail sur le capteur cardiaque.
+
 | Fichier | Rôle |
 |---|---|
 | `sketch.ino` | Programme ESP32 : lit le signal sur **GPIO34** à 50 Hz et l'envoie sur le port série (115 200 bauds) |

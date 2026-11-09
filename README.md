@@ -2,7 +2,30 @@
 
 **🇫🇷 Français** · [🇬🇧 English](#english)
 
-Application de suivi sportif conçue pour fonctionner avec un **brassard cardiaque** (photopléthysmographe sur ESP32). Projet réalisé en 2026.
+Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) et application de suivi sportif. Projet de groupe réalisé à l'EPISEN de février à juin 2026.
+
+## L'équipe
+
+| Membre | Rôle | Tâches principales |
+|---|---|---|
+| **Valentin Auger** | Matériel et application | schéma électrique du brassard, firmware ESP32, acquisition et calcul RMS, interface Flutter du prototype |
+| **Maxence Olivier** | Chef de projet et qualité | planning (Gantt, MPM), documentation technique, conformité, tests |
+| **Akram Boutabaa** | Développement et réglementaire | interface Flutter, graphiques, état de l'art, hébergement de données de santé (HDS) et RGPD |
+| **Othmen Al Bydeoi** | Architecture système | architecture Bluetooth Low Energy (GATT), intégration réseau, modèles de données (MCD, MCT), schémas |
+
+## Le brassard (version finale)
+
+| Composant | Rôle |
+|---|---|
+| Capteur musculaire **MyoWare 2.0** + électrodes de surface | amplifie, redresse et lisse le signal du muscle (sortie analogique « enveloppe ») |
+| **MyoWare 2.0 Link Shield** | relie le capteur au microcontrôleur |
+| **SparkFun Thing Plus ESP32-S3** | conversion 12 bits à 500 Hz, valeur efficace sur 200 ms, envoi en Bluetooth Low Energy (~50 Hz, paquets de 8 octets) |
+| Batterie **LiPo 3,7 V 1 500 mAh** + interrupteur | autonomie visée : plus de 2 h (environ 10 h estimées) |
+| Brassard élastique | maintien sur le biceps |
+
+La chaîne de mesure a été modélisée sous Simulink avant le câblage : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md), avec ses limites et les corrections prévues.
+
+> **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application ci-dessous date de cette étape : elle affiche encore des battements par minute simulés.
 
 ▶️ **Démo en ligne (sans serveur, données fictives) :** https://valentin-auger-laboratoire.github.io/athletix-data/ puis « Essayer la démo ».
 
@@ -88,7 +111,7 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 ## Licences et crédits
 
-- Code du projet : © 2026 Valentin Auger.
+- Code du projet : © 2026 équipe Athletix-Data (Valentin Auger, Maxence Olivier, Akram Boutabaa, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (dossier `PHPMailer/`, version 7.0.2) est distribué sous **licence LGPL 2.1** ; voir `PHPMailer/LICENSE`.
 - Flutter et ses packages : licences BSD respectives.
 
@@ -98,7 +121,13 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 # Athletix-Data (English)
 
-A fitness-tracking app designed to work with a **heart-rate armband** (photoplethysmograph on an ESP32). Built in 2026.
+A connected armband that measures muscle activity (electromyography, EMG) and a fitness-tracking app. Group project at EPISEN (French engineering school), February to June 2026.
+
+**Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Akram Boutabaa (development and regulatory: Flutter UI, health-data hosting and GDPR), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models).
+
+**Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was modelled in Simulink first: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md).
+
+**History:** the project first explored a heart-rate sensor (photoplethysmograph on an ESP32); its code and Wokwi simulation are kept in `hardware/`. The app below dates from that stage and still shows simulated heart rates.
 
 ▶️ **Live demo (no server, fictional data):** https://valentin-auger-laboratoire.github.io/athletix-data/ then “Essayer la démo” (Try the demo).
 
@@ -145,5 +174,5 @@ The questionnaire collects **health data**, which is sensitive data under the GD
 
 ## Licences
 
-- Project code: © 2026 Valentin Auger.
+- Project code: © 2026 Athletix-Data team (Valentin Auger, Maxence Olivier, Akram Boutabaa, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (`PHPMailer/` folder, v7.0.2) is distributed under the **LGPL 2.1** licence; see `PHPMailer/LICENSE`.
