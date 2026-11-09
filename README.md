@@ -22,7 +22,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 | Batterie **LiPo 3,7 V 1 500 mAh** + interrupteur | autonomie visée : plus de 2 h (environ 10 h estimées) |
 | Brassard élastique | maintien sur le biceps |
 
-La chaîne de mesure a été modélisée sous Simulink avant le câblage : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md) : l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas.
+La chaîne de mesure a été modélisée sous Simulink avant le câblage, à titre d'**expérimentation** : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). Dans ce modèle d'essai, l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas. Le modèle final est fourni : [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b ou plus récent).
 
 > **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application ci-dessous date de cette étape : elle affiche encore des battements par minute simulés.
 
@@ -69,6 +69,7 @@ Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ─�
 - **Vitesse, répétitions, stabilité…** : valeurs d'exemple fixes, marquées « valeur d'exemple ».
 - **« IA »** : les conseils sont produits par des **règles `if/else`**, pas par un modèle entraîné (mention « Conseils générés par règles »). Ils ne remplacent pas un avis médical.
 - **Mode démo** : compte et données **fictifs**, gardés en mémoire et perdus au rechargement de la page.
+- **Simulation Simulink de la chaîne EMG** : c'est une expérimentation. Le signal du muscle est généré, la référence des 100 % (1,85 V) est supposée, et rien n'a encore été mesuré sur le vrai brassard.
 
 ## Installation
 
@@ -124,7 +125,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models).
 
-**Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was modelled in Simulink first: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md).
+**Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
 **History:** the project first explored a heart-rate sensor (photoplethysmograph on an ESP32); its code and Wokwi simulation are kept in `hardware/`. The app below dates from that stage and still shows simulated heart rates.
 
@@ -159,6 +160,7 @@ Flutter Web app (lib/) ──HTTP POST──► PHP API (backend/) ──► MyS
 - **Speed, reps, stability…**: fixed example values, labelled as such.
 - **“AI”**: the advice comes from **if/else rules**, not a trained model. It is not medical advice.
 - **Demo mode**: **fictional** account and data, kept in memory and lost when the page reloads.
+- **Simulink model of the EMG chain**: an experiment. The muscle signal is generated, the 100 % reference (1.85 V) is assumed, and nothing has been measured on the real armband yet.
 
 ## Installation
 
