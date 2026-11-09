@@ -4,40 +4,50 @@
 
 Avant de câbler le brassard, l'équipe a modélisé sous **Simulink** toute la chaîne de mesure musculaire : du signal du muscle jusqu'à l'alerte envoyée à l'application. Le modèle s'appelle `AthletixData_EMG_Simulation`.
 
-![Résultat de la simulation : alerte (haut) et intensité en % MVC avec le seuil de 75 % (bas)](resultat-simulation.png)
+![Résultat de la simulation corrigée : alerte d'effort intense (haut) et intensité en % MVC avec le seuil de 75 % (bas)](resultat-simulation-corrigee.png)
 
-## La chaîne modélisée
+## La chaîne modélisée (version finale)
 
 | Étape | Bloc Simulink | Réglage |
 |---|---|---|
-| **Signal du muscle** | bruit blanc limité en bande × contraction à t = 1 s | puissance 0,1, période 0,1 s, graine 23341 |
-| Parasite du secteur | sinusoïde | 50 Hz, 0,08 V |
-| **MyoWare 2.0** | redressement double alternance (\|u\|) | |
+| **Signal du muscle** | bruit blanc limité en bande | échantillonné à 2 kHz (période 0,0005 s), puissance 7,1·10⁻⁹, graine 23341 |
+| | filtre passe-bande (Butterworth 2 + 2) | 20 à 450 Hz, la bande d'un vrai signal musculaire |
+| | profil d'effort (horloge + table) | repos, 40 %, 95 %, 50 %, repos, avec des transitions de 0,3 s |
+| Parasite du secteur | sinusoïde | 50 Hz, 0,08 mV |
+| **MyoWare 2.0** | amplification | ×1000 (le signal sur la peau est de l'ordre du millivolt) |
+| | redressement double alternance (\|u\|) | |
 | | filtre passe-bas d'ordre 2 (enveloppe) | 5 Hz |
 | **ESP32-S3** | échantillonneur | 500 Hz (2 ms) |
 | | quantification du convertisseur | 12 bits sur 0–3,3 V (0,806 mV par pas) |
 | | saturation | 0 à 3,3 V |
-| | valeur efficace glissante | carré, moyenne sur 100 échantillons (200 ms), racine |
+| | valeur efficace glissante de l'enveloppe | carré, moyenne sur 100 échantillons (200 ms), racine |
 | | normalisation | ×100 / 1,85 V → % de la contraction maximale (MVC) |
-| | alerte | ≥ 75 % MVC |
+| | **alerte d'effort intense** (bloc Relay) | s'allume à 75 % MVC, s'éteint sous 70 % |
 
-## Lecture du résultat (5 s simulées)
+## Résultat (5 s simulées)
 
-- Au repos (avant 1 s), l'intensité reste à environ **3 %** : c'est le résidu du 50 Hz après redressement et filtrage.
-- Après 1 s, deux passages au-dessus de **75 %** déclenchent l'alerte : de 1,63 à 1,92 s, puis de 3,50 à 3,69 s.
+| Phase | Effort demandé | Intensité affichée |
+|---|---|---|
+| Repos (0–1 s) | 0 % | ≈ 3 % (résidu du 50 Hz) |
+| Contraction moyenne (1,3–2 s) | 40 % | ≈ 42–45 % |
+| Contraction forte (2,3–3 s) | 95 % | ≈ 92–108 % |
+| Contraction légère (3,3–4 s) | 50 % | ≈ 50–55 % |
+| Retour au repos | 0 % | ≈ 3 % |
 
-## Limites connues, et corrections prévues
+L'intensité suit l'effort demandé. L'alerte s'allume **une seule fois**, d'environ 2,3 s à 3,3 s : l'intensité redescend vers 92 % au milieu de la contraction forte, mais l'hystérésis (fin d'alerte seulement sous 70 %) l'empêche de clignoter.
 
-Le modèle a été relu en novembre 2026. La chaîne de traitement est cohérente avec le matériel (MyoWare 2.0, convertisseur 12 bits de l'ESP32-S3, fenêtre de 200 ms), mais plusieurs points sont à corriger avant de s'en servir pour conclure :
+## À savoir pour lire ce résultat
 
-1. **Le signal musculaire est trop lent.** Le bruit change de valeur toutes les 0,1 s : c'est un escalier à 10 Hz, alors qu'un vrai signal musculaire s'étend de 20 à 450 Hz. Comme l'effort simulé est constant après 1 s, les deux pics viennent du tirage aléatoire et non d'un effort plus fort : avec une autre graine, on obtient un pic à 120 %.
-   → Correction prévue : bruit échantillonné à 2 kHz, filtre passe-bande 20–450 Hz et un vrai profil d'effort (repos, 40 %, 95 %, 50 %, repos). Vérifiée par une reproduction en Python : l'intensité affichée suit alors l'effort demandé (40 % → 40–43 %, 95 % → 95–97 %), quel que soit le tirage.
-2. **L'alerte mesure l'intensité, pas la fatigue.** Un seuil sur le % MVC repère un effort intense. La fatigue se détecte autrement, par exemple par la baisse de la fréquence médiane du signal brut (sortie RAW du MyoWare échantillonnée à 1 kHz ou plus).
-   → Correction prévue : renommer en « alerte d'effort intense » et ajouter une hystérésis (alerte à 75 %, fin d'alerte à 70 %) pour qu'elle ne clignote pas autour du seuil.
-3. **La référence des 100 % (1,85 V) est supposée.** En vrai, elle se mesure pendant une contraction maximale de calibration, propre à chaque personne.
-4. **Le signal est exprimé en volts dès le muscle.** Sur la peau, il est de l'ordre du millivolt : c'est le MyoWare qui l'amplifie. Le modèle corrigé ajoutera ce gain.
+- **Le dépassement de 100 %** pendant la contraction forte (≈ 104 % et 108 %) vient des variations naturelles du signal autour d'un effort de 95 %. En vrai, la référence des 100 % se mesure pendant une contraction maximale de calibration, propre à chaque personne. Ici, elle est **supposée** (1,85 V).
+- **L'alerte mesure l'intensité, pas la fatigue.** La fatigue musculaire se détecte autrement, par exemple par la baisse de la fréquence médiane du signal brut. Il faudrait alors lire la sortie RAW du MyoWare à 1 kHz ou plus.
+- **Le calcul RMS porte sur l'enveloppe** déjà lissée par le MyoWare : c'est une moyenne efficace glissante de l'enveloppe, pas la valeur efficace du signal brut.
+- Les réglages ont été vérifiés par une reproduction de la chaîne en Python : sur plusieurs tirages aléatoires, un effort de 40 % donne 40 à 43 % et un effort de 95 % donne 95 à 97 %.
 
-Le fichier `.slx` sera ajouté ici une fois ces corrections faites.
+## Historique
+
+La première version du modèle utilisait un bruit qui ne changeait de valeur que toutes les 0,1 s, avec un effort constant après 1 s : les pics venaient du tirage aléatoire, et non d'un effort plus fort. Elle a été corrigée en novembre 2026 (bruit à 2 kHz, filtre 20–450 Hz, profil d'effort, gain du MyoWare, hystérésis sur l'alerte). Son résultat est conservé pour comparaison : [`resultat-simulation.png`](resultat-simulation.png).
+
+Le fichier `.slx` du modèle sera ajouté dans ce dossier.
 
 ---
 
@@ -45,6 +55,15 @@ Le fichier `.slx` sera ajouté ici une fois ces corrections faites.
 
 ## Simulink simulation of the EMG chain (English)
 
-Before wiring the armband, the team modelled the whole muscle-measurement chain in **Simulink**: muscle signal and 50 Hz interference, MyoWare 2.0 (full-wave rectification + 5 Hz envelope filter), ESP32-S3 (500 Hz sampling, 12-bit ADC on 0–3.3 V, 200 ms moving RMS, normalisation to % of maximum voluntary contraction) and an alert at ≥ 75 % MVC.
+Before wiring the armband, the team modelled the whole muscle-measurement chain in **Simulink**:
+- **Muscle signal:** 2 kHz noise, 20–450 Hz band-pass filter, an effort profile (rest, 40 %, 95 %, 50 %, rest) and 50 Hz interference.
+- **MyoWare 2.0:** ×1000 gain, full-wave rectification, 5 Hz envelope filter.
+- **ESP32-S3:** 500 Hz sampling, 12-bit ADC on 0–3.3 V, 200 ms moving RMS of the envelope, normalisation to % of maximum voluntary contraction (MVC).
+- **Alert:** a high-effort alert with hysteresis (on at 75 %, off below 70 %).
 
-**Known limits (reviewed in November 2026):** the muscle signal is a 10 Hz staircase rather than a 20–450 Hz signal, so the two peaks come from the random draw, not from a stronger effort; the alert detects high intensity, not fatigue; the 100 % reference (1.85 V) is assumed. Planned corrections: 2 kHz noise with a 20–450 Hz band-pass, a real effort profile, a MyoWare gain stage, a 75/70 % hysteresis on the alert. The `.slx` file will be added once corrected.
+**Result:** the displayed intensity follows the requested effort (≈ 3 % at rest, 42–45 % for 40 %, 92–108 % for 95 %, 50–55 % for 50 %), and the alert turns on once, from about 2.3 s to 3.3 s, without flickering.
+
+**Limits:**
+- The 100 % reference (1.85 V) is assumed.
+- The alert measures intensity, not fatigue.
+- The first version of the model (10 Hz staircase noise, constant effort) was corrected in November 2026. Its result is kept in `resultat-simulation.png`.

@@ -22,7 +22,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 | Batterie **LiPo 3,7 V 1 500 mAh** + interrupteur | autonomie visée : plus de 2 h (environ 10 h estimées) |
 | Brassard élastique | maintien sur le biceps |
 
-La chaîne de mesure a été modélisée sous Simulink avant le câblage : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md), avec ses limites et les corrections prévues.
+La chaîne de mesure a été modélisée sous Simulink avant le câblage : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md) : l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas.
 
 > **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application ci-dessous date de cette étape : elle affiche encore des battements par minute simulés.
 
