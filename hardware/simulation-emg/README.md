@@ -4,6 +4,8 @@
 
 Avant de câbler le brassard, l'équipe a modélisé sous **Simulink** toute la chaîne de mesure musculaire : du signal du muscle jusqu'à l'alerte envoyée à l'application. Le modèle s'appelle `AthletixData_EMG_Simulation`.
 
+C'est une **expérimentation** : un modèle d'essai pour choisir les réglages avant le montage, pas une mesure sur le vrai brassard. Le signal du muscle est simulé et la référence des 100 % est supposée.
+
 ![Résultat de la simulation corrigée : alerte d'effort intense (haut) et intensité en % MVC avec le seuil de 75 % (bas)](resultat-simulation-corrigee.png)
 
 ## La chaîne modélisée (version finale)
@@ -47,7 +49,7 @@ L'intensité suit l'effort demandé. L'alerte s'allume **une seule fois**, d'env
 
 La première version du modèle utilisait un bruit qui ne changeait de valeur que toutes les 0,1 s, avec un effort constant après 1 s : les pics venaient du tirage aléatoire, et non d'un effort plus fort. Elle a été corrigée en novembre 2026 (bruit à 2 kHz, filtre 20–450 Hz, profil d'effort, gain du MyoWare, hystérésis sur l'alerte). Son résultat est conservé pour comparaison : [`resultat-simulation.png`](resultat-simulation.png).
 
-Le fichier `.slx` du modèle sera ajouté dans ce dossier.
+Le modèle final est dans ce dossier : [`AthletixData_EMG_Simulation.slx`](AthletixData_EMG_Simulation.slx) (enregistré avec MATLAB/Simulink R2026b ; il faut cette version ou une plus récente pour l'ouvrir).
 
 ---
 
@@ -55,7 +57,9 @@ Le fichier `.slx` du modèle sera ajouté dans ce dossier.
 
 ## Simulink simulation of the EMG chain (English)
 
-Before wiring the armband, the team modelled the whole muscle-measurement chain in **Simulink**:
+Before wiring the armband, the team modelled the whole muscle-measurement chain in **Simulink**. This is an **experiment**: a test model used to choose the settings before building, not a measurement on the real armband.
+
+The chain:
 - **Muscle signal:** 2 kHz noise, 20–450 Hz band-pass filter, an effort profile (rest, 40 %, 95 %, 50 %, rest) and 50 Hz interference.
 - **MyoWare 2.0:** ×1000 gain, full-wave rectification, 5 Hz envelope filter.
 - **ESP32-S3:** 500 Hz sampling, 12-bit ADC on 0–3.3 V, 200 ms moving RMS of the envelope, normalisation to % of maximum voluntary contraction (MVC).
@@ -67,3 +71,5 @@ Before wiring the armband, the team modelled the whole muscle-measurement chain 
 - The 100 % reference (1.85 V) is assumed.
 - The alert measures intensity, not fatigue.
 - The first version of the model (10 Hz staircase noise, constant effort) was corrected in November 2026. Its result is kept in `resultat-simulation.png`.
+
+**Model file:** [`AthletixData_EMG_Simulation.slx`](AthletixData_EMG_Simulation.slx) (saved with MATLAB/Simulink R2026b; open it with that version or later).
