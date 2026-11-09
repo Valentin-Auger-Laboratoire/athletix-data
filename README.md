@@ -10,7 +10,6 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 |---|---|---|
 | **Valentin Auger** | Matériel et application | schéma électrique du brassard, firmware ESP32, acquisition et calcul RMS, interface Flutter du prototype |
 | **Maxence Olivier** | Chef de projet et qualité | planning (Gantt, MPM), documentation technique, conformité, tests |
-| **Akram Boutabaa** | Développement et réglementaire | interface Flutter, graphiques, état de l'art, hébergement de données de santé (HDS) et RGPD |
 | **Othmen Al Bydeoi** | Architecture système | architecture Bluetooth Low Energy (GATT), intégration réseau, modèles de données (MCD, MCT), schémas |
 
 ## Le brassard (version finale)
@@ -111,7 +110,7 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 ## Licences et crédits
 
-- Code du projet : © 2026 équipe Athletix-Data (Valentin Auger, Maxence Olivier, Akram Boutabaa, Othmen Al Bydeoi).
+- Code du projet : © 2026 équipe Athletix-Data (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (dossier `PHPMailer/`, version 7.0.2) est distribué sous **licence LGPL 2.1** ; voir `PHPMailer/LICENSE`.
 - Flutter et ses packages : licences BSD respectives.
 
@@ -123,7 +122,7 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 A connected armband that measures muscle activity (electromyography, EMG) and a fitness-tracking app. Group project at EPISEN (French engineering school), February to June 2026.
 
-**Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Akram Boutabaa (development and regulatory: Flutter UI, health-data hosting and GDPR), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models).
+**Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models).
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was modelled in Simulink first: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md).
 
@@ -174,5 +173,5 @@ The questionnaire collects **health data**, which is sensitive data under the GD
 
 ## Licences
 
-- Project code: © 2026 Athletix-Data team (Valentin Auger, Maxence Olivier, Akram Boutabaa, Othmen Al Bydeoi).
+- Project code: © 2026 Athletix-Data team (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (`PHPMailer/` folder, v7.0.2) is distributed under the **LGPL 2.1** licence; see `PHPMailer/LICENSE`.
