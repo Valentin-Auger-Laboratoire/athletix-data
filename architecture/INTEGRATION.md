@@ -97,7 +97,10 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 
 ### Ajouts à l'API
 
-- `get_seances.php` (POST + jeton) : les dernières séances de l'utilisateur (paramètre `limite`, 1 à 500, 100 par défaut) avec leur résumé EMG et, depuis la migration `003`, les mesures du téléphone, le ressenti et la courbe.
+- `get_seances.php` (POST + jeton) : les dernières séances de l'utilisateur (paramètre `limite`, 1 à 500, 100 par défaut) avec leur résumé EMG et, depuis la migration `003`, les mesures du téléphone, le ressenti et la courbe. Avec `id` : une seule séance, avec son tracé GPS (migration `004`).
+- `save_seance.php` accepte aussi (migration `004`) `trace` (JSON `[[lat, lon, s, %], …]`, 2 à 500 points, temps croissant), `nb_series`, `client_uuid` (UUID v4 : une séance renvoyée après une coupure n'est pas enregistrée deux fois, la réponse porte `deja_enregistree`) et `fin_il_y_a_s` (séance envoyée plus tard, 0 à 30 jours ; durée mesurée par le téléphone ou le brassard, donc juste même si l'horloge du téléphone est fausse).
+- `export_donnees.php` (POST + jeton) : RGPD, toutes les données du compte en JSON (sans mot de passe, jetons ni code de vérification).
+- `supprimer_compte.php` (POST + jeton + `password`) : RGPD, supprime le compte et toutes ses données ; les brassards restent mais ne sont plus liés à personne.
 - `save_seance.php` et `save_calibration.php` acceptent un champ facultatif `batterie` (0 à 100 %), enregistré dans `brassards.batterie_niveau`.
 - `get_hardware.php` lit maintenant le dernier brassard de l'utilisateur dans `brassards` (batterie, dernière synchronisation, numéro de série). `update_hardware.php` et `save_performance.php` sont supprimés (migration `002`).
-- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (49 vérifications).
+- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (68 vérifications), relancé par GitHub à chaque envoi.

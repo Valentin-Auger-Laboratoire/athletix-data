@@ -197,6 +197,13 @@ class _NatationScreenState extends State<NatationScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white70, height: 1.4),
         ),
+        const SizedBox(height: 12),
+        const Text(
+          "⚠️ Le prototype n'est pas étanche (carte, batterie) : il faut un boîtier étanche avant d'aller "
+          "dans l'eau. En attendant, on teste hors de l'eau en éloignant le téléphone.",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontSize: 12, height: 1.4),
+        ),
         const SizedBox(height: 20),
         if (_trouve != null) ...[
           Container(

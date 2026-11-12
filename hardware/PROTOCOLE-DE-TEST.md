@@ -81,6 +81,17 @@ Si 4.4 reste bloqué vers 3,3 V : électrodes trop proches ou gain du MyoWare tr
 | 6.3 | Brassard allumé et connecté en continu | durée avant extinction (objectif : plus de 2 h) | | |
 | 6.4 | Brassard dans le boîtier, porté pendant une séance | tient en place, électrodes toujours collées | | |
 
+## Étape 7 — Séance sans connexion (natation), HORS DE L'EAU
+
+Le prototype n'est **pas étanche** : ce test se fait à sec, en éloignant le téléphone.
+
+| # | Vérification | Attendu | Mesuré | OK ? |
+|---|---|---|---|---|
+| 7.1 | Sport « Natation », Démarrer dans l'eau | moniteur série : `Enregistrement sans connexion démarré` | | |
+| 7.2 | Téléphone dans une autre pièce (ou Bluetooth coupé) 5 à 10 min, en contractant le biceps de temps en temps | le brassard continue (moniteur série) | | |
+| 7.3 | Retour, Récupérer la séance | durée et intensité moyenne cohérentes avec ce qui a été fait, séance visible dans « Mes séances » | | |
+| 7.4 | Nouvel essai, puis repos de plus de 5 min avant de revenir | moniteur série : `Enregistrement sans connexion terminé (5 min de repos)` ; la durée récupérée n'inclut pas ces 5 min | | |
+
 ## Comparer à la simulation
 
 Remplir après l'étape 5, et l'ajouter au README :

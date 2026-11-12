@@ -5,7 +5,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 | Fichier | Rôle |
 |---|---|
 | `firmware-brassard.ino` | Bluetooth, lecture du MyoWare, jauge de batterie, commandes |
-| `calcul_emg.h` | tous les calculs : RMS glissante 200 ms, % MVC, alerte avec hystérésis, calibration, paquets de 8 octets. Aucune dépendance au matériel |
+| `calcul_emg.h` | tous les calculs : RMS glissante 200 ms, % MVC, alerte avec hystérésis, calibration, paquets de 8 octets, résumé hors ligne (natation). Aucune dépendance au matériel |
 
 ## Ce qu'il fait de plus que le faux brassard
 
@@ -13,11 +13,12 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 - **Vraie batterie** : jauge **MAX17048** de la carte (I2C, adresse `0x36`, GPIO8 / GPIO9), lue toutes les 30 s et envoyée en Bluetooth. Si la jauge ne répond pas, le service batterie n'est pas publié et l'application affiche « — ».
 - **Intervalle de connexion court** (15 à 20 ms), demandé au téléphone pour tenir 50 mesures par seconde.
 - **Avertissements** (caractéristique État) : saturation pendant plus de 2 s (électrode décollée ?), batterie sous 10 %.
+- **Natation (version 1.1)** : commande `0x05`, le brassard continue de mesurer même si la liaison se coupe et garde le résumé de la séance (caractéristique `abad0005`, [`GATT.md`](../../architecture/GATT.md) §11). Arrêt automatique après 5 min sous 10 %, à la dernière activité. Le résumé n'est effacé que sur la commande `0x06`, envoyée par l'application une fois la séance enregistrée.
 - **Commandes traitées dans `loop()`**, pas dans la tâche Bluetooth : évite les accès simultanés aux variables.
 
 ## Vérifications faites sans la carte
 
-- **Les calculs** (`calcul_emg.h`) sont compilés et testés sur ordinateur : 27 vérifications, dont le paquet identique à l'exemple de `GATT.md` et le profil d'effort de la simulation Simulink (une seule alerte, pas de clignotement).
+- **Les calculs** (`calcul_emg.h`) sont compilés et testés sur ordinateur : 41 vérifications, dont le paquet identique à l'exemple de `GATT.md`, le profil d'effort de la simulation Simulink (une seule alerte, pas de clignotement) et la séance de natation (durée sans le temps au bord, moyenne, courbe, arrêt automatique). La copie en Dart du calcul de natation, utilisée par le brassard simulé, donne **les mêmes octets** (`test/natation_test.dart`). GitHub relance ces tests à chaque envoi.
   ```bash
   g++ -std=c++17 -Wall -Wextra -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg
   ```
