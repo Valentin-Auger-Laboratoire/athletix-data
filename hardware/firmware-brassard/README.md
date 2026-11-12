@@ -14,6 +14,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 - **Intervalle de connexion court** (15 à 20 ms), demandé au téléphone pour tenir 50 mesures par seconde.
 - **Avertissements** (caractéristique État) : saturation pendant plus de 2 s (électrode décollée ?), batterie sous 10 %.
 - **Natation (version 1.1)** : commande `0x05`, le brassard continue de mesurer même si la liaison se coupe et garde le résumé de la séance (caractéristique `abad0005`, [`GATT.md`](../../architecture/GATT.md) §11). Arrêt automatique après 5 min sous 10 %, à la dernière activité. Le résumé n'est effacé que sur la commande `0x06`, envoyée par l'application une fois la séance enregistrée.
+- **Journal USB** (`JOURNAL_SERIE`) : pendant une mesure, chaque valeur est aussi écrite sur le port USB (`M,ms,mV,RMS,intensité,alerte`), pour la [comparaison automatique avec la simulation](../../mesures/README.md). Électrodes sur la peau : PC portable débranché du secteur.
 - **Commandes traitées dans `loop()`**, pas dans la tâche Bluetooth : évite les accès simultanés aux variables.
 
 ## Vérifications faites sans la carte

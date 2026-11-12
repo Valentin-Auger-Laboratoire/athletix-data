@@ -54,3 +54,6 @@ config.local.php
 *.sql.bak
 hardware/build/
 hardware/sketch/
+
+# Python (outils de mesure)
+__pycache__/
