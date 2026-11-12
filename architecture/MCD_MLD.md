@@ -108,7 +108,7 @@ En gras : ce qui est nouveau. `RESULTATS_EMG` utilise `session_id` comme clé pr
 | R5. Le temps d'effort intense ne peut pas dépasser la durée de la séance | `save_seance.php` |
 | R6. Le début et la fin d'une séance sont fixés par le **serveur**, pas par le téléphone (son horloge peut être fausse) | `save_seance.php` |
 
-## 5. À décider avec l'équipe
+## 5. Décisions (mise à jour du 12 novembre 2026)
 
-- **D1 et le classement.** Le classement additionne aujourd'hui les scores de `performances`, que l'application ne remplit jamais. Il faut choisir un nouveau score fondé sur les résultats EMG (par exemple le temps passé au-dessus de 40 % MVC), puis retirer `performances.user_id`.
-- **`hardware_status`.** À supprimer une fois que l'application lit l'état du brassard directement en Bluetooth et dans `brassards`.
+- **D1 et le classement : règle de score proposée et codée** (`backend/get_classement.php`, à valider par l'équipe). Sur les 30 derniers jours, chaque séance **mesurée** rapporte `10 + minutes × intensité moyenne ÷ 50` points. Les 10 points récompensent la régularité, la deuxième partie le travail musculaire réellement fourni. Exemple : 30 min à 40 % MVC = 10 + 24 = 34 points. Les séances faites avec le brassard simulé (`donnees_simulees = 1`) ne comptent pas. La table `performances` est supprimée (migration `002`), ce qui règle aussi la redondance D1.
+- **`hardware_status` supprimée** (migration `002`) : l'état du brassard (batterie, dernière synchronisation) est porté par `brassards`, mis à jour par l'application à chaque calibration ou séance (champ `batterie`).

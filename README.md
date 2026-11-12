@@ -40,9 +40,9 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 
 Le matériel, demandé en juin 2026, vient d'être commandé par l'école : livraison attendue **dans un mois au plus tôt**. En attendant, tout ce qui ne dépend pas des pièces est préparé.
 
-- ✅ **Fait** : application et démo en ligne, API PHP / MySQL, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé, firmware de test, boîtier modélisé sous Fusion 360 (fichiers à ajouter).
-- 🔜 **À faire sans le matériel** : connexion Bluetooth réelle dans l'application, écrans de calibration et d'historique, règle de score du classement, API testée sur un vrai serveur, faux brassard testé sur un ESP32, firmware final, protocole de test.
-- ⏳ **À la réception** : vérification de la batterie, soudure, premiers tests, calibration, comparaison avec la simulation, séance complète enregistrée, autonomie, montage dans le boîtier.
+- ✅ **Fait** : application et démo en ligne, API PHP / MySQL testée sur une vraie base, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé vérifié sur les fiches SparkFun, boîtier modélisé sous Fusion 360 (fichiers à ajouter). Et depuis le 12 novembre : connexion Bluetooth réelle, écrans Brassard, Calibration, Mes séances et consentement, classement calculé à partir des mesures, projet Android, firmware final, protocole de test.
+- 🔜 **Encore sans le matériel** : tester le faux brassard sur un ESP32, valider la règle de score, compléter la commande (câble jack, embase, électrodes), ajouter le boîtier, Gantt et rapport du jalon 1.
+- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation, autonomie, boîtier.
 
 Détail, cases à cocher et répartition proposée : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
 
@@ -78,17 +78,19 @@ Muscle ──► MyoWare 2.0 ──► ESP32-S3 ══ Bluetooth LE (GATT) ═�
                                                                                                             + migrations/)
 ```
 
-Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration réseau sont décrits dans [`architecture/`](architecture/README.md). Pour l'instant, l'application utilise un **brassard simulé** qui produit les vrais paquets Bluetooth ; un firmware de test pour ESP32 est dans [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md).
+Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration réseau sont décrits dans [`architecture/`](architecture/README.md). En attendant le matériel, l'application utilise un **brassard simulé** qui produit les vrais paquets Bluetooth. La connexion au vrai brassard (`lib/services/brassard/brassard_ble.dart`), le [firmware final](hardware/firmware-brassard/README.md) et un [firmware de test](hardware/faux-brassard-ble/README.md) sont prêts, à tester avec la carte.
 
 | Dossier | Contenu |
 |---|---|
-| `lib/` | Application Flutter (écrans, `config.dart`, couche API, mode démo) |
-| `backend/` | API PHP : inscription, vérification par e-mail, connexion, profils, classement, état du brassard |
-| `hardware/` | Câblage présumé du brassard EMG, simulation Simulink, et fichiers du premier capteur cardiaque : code ESP32, simulation Wokwi ([détails](hardware/README.md)) |
+| `lib/` | Application Flutter (écrans, `config.dart`, couche API, mode démo, Bluetooth) |
+| `android/` | Projet Android (autorisations Bluetooth), à ouvrir dans Android Studio |
+| `backend/` | API PHP : inscription, vérification par e-mail, connexion, profils, séances, calibrations, historique, classement, état du brassard |
+| `hardware/` | Câblage présumé du brassard EMG, firmware final et firmware de test, protocole de test, simulation Simulink, et fichiers du premier capteur cardiaque ([détails](hardware/README.md)) |
 | `architecture/` | Spécification Bluetooth (GATT), MCD / MLD, MCT, intégration réseau |
 | `FEUILLE-DE-ROUTE.md` | Ce qu'il reste à faire, avant et après la réception du matériel |
 | `database.sql` | Structure de la base + 1 compte de démo fictif |
-| `migrations/` | Mises à jour de la base (brassard, calibrations, résultats EMG) |
+| `migrations/` | Mises à jour de la base (001 : brassard, calibrations, résultats EMG ; 002 : nettoyage) |
+| `test/`, `tests/` | Tests de l'application (`flutter test`), de l'API (`tests/api/`) et des calculs du firmware (`tests/firmware/`) |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
 
 ## Fonctionnalités
@@ -98,12 +100,17 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 - 5 familles de sports (environ 25 disciplines), avec un écran de séance par discipline.
 - Questionnaire de profil (objectif, niveau, taille, poids, fréquence, blessures, antécédents cardio, sommeil, stress) avec **historique** des profils ; à la mise à jour, il reprend les réponses précédentes.
 - Conseils calculés à partir de tout le profil : rythme selon le niveau et la fréquence déclarée, objectif, taille et poids (IMC, protéines), blessures, stress, sommeil, antécédents.
-- Classement des athlètes (score total de leurs performances).
+- **Brassard** : recherche et connexion Bluetooth au vrai brassard (application Android, ou Chrome / Edge en HTTPS), batterie, numéro de série ; ou brassard simulé.
+- **Calibration** : contraction maximale de 3 s qui devient la référence 100 %, enregistrée dans l'historique des calibrations.
+- Séance en direct : intensité en % de la contraction maximale, alerte d'effort intense avec hystérésis, résumé enregistré à la fin.
+- **Mes séances** : historique des séances et de leur résumé (durée, intensité moyenne et maximale, temps d'effort intense, alertes).
+- Classement des 30 derniers jours, calculé à partir des séances mesurées (10 points par séance + minutes × intensité moyenne ÷ 50 ; les séances simulées ne comptent pas).
+- **Consentement** au premier lancement (données de santé, RGPD).
 - **Mode démo** utilisable sans backend.
 
 ## Ce qui est simulé (à lire avant d'évaluer le projet)
 
-- **Intensité musculaire** : pendant une séance, l'écran affiche le % de la contraction maximale (MVC) venant d'un **brassard simulé** (profil repos / 40 % / 95 % / 50 %). Les paquets suivent le vrai format Bluetooth, mais aucun muscle n'est mesuré, et l'écran l'indique. La séance est ensuite enregistrée comme « données simulées ».
+- **Intensité musculaire** : tant que le vrai brassard n'est pas relié, l'écran affiche le % de la contraction maximale (MVC) venant d'un **brassard simulé** (profil repos / 40 % / 95 % / 50 %). Les paquets suivent le vrai format Bluetooth, mais aucun muscle n'est mesuré, et l'écran l'indique. La séance est enregistrée comme « données simulées ». La connexion au vrai brassard est écrite mais **pas encore testée avec une carte**.
 - **Mesure propre à chaque discipline** (activité musculaire moyenne, pic de contraction, efforts intenses, relâchement, en % de la contraction maximale), affichée sous l'intensité : valeurs d'exemple fixes, marquées « valeur d'exemple ».
 - **« IA »** : les conseils sont produits par des **règles `if/else`**, pas par un modèle entraîné (mention « Conseils générés par règles »). Ils ne remplacent pas un avis médical.
 - **Mode démo** : compte et données **fictifs**, gardés en mémoire et perdus au rechargement de la page.
@@ -118,7 +125,7 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 ### 1. Base de données
 Démarre MySQL dans XAMPP, puis importe `database.sql` (phpMyAdmin → Importer, ou `mysql -u root < database.sql`).
 Cela crée la base `athletix-pro` et un compte de démo fictif : `demo@exemple.com` / `demo1234`.
-Importe ensuite `migrations/001_brassard_emg.sql` (tables du brassard, des calibrations et des résultats de séance).
+Importe ensuite `migrations/001_brassard_emg.sql` (tables du brassard, des calibrations et des résultats de séance), puis `migrations/002_score_et_nettoyage.sql` (suppression des anciennes tables `performances` et `hardware_status`).
 
 ### 2. Backend PHP
 1. Copie (ou clone) le dépôt dans `htdocs/athletix-data` pour que l'API réponde sur `http://localhost/athletix-data/backend/`.
@@ -137,7 +144,24 @@ L'URL de l'API est définie à un seul endroit, `lib/config.dart`. Elle peut aus
 flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=https://mon-serveur.exemple/backend
 ```
 
-### 4. Version web pour GitHub Pages
+### 4. Application Android (pour le vrai brassard)
+Le Bluetooth du brassard s'utilise depuis l'application Android (le dossier `android/` est déjà prêt, avec les autorisations Bluetooth).
+1. Ouvrir le dossier du projet dans **Android Studio** (avec le plugin Flutter), brancher un téléphone Android en mode développeur.
+2. Sur le téléphone, `localhost` désigne le téléphone lui-même : il faut donner l'adresse du PC qui fait tourner XAMPP, sur le même Wi-Fi.
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.20/athletix-data/backend
+flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.20/athletix-data/backend
+```
+L'APK se trouve ensuite dans `build/app/outputs/flutter-apk/app-release.apk`. Remplacer `192.168.1.20` par l'adresse IP du PC (`ipconfig` sous Windows). Le `http://` est autorisé pour le prototype ; à passer en HTTPS pour un vrai déploiement.
+
+### 5. Tests
+```bash
+flutter test                                   # application : format Bluetooth, résumé de séance, calibration, démo
+ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 41 vérifications
+g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg   # calculs du firmware
+```
+
+### 6. Version web pour GitHub Pages
 ```bash
 MSYS_NO_PATHCONV=1 flutter build web --release --base-href /athletix-data/
 rm -rf docs && cp -r build/web docs && touch docs/.nojekyll
@@ -153,6 +177,7 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 - Code du projet : © 2026 équipe Athletix-Data (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (dossier `PHPMailer/`, version 7.0.2) est distribué sous **licence LGPL 2.1** ; voir `PHPMailer/LICENSE`.
 - Flutter et ses packages : licences BSD respectives.
+- [flutter_blue_plus](https://pub.dev/packages/flutter_blue_plus) (Bluetooth) : licence FlutterBluePlus, gratuite pour un usage personnel ou éducatif comme ce projet étudiant (`License.nonprofit` dans le code). Un usage commercial demanderait une licence payante. Le package peut envoyer une statistique anonyme au moment de la compilation (nom de l'application, version).
 
 ---
 
@@ -166,7 +191,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
-**Project status.** The hardware, requested in June 2026, has just been ordered by the school (expected in a month at the earliest). Done: app and online demo, PHP/MySQL API, Bluetooth format and data models, simulated armband, Simulink simulation, presumed wiring, test firmware, enclosure modelled in Fusion 360 (files to be added). Next, without the hardware: real Bluetooth connection in the app, calibration and history screens, leaderboard scoring, API tested on a real server, test firmware tried on an ESP32, final firmware, test protocol. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
+**Project status.** The hardware, requested in June 2026, has just been ordered by the school (expected in a month at the earliest). Done: app and online demo, PHP/MySQL API tested on a real database, Bluetooth format and data models, simulated armband, Simulink simulation, presumed wiring checked against SparkFun datasheets, enclosure modelled in Fusion 360 (files to be added), real Bluetooth connection, calibration and history screens, EMG-based leaderboard, Android project, final firmware and test protocol. Next: try the test firmware on an ESP32, then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
@@ -197,12 +222,17 @@ The Bluetooth format, data models and network integration are described (in Fren
 - 5 sport families (about 25 disciplines), each with a workout screen.
 - Profile questionnaire (goal, level, height, weight, frequency, injuries, cardiac history, sleep, stress) with a **history** of profiles; when updating, it starts from the previous answers.
 - Advice computed from the whole profile: pace from level and declared frequency, goal, height and weight (BMI, protein), injuries, stress, sleep, history.
-- Athlete leaderboard (total score of recorded performances).
+- **Armband**: Bluetooth search and connection to the real armband (Android app, or Chrome / Edge over HTTPS), battery, serial number; or a simulated armband.
+- **Calibration**: a 3 s maximum contraction becomes the 100 % reference, stored in the calibration history.
+- Live workout: intensity in % of maximum contraction, high-effort alert with hysteresis, summary saved at the end.
+- **My sessions**: history of sessions and their summary.
+- 30-day leaderboard computed from measured sessions (10 points per session + minutes × average intensity ÷ 50; simulated sessions do not count).
+- **Consent** screen on first launch (health data, GDPR).
 - **Demo mode** that works without any backend.
 
 ## What is simulated
 
-- **Muscle intensity**: during a workout, the % of maximum contraction comes from a **simulated armband** that follows the real Bluetooth packet format. No muscle is measured, the screen says so, and the session is saved as simulated data.
+- **Muscle intensity**: until the real armband is connected, the % of maximum contraction comes from a **simulated armband** that follows the real Bluetooth packet format. No muscle is measured, the screen says so, and the session is saved as simulated data. The real Bluetooth connection is written but **not yet tested with a board**.
 - **Discipline-specific reading** (average muscle activity, peak contraction, intense efforts, relaxation, in % of maximum contraction), shown below the intensity: fixed example values, labelled as such.
 - **“AI”**: the advice comes from **if/else rules**, not a trained model. It is not medical advice.
 - **Demo mode**: **fictional** account and data, kept in memory and lost when the page reloads.
@@ -210,10 +240,12 @@ The Bluetooth format, data models and network integration are described (in Fren
 
 ## Installation
 
-1. **Database**: start MySQL (XAMPP) and import `database.sql`. This creates a fictional demo account: `demo@exemple.com` / `demo1234`.
+1. **Database**: start MySQL (XAMPP) and import `database.sql`, then `migrations/001_brassard_emg.sql` and `migrations/002_score_et_nettoyage.sql`. This creates a fictional demo account: `demo@exemple.com` / `demo1234`.
 2. **PHP backend**: place the repository in `htdocs/athletix-data`. Copy `backend/config.example.php` to `backend/config.local.php` (git-ignored), then fill in the MySQL credentials, the SMTP settings (Gmail address and **app password**) and `allowed_origin`.
 3. **Flutter app**: run `flutter pub get`, then `flutter run -d chrome --web-port 5000`. The API URL lives in `lib/config.dart`, or can be passed with `--dart-define=API_BASE_URL=...`.
-4. **GitHub Pages**: `MSYS_NO_PATHCONV=1 flutter build web --release --base-href /athletix-data/`, copy `build/web` to `docs/`, add `docs/.nojekyll`, then enable Pages on `main` / `docs`.
+4. **Android app** (real armband): open the project in Android Studio and build with `--dart-define=API_BASE_URL=http://<PC IP>/athletix-data/backend`.
+5. **Tests**: `flutter test`, `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (on a test database only), and the firmware calculation tests in `tests/firmware/`.
+6. **GitHub Pages**: `MSYS_NO_PATHCONV=1 flutter build web --release --base-href /athletix-data/`, copy `build/web` to `docs/`, add `docs/.nojekyll`, then enable Pages on `main` / `docs`.
 
 ## Personal data (GDPR)
 
@@ -223,3 +255,4 @@ The questionnaire collects **health data**, which is sensitive data under the GD
 
 - Project code: © 2026 Athletix-Data team (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (`PHPMailer/` folder, v7.0.2) is distributed under the **LGPL 2.1** licence; see `PHPMailer/LICENSE`.
+- [flutter_blue_plus](https://pub.dev/packages/flutter_blue_plus) (Bluetooth): FlutterBluePlus licence, free for personal or educational use such as this student project (`License.nonprofit`); commercial use would require a paid licence.

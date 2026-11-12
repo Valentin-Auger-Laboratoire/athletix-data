@@ -70,10 +70,22 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 
 ## 5. Étapes suivantes
 
-| Étape | Qui | Dépend de |
+> Mise à jour le 12 novembre 2026 : décision prise et travail fait en attendant le matériel.
+
+| Étape | Qui | État |
 |---|---|---|
-| Tester le faux brassard ESP32 avec nRF Connect | Othmen | une carte ESP32 |
-| Choisir web ou Android (§3) | équipe | — |
-| Écrire `BrassardBle` (connexion réelle) | Othmen | choix ci-dessus |
-| Remplacer la source simulée par le MyoWare dans le firmware | Valentin | brassard câblé |
-| Nouvelle règle de score du classement | équipe | `MCD_MLD.md` §5 |
+| Choisir web ou Android (§3) | équipe | ✅ **décidé** : web pour la démo en ligne, **Android** (projet `android/`, compilé avec Android Studio) pour l'usage réel avec le brassard |
+| Écrire `BrassardBle` (connexion réelle) | équipe | ✅ écrit : `lib/services/brassard/brassard_ble.dart` (package `flutter_blue_plus`), ⏳ à tester avec le faux brassard puis le vrai |
+| Écran de choix du brassard et de calibration (O3, O4) | équipe | ✅ `lib/screens/brassard_screen.dart`, `calibration_screen.dart` |
+| Historique des séances | équipe | ✅ route `get_seances.php` et écran « Mes séances » |
+| Nouvelle règle de score du classement | équipe | ✅ proposée et codée dans `get_classement.php` (voir `MCD_MLD.md` §5), à valider |
+| Firmware final avec le vrai MyoWare et la vraie batterie | équipe | ✅ écrit : `hardware/firmware-brassard/`, calculs testés sur ordinateur, ⏳ à flasher |
+| Tester le faux brassard ESP32 avec nRF Connect | Othmen | ⏳ une carte ESP32 (un ESP32 classique suffit) |
+| Brassard réel câblé, mesuré, calibré | équipe | ⏳ matériel (voir `hardware/PROTOCOLE-DE-TEST.md`) |
+
+### Ajouts à l'API
+
+- `get_seances.php` (POST + jeton) : les 50 dernières séances de l'utilisateur avec leur résumé EMG.
+- `save_seance.php` et `save_calibration.php` acceptent un champ facultatif `batterie` (0 à 100 %), enregistré dans `brassards.batterie_niveau`.
+- `get_hardware.php` lit maintenant le dernier brassard de l'utilisateur dans `brassards` (batterie, dernière synchronisation, numéro de série). `update_hardware.php` et `save_performance.php` sont supprimés (migration `002`).
+- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (41 vérifications).

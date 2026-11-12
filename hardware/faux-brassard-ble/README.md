@@ -22,6 +22,6 @@ Pour lire un paquet, voir l'exemple dans `GATT.md` §4 (tout est en little-endia
 
 ## Passer au vrai signal
 
-Mettre `#define SOURCE_SIMULEE 0` et brancher la sortie **ENV** du MyoWare 2.0 sur `PIN_EMG` (GPIO1 sur ESP32-S3, GPIO34 sur ESP32 classique). Le calcul (500 Hz, RMS sur 200 ms, % MVC, alerte 75 % / 70 %) reprend celui de la simulation Simulink.
+Mettre `#define SOURCE_SIMULEE 0` et brancher la sortie **ENV** du MyoWare 2.0 sur `PIN_EMG` (A0 = GPIO10 sur la SparkFun Thing Plus ESP32-S3, GPIO34 sur ESP32 classique). Le calcul (500 Hz, RMS sur 200 ms, % MVC, alerte 75 % / 70 %) reprend celui de la simulation Simulink.
 
 > Ce sketch n'a pas encore été testé sur une vraie carte : sa syntaxe a été vérifiée, mais pas son fonctionnement avec la bibliothèque BLE de l'ESP32. Note ici les résultats du premier essai.

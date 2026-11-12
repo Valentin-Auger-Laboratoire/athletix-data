@@ -8,16 +8,18 @@
 | Partie | État |
 |---|---|
 | Application Flutter (comptes, profil, conseils, séances, classement, mode démo) | ✅ fait, démo en ligne |
-| API PHP / MySQL (comptes, profils, séances, calibrations) | ✅ écrite, ⚠️ jamais exécutée sur un vrai serveur (seulement vérifiée en syntaxe) |
-| Format Bluetooth (GATT), modèles de données, migration | ✅ fait ([`architecture/`](architecture/README.md)) |
+| API PHP / MySQL | ✅ testée sur une vraie base MariaDB : 41 vérifications ([`tests/api/`](tests/api/test_api.sh)) |
+| Format Bluetooth (GATT), modèles de données, migrations | ✅ fait ([`architecture/`](architecture/README.md)) |
 | Brassard simulé dans l'application (vrais paquets Bluetooth) | ✅ fait, testé |
 | Simulation Simulink de la chaîne EMG | ✅ faite ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)) |
-| Câblage du brassard | ✅ schéma présumé ([`hardware/`](hardware/README.md)), non testé |
-| Firmware de test ESP32 (faux brassard) | ✅ écrit, ⚠️ jamais testé sur une carte |
-| Connexion Bluetooth réelle dans l'application | ❌ à faire |
-| Écran de calibration dans l'application | ❌ à faire |
-| Historique des séances dans l'application | ❌ à faire |
-| Règle de score du classement à partir des mesures EMG | ❌ à décider puis coder |
+| Câblage du brassard | ✅ schéma présumé vérifié sur les fiches SparkFun ([`hardware/`](hardware/README.md)), non testé |
+| Connexion Bluetooth réelle dans l'application (`BrassardBle`) | ✅ écrite, ⏳ à tester avec une carte |
+| Écrans Brassard, Calibration, Mes séances, consentement | ✅ faits, testés dans le navigateur |
+| Règle de score du classement à partir des mesures EMG | ✅ proposée et codée, ⏳ à valider en équipe |
+| Projet Android | ✅ prêt (autorisations Bluetooth), ⏳ APK à compiler dans Android Studio |
+| Firmware de test ESP32 (faux brassard) | ✅ écrit, ⏳ jamais testé sur une carte |
+| Firmware final (vrai MyoWare, batterie) | ✅ écrit, calculs testés sur ordinateur, ⏳ à flasher |
+| Protocole de test | ✅ écrit ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) |
 | Boîtier (Fusion 360) | ✅ modélisé (Valentin), ⏳ fichiers pas encore ajoutés au dépôt |
 | Brassard réel câblé, mesuré, calibré | ❌ attend le matériel |
 
@@ -26,27 +28,27 @@
 L'objectif : quand les pièces arrivent, il ne reste plus qu'à souder, flasher et mesurer.
 
 ### Décisions d'équipe
-- [ ] **Web ou Android pour le Bluetooth réel** ([`INTEGRATION.md`](architecture/INTEGRATION.md) §3). Recommandé : garder le web pour la démo en ligne, faire une version Android pour l'usage avec le brassard.
-- [ ] **Règle de score du classement** fondée sur les résultats EMG (par exemple temps passé dans la bonne zone d'intensité, régularité des séances), voir [`MCD_MLD.md`](architecture/MCD_MLD.md) §5.
+- [x] **Web ou Android pour le Bluetooth réel** : **décidé**, web pour la démo en ligne, **Android** (Android Studio) pour l'usage avec le brassard.
+- [ ] **Valider la règle de score du classement** : proposée et codée (10 points par séance mesurée + minutes × intensité moyenne ÷ 50, sur 30 jours, séances simulées exclues), voir [`MCD_MLD.md`](architecture/MCD_MLD.md) §5. À garder ou à changer en équipe.
 
 ### Application
-- [ ] **`BrassardBle`** : la vraie connexion Bluetooth, qui remplace le brassard simulé. Elle implémente l'interface existante `SourceBrassard`, donc aucun écran n'est à modifier (piste : package `flutter_blue_plus`).
-- [ ] **Écran de calibration** : consignes (« contracte ton biceps au maximum pendant 3 s »), bouton, envoi de la commande `0x03` au brassard, enregistrement par `save_calibration.php`. La route serveur existe déjà, il manque l'écran et la méthode dans `api.dart`.
-- [ ] **Historique des séances** : une route `get_seances.php` et un écran qui liste les séances enregistrées (durée, intensité moyenne et maximale, alertes).
-- [ ] **Classement** : coder la règle de score choisie dans `get_classement.php`, puis supprimer la table `performances` devenue inutile (défaut D1).
-- [ ] **Consentement** au premier lancement : les mesures sont des données de santé (RGPD), et l'application n'est pas un dispositif médical.
+- [x] **`BrassardBle`** (fait : `lib/services/brassard/brassard_ble.dart`, à tester avec une carte) : la vraie connexion Bluetooth, qui remplace le brassard simulé. Elle implémente l'interface existante `SourceBrassard`, donc aucun écran n'est à modifier (piste : package `flutter_blue_plus`).
+- [x] **Écran de calibration** (fait) : consignes (« contracte ton biceps au maximum pendant 3 s »), bouton, envoi de la commande `0x03` au brassard, enregistrement par `save_calibration.php`. La route serveur existe déjà, il manque l'écran et la méthode dans `api.dart`.
+- [x] **Historique des séances** (fait) : une route `get_seances.php` et un écran qui liste les séances enregistrées (durée, intensité moyenne et maximale, alertes).
+- [x] **Classement** (fait, migration `002`) : coder la règle de score choisie dans `get_classement.php`, puis supprimer la table `performances` devenue inutile (défaut D1).
+- [x] **Consentement** (fait) au premier lancement : les mesures sont des données de santé (RGPD), et l'application n'est pas un dispositif médical.
 
 ### Serveur
-- [ ] **Faire tourner l'API pour de vrai** : XAMPP, import de `database.sql` puis de `migrations/001_brassard_emg.sql`, application lancée **hors mode démo**. Tester chaque parcours : inscription, code par e-mail, connexion, profil, séance enregistrée.
-- [ ] Noter les erreurs trouvées et les corriger (jusqu'ici le PHP n'a été vérifié qu'en syntaxe).
+- [x] **Faire tourner l'API pour de vrai** (fait sur MariaDB, script `tests/api/test_api.sh`, 41 vérifications ; à refaire une fois sur votre XAMPP avec l'application Android) : XAMPP, import de `database.sql` puis de `migrations/001_brassard_emg.sql`, application lancée **hors mode démo**. Tester chaque parcours : inscription, code par e-mail, connexion, profil, séance enregistrée.
+- [x] Noter les erreurs trouvées et les corriger : aucune erreur de fonctionnement trouvée ; réponses JSON rendues lisibles (accents).
 
 ### Brassard (préparation)
 - [ ] **Tester le faux brassard** ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) : un **ESP32 classique suffit** (celui de la première piste par exemple). Le flasher et vérifier avec l'appli gratuite nRF Connect que les paquets arrivent, puis avec l'application quand `BrassardBle` est prêt.
-- [ ] **Firmware final** : partir du faux brassard, `SOURCE_SIMULEE 0`, broche du MyoWare, et ajouter le niveau de batterie dans le service Bluetooth (remplace `hardware_status`).
-- [ ] **Vérifier les fiches techniques** (SparkFun Thing Plus ESP32-S3, MyoWare 2.0, Link Shield) et corriger le [câblage présumé](hardware/README.md) si besoin : broche analogique exacte, alimentation, sortie du Link Shield.
-- [ ] **Compléter la commande si possible** : le Link Shield sort le signal par un jack 3,5 mm (câble jack et petite embase à prévoir), les électrodes sont à usage unique (prévoir un paquet de rechange). Le câble Qwiic ne sert pas pour le signal.
+- [x] **Firmware final** (fait : [`hardware/firmware-brassard/`](hardware/firmware-brassard/README.md), calculs testés sur ordinateur, à flasher) : partir du faux brassard, `SOURCE_SIMULEE 0`, broche du MyoWare, et ajouter le niveau de batterie dans le service Bluetooth (remplace `hardware_status`).
+- [x] **Vérifier les fiches techniques** (fait : A0 = GPIO10, jauge MAX17048 en I2C, Link Shield sur ENV, jack pointe / bague / corps ; à confirmer sur la carte reçue) (SparkFun Thing Plus ESP32-S3, MyoWare 2.0, Link Shield) et corriger le [câblage présumé](hardware/README.md) si besoin : broche analogique exacte, alimentation, sortie du Link Shield.
+- [ ] **Compléter la commande si possible** (liste dans [`hardware/README.md`](hardware/README.md#à-compléter-dans-la-commande)) : le Link Shield sort le signal par un jack 3,5 mm (câble jack et petite embase à prévoir), les électrodes sont à usage unique (prévoir un paquet de rechange). Le câble Qwiic ne sert pas pour le signal.
 - [ ] **Boîtier** : le modèle Fusion 360 est fait (Valentin). Reste à l'exporter en STEP et STL, avec quelques captures, et à l'ajouter au dépôt. Prévoir de vérifier les cotes une fois les pièces en main.
-- [ ] **Protocole de test écrit** (voir §2) avec les résultats attendus, pour comparer la mesure réelle à la simulation.
+- [x] **Protocole de test écrit** ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) (voir §2) avec les résultats attendus, pour comparer la mesure réelle à la simulation.
 
 ### Projet
 - [ ] Mettre à jour le **diagramme de Gantt** avec la nouvelle date de livraison (Maxence).

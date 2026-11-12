@@ -2,26 +2,43 @@
 
 ## Brassard EMG (version finale) : câblage présumé
 
-Le matériel n'est pas encore reçu. Ce schéma montre comment les composants commandés seront reliés : c'est un schéma d'intention, **non testé**.
+Le matériel n'est pas encore reçu. Ce schéma montre comment les composants commandés seront reliés, d'après les fiches SparkFun : il reste **non testé**.
 
 ![Câblage présumé du brassard EMG](cablage-presume.png)
 
 | Liaison | Détail |
 |---|---|
 | Électrodes → MyoWare 2.0 | 3 électrodes SEN-12969 à boutons-pression : 2 sur le biceps, la référence sur une zone osseuse (coude) |
-| MyoWare 2.0 → Link Shield | le Link Shield s'empile sur le capteur et sort le signal par une prise jack 3,5 mm |
-| Câble jack → ESP32-S3 | 3 conducteurs : signal « enveloppe » sur **A0** (entrée analogique 12 bits), **+3,3 V** et **GND** de la carte |
-| Batterie → carte | LiPo 3,7 V 1 500 mAh sur la prise batterie JST, avec l'interrupteur DS12LR sur le fil rouge |
+| MyoWare 2.0 → Link Shield | le Link Shield s'empile sur le capteur et sort le signal par une prise jack 3,5 mm ; son **interrupteur doit être sur ENV** (enveloppe) et son alimentation sur ON |
+| Câble jack → ESP32-S3 | pointe = signal sur **A0 = GPIO10** (entrée analogique 12 bits), bague = **+3,3 V**, corps = **GND** |
+| Batterie → carte | LiPo 3,7 V 1 500 mAh sur la prise batterie JST, avec l'interrupteur DS12LR sur le fil rouge. ⚠️ Vérifier la polarité avant de brancher |
+| Jauge de batterie | MAX17048 intégrée à la carte (I2C, adresse 0x36, GPIO8 / GPIO9) : niveau lu par le firmware |
 | USB-C | recharge de la batterie par la carte et programmation |
 | Carte → téléphone | Bluetooth LE vers l'application Flutter |
 
 - Alimenté en 3,3 V par la carte, le capteur sort une tension qui reste dans la plage du convertisseur (0 à 3,3 V).
 - Le câble Qwiic du devis est une liaison **I2C** (numérique) : il ne transporte pas ce signal analogique, qui doit arriver sur une entrée analogique comme A0.
 - Les inverseurs GR33 / GA55 et les résistances 150 Ω du devis ne sont pas représentés : leur usage reste à définir.
-- Brochage exact à vérifier sur les fiches SparkFun à la réception du matériel.
+- Brochage vérifié sur les fiches SparkFun : [Thing Plus ESP32-S3](https://docs.sparkfun.com/SparkFun_Thing_Plus_ESP32-S3/hardware_overview/) ([schéma](https://cdn.sparkfun.com/assets/5/e/6/5/0/SparkFun_Thing_Plus_ESP32-S3.pdf)), [Link Shield](https://learn.sparkfun.com/tutorials/getting-started-with-the-myoware-20-muscle-sensor-ecosystem/-myoware-20-link-shield). À confirmer sur la carte reçue.
 - La chaîne de mesure a été testée en simulation sous Simulink : voir [`simulation-emg/`](simulation-emg/README.md).
 
 Fichiers : `cablage-presume.svg` (source du schéma) et `cablage-presume.png` (image).
+
+### À compléter dans la commande
+
+| Pièce | Pourquoi |
+|---|---|
+| **Câble jack 3,5 mm mâle-mâle, 3 contacts (TRS)** | le Link Shield sort par un jack, câble vendu à part (absent du devis) |
+| **Embase jack 3,5 mm TRS à souder** (ou couper un câble jack et souder les 3 fils) | relier le câble jack aux broches A0 / 3V3 / GND de la carte |
+| **Électrodes de rechange** (SEN-12969) | à usage unique : un paquet ne suffit pas pour tous les essais |
+
+### Programmes et tests
+
+| Dossier / fichier | Rôle |
+|---|---|
+| [`firmware-brassard/`](firmware-brassard/README.md) | **firmware final** : vrai signal, vraie batterie, calculs testés sur ordinateur |
+| [`faux-brassard-ble/`](faux-brassard-ble/README.md) | firmware de test : signal inventé, pour tester l'application sur n'importe quel ESP32 |
+| [`PROTOCOLE-DE-TEST.md`](PROTOCOLE-DE-TEST.md) | les essais à faire à la réception du matériel, dans l'ordre, avec les résultats attendus |
 
 ## Première piste : capteur cardiaque (photopléthysmographe)
 

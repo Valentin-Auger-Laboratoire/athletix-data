@@ -152,4 +152,6 @@ Application                                  Brassard
 | UUID et codes partagés | `lib/services/brassard/gatt_athletix.dart` | ✅ |
 | Brassard simulé dans l'app (même format d'octets) | `lib/services/brassard/brassard_simule.dart` | ✅ |
 | Faux brassard ESP32 qui publie ce service | `hardware/faux-brassard-ble/faux-brassard-ble.ino` | ✅ (non compilé ici, à tester sur carte) |
-| Connexion Bluetooth réelle dans l'app | — | ⏳ à faire (voir `INTEGRATION.md`) |
+| Lecture de la configuration et de l'état, commandes (tests) | `lib/services/brassard/codec_gatt.dart`, `test/ajouts_test.dart` | ✅ |
+| Connexion Bluetooth réelle dans l'app (Android et Chrome) | `lib/services/brassard/brassard_ble.dart` | ✅ écrite, ⏳ à tester avec une carte |
+| Firmware final (vrai MyoWare, jauge de batterie, intervalle 15–20 ms) | `hardware/firmware-brassard/` | ✅ calculs testés sur ordinateur (`tests/firmware/`), ⏳ à flasher |

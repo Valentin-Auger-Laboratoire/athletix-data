@@ -3,7 +3,7 @@
        Matériel pas encore reçu : schéma d'intention, non testé. -->
   <rect width="1400" height="760" fill="#ffffff"/>
   <text x="40" y="52" font-size="28" font-weight="bold" fill="#1d1d1f">Câblage présumé du brassard EMG</text>
-  <text x="40" y="84" font-size="17" fill="#555">Établi d'après les composants commandés. Matériel pas encore reçu : schéma d'intention, non testé.</text>
+  <text x="40" y="84" font-size="17" fill="#555">Établi d'après les composants commandés et les fiches SparkFun. Matériel pas encore reçu : non testé.</text>
 
   <!-- ===== Bras et électrodes ===== -->
   <g>
@@ -35,24 +35,24 @@
   <text x="440" y="252" font-size="14" fill="#333">→ sortie « enveloppe »</text>
   <rect x="440" y="272" width="210" height="70" rx="8" fill="#ffffff" stroke="#c8102e" stroke-width="2"/>
   <text x="455" y="300" font-size="16" font-weight="bold" fill="#c8102e">Link Shield</text>
-  <text x="455" y="322" font-size="13" fill="#333">empilé sur le capteur,</text>
-  <text x="455" y="338" font-size="13" fill="#333">sortie par jack 3,5 mm</text>
+  <text x="455" y="322" font-size="13" fill="#333">empilé, sortie jack 3,5 mm,</text>
+  <text x="455" y="338" font-size="13" fill="#333">interrupteur sur ENV</text>
 
   <!-- ===== Câble jack : 3 conducteurs ===== -->
   <path d="M650 280 L 800 280 L 800 265 L 900 265" fill="none" stroke="#e0a100" stroke-width="5"/>
   <path d="M650 310 L 820 310 L 820 305 L 900 305" fill="none" stroke="#d62d2d" stroke-width="5"/>
   <path d="M650 340 L 840 340 L 840 345 L 900 345" fill="none" stroke="#222" stroke-width="5"/>
-  <text x="690" y="236" font-size="14" font-weight="bold" fill="#333">câble jack 3,5 mm</text>
-  <text x="690" y="254" font-size="13" fill="#555">(3 conducteurs)</text>
-  <text x="680" y="273" font-size="13" fill="#9a6f00">signal</text>
-  <text x="680" y="303" font-size="13" fill="#b01e1e">+3,3 V</text>
-  <text x="680" y="333" font-size="13" fill="#222">GND</text>
+  <text x="690" y="236" font-size="14" font-weight="bold" fill="#333">câble jack-jack 3,5 mm</text>
+  <text x="690" y="254" font-size="13" fill="#555">+ embase (à commander)</text>
+  <text x="680" y="273" font-size="13" fill="#9a6f00">pointe : signal</text>
+  <text x="680" y="303" font-size="13" fill="#b01e1e">bague : +3,3 V</text>
+  <text x="680" y="333" font-size="13" fill="#222">corps : GND</text>
 
   <!-- ===== SparkFun Thing Plus ESP32-S3 ===== -->
   <rect x="900" y="150" width="270" height="300" rx="14" fill="#e6f0ea" stroke="#2f7d4f" stroke-width="3"/>
   <text x="920" y="185" font-size="19" font-weight="bold" fill="#2f7d4f">SparkFun Thing Plus</text>
   <text x="920" y="208" font-size="19" font-weight="bold" fill="#2f7d4f">ESP32-S3</text>
-  <rect x="890" y="255" width="20" height="20" fill="#e0a100"/><text x="920" y="271" font-size="15" fill="#222">A0 (CAN 12 bits)</text>
+  <rect x="890" y="255" width="20" height="20" fill="#e0a100"/><text x="920" y="271" font-size="15" fill="#222">A0 = GPIO10 (CAN 12 bits)</text>
   <rect x="890" y="295" width="20" height="20" fill="#d62d2d"/><text x="920" y="311" font-size="15" fill="#222">3V3</text>
   <rect x="890" y="335" width="20" height="20" fill="#222"/><text x="920" y="351" font-size="15" fill="#222">GND</text>
   <text x="1010" y="271" font-size="13" fill="#555"></text>
@@ -102,6 +102,6 @@
   <path d="M56 676 Q 76 664 96 676" fill="none" stroke="#2f6fd6" stroke-width="3"/><text x="106" y="678" font-size="13" fill="#333">Bluetooth LE (sans fil)</text>
 
   <!-- ===== Notes ===== -->
-  <text x="40" y="712" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Brochage exact à vérifier sur les fiches SparkFun.</text>
+  <text x="40" y="712" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Jauge de batterie MAX17048 intégrée à la carte (I2C, GPIO8 / GPIO9).</text>
   <text x="40" y="734" font-size="14" fill="#555">Non représentés : inverseurs GR33 / GA55 et résistances 150 Ω (usage à définir). Le câble Qwiic du devis est une liaison I2C : il ne transporte pas ce signal analogique.</text>
 </svg>

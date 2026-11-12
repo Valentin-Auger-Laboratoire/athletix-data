@@ -18,7 +18,7 @@
 #include <BLE2902.h>
 
 #define SOURCE_SIMULEE 1
-const int PIN_EMG = 1;            // sortie ENV du MyoWare : GPIO1 sur ESP32-S3, GPIO34 sur un ESP32 classique
+const int PIN_EMG = 10;           // sortie ENV du MyoWare : A0 = GPIO10 sur la SparkFun Thing Plus ESP32-S3, GPIO34 sur un ESP32 classique
 
 // ---- UUID : identiques à lib/services/brassard/gatt_athletix.dart ----
 #define UUID_SERVICE        "abad0000-b097-4a54-8315-c2971fc04ce6"
