@@ -101,7 +101,7 @@ try {
         $distance, $denivele, $vitesse, $nb_pas, $fc_moy, $fc_max, $temp, $humidite,
         $meteo, $ressenti, $douleur, $sommeil, $commentaire, $mode_adapte, $trace, $client_uuid);
     if (!$stmt->execute()) {
-        throw new RuntimeException($stmt->error);
+        throw new RuntimeException($stmt->error, $stmt->errno);
     }
     $session_id = (int) $stmt->insert_id;
     $stmt->close();
@@ -115,13 +115,26 @@ try {
     $stmt->bind_param("iiiiiiiiiiiiisi", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
         $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $series, $fatigue, $courbe, $ref_mvc);
     if (!$stmt->execute()) {
-        throw new RuntimeException($stmt->error);
+        throw new RuntimeException($stmt->error, $stmt->errno);
     }
     $stmt->close();
 
     $conn->commit();
 } catch (Throwable $e) {
     $conn->rollback();
+    // Deux envois simultanés de la même séance : le second bute sur l'index unique (erreur 1062).
+    // Ce n'est pas une erreur pour l'utilisateur : la séance est bien enregistrée.
+    if ($client_uuid !== null && $e->getCode() === 1062) {
+        $stmt = $conn->prepare("SELECT id FROM sessions_entrainement WHERE user_id = ? AND client_uuid = ?");
+        $stmt->bind_param("is", $user_id, $client_uuid);
+        $stmt->execute();
+        $deja = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($deja) {
+            json_out(["status" => "success", "message" => "Séance déjà enregistrée", "session_id" => (int) $deja['id'],
+                      "deja_enregistree" => true]);
+        }
+    }
     json_out(["status" => "error", "message" => "Erreur lors de l'enregistrement de la séance"], 500);
 }
 

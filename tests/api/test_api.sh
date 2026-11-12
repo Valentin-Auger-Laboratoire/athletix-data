@@ -106,6 +106,24 @@ check "détail : séance d'un autre refusée (aucun résultat)" '"seances":\[\]'
 R=$(post export_donnees.php -d token=$T)
 check "export RGPD : compte, profils, séances" '"compte":\{"pseudo":"Testeur","email":"test@exemple.fr".*"profils":\[\{.*"seances":\[\{' "$R"
 check "export RGPD : sans mot de passe ni jeton" '^[^$]*$' "$(echo "$R" | grep -o 'password_hash\|token_hash\|verification_code' || true)"
+# Cinq envois simultanés de la même séance : une seule enregistrée, tous répondent « succès »
+U2=9b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d
+for i in 1 2 3 4 5; do post save_seance.php $S -d client_uuid=$U2 > /tmp/athletix_course_$i.json & done; wait
+check "envois simultanés : une seule séance" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM sessions_entrainement WHERE client_uuid='$U2'")"
+check "envois simultanés : tous en succès" '^5$' "$(cat /tmp/athletix_course_*.json | grep -o '"status":"success"' | wc -l | tr -d ' ')"
+rm -f /tmp/athletix_course_*.json
+# Un deuxième utilisateur ne voit ni ne touche les données du premier
+post register.php -d pseudo=Autre -d email=autre@exemple.fr -d password=autre1234 -d sport=Yoga > /dev/null
+CODE2=$(mysql -uroot -N "$DB" -e "SELECT verification_code FROM users WHERE email='autre@exemple.fr'")
+post verify_code.php -d email=autre@exemple.fr -d code="$CODE2" > /dev/null
+T2=$(post login.php -d email=autre@exemple.fr -d password=autre1234 | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
+check "autre utilisateur : séance du premier invisible (par son id)" '"seances":\[\]' "$(post get_seances.php -d token=$T2 -d id=$SID)"
+check "autre utilisateur : historique vide" '"seances":\[\]' "$(post get_seances.php -d token=$T2)"
+check "autre utilisateur : export sans les séances du premier" '"seances":\[\]' "$(post export_donnees.php -d token=$T2)"
+check "autre utilisateur : renvoyer l'identifiant d'un autre crée SA séance" '"session_id":[0-9]+' "$(post save_seance.php -d token=$T2 -d discipline=Yoga -d duree_s=300 -d nb_echantillons=1 -d intensite_moyenne_pct=10 -d intensite_max_pct=20 -d temps_effort_intense_s=0 -d nb_alertes=0 -d client_uuid=$U)"
+check "autre utilisateur : la séance du premier n'a pas changé de propriétaire" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM sessions_entrainement s JOIN users u ON u.id=s.user_id WHERE s.client_uuid='$U' AND u.email='test@exemple.fr'")"
+check "suppression du compte de l'autre utilisateur" '"status":"success"' "$(post supprimer_compte.php -d token=$T2 -d password=autre1234)"
+check "le premier compte est intact" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM users WHERE email='test@exemple.fr'")"
 check "suppression : mauvais mot de passe refusé" 'Mot de passe incorrect' "$(post supprimer_compte.php -d token=$T -d password=faux)"
 check "déconnexion" '"status":"success"' "$(post logout.php -d token=$T)"
 check "jeton révoqué" 'Session expirée' "$(post get_profil_ia.php -d token=$T)"

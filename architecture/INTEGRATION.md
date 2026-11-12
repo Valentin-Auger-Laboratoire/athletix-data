@@ -103,4 +103,14 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 - `supprimer_compte.php` (POST + jeton + `password`) : RGPD, supprime le compte et toutes ses données ; les brassards restent mais ne sont plus liés à personne.
 - `save_seance.php` et `save_calibration.php` acceptent un champ facultatif `batterie` (0 à 100 %), enregistré dans `brassards.batterie_niveau`.
 - `get_hardware.php` lit maintenant le dernier brassard de l'utilisateur dans `brassards` (batterie, dernière synchronisation, numéro de série). `update_hardware.php` et `save_performance.php` sont supprimés (migration `002`).
-- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (68 vérifications), relancé par GitHub à chaque envoi.
+- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (77 vérifications), relancé par GitHub à chaque envoi.
+
+### Sécurité : relecture du 12 novembre 2026
+
+Vérifié (et testé dans `tests/api/test_api.sh`) : toutes les requêtes SQL sont préparées ; chaque route protégée vérifie le jeton (seul son hash SHA-256 est en base, avec une date d'expiration) ; chaque lecture est filtrée par l'utilisateur du jeton (un autre compte ne voit ni l'historique, ni le détail par `id`, ni l'export) ; renvoyer l'identifiant `client_uuid` d'un autre compte crée une séance à soi, sans toucher à celle de l'autre ; cinq envois simultanés de la même séance n'en enregistrent qu'une (index unique, et l'erreur de doublon est rattrapée) ; la suppression du compte redemande le mot de passe et ne touche que ce compte ; l'export CSV neutralise les textes qui commencent par `=`, `+`, `-` ou `@` (sinon Excel les exécuterait comme des formules).
+
+Limites connues du prototype, à traiter avant un vrai déploiement :
+- **Pas de limite du nombre d'essais** (connexion, suppression du compte) : un serveur réel devrait ralentir ou bloquer après plusieurs échecs.
+- **HTTP autorisé** pour joindre XAMPP sur le réseau local : le jeton circule en clair. En production : HTTPS obligatoire, et retirer `usesCleartextTraffic` du manifeste Android.
+- **Données déclarées par le téléphone** : le serveur ne peut pas prouver qu'une séance vient vraiment du brassard (`simule=0`). Pour un classement sans triche, il faudrait que le brassard signe ses résumés.
+- **Bluetooth sans appairage sécurisé** (voir `GATT.md` §9).

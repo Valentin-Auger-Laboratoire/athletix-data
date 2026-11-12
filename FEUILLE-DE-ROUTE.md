@@ -10,7 +10,7 @@
 | Partie | État |
 |---|---|
 | **Application Flutter** : comptes, profil, conseils, séances en direct, natation, historique, détail d'une séance, évolution, classement, réglages, mon compte, mode démo | ✅ faite, testée dans le navigateur ([démo en ligne](https://valentin-auger-laboratoire.github.io/athletix-data/)), ⏳ à essayer sur un téléphone Android |
-| **API PHP / MySQL** | ✅ testée sur une vraie base MariaDB : 68 vérifications ([`tests/api/`](tests/api/test_api.sh)) |
+| **API PHP / MySQL** | ✅ testée sur une vraie base MariaDB : 77 vérifications ([`tests/api/`](tests/api/test_api.sh)) |
 | **Tests automatiques sur GitHub** (application, API, firmware) à chaque envoi | ✅ ([`.github/workflows/tests.yml`](.github/workflows/tests.yml)) |
 | Format Bluetooth (GATT), modèles de données, migrations 001 à 004 | ✅ ([`architecture/`](architecture/README.md), [`migrations/`](migrations/)) |
 | Brassard simulé dans l'application (vrais paquets Bluetooth) | ✅ |
@@ -44,7 +44,7 @@
 ### Serveur
 - API PHP / MySQL : comptes, profils, séances (résumé EMG, téléphone, contexte, courbe, tracé), calibrations, historique et détail, classement calculé à partir des mesures, état du brassard, export et suppression du compte.
 - Migrations `001` à `004` (relançables sans erreur).
-- 68 vérifications sur une vraie base, relancées automatiquement par GitHub à chaque envoi.
+- 77 vérifications sur une vraie base, relancées automatiquement par GitHub à chaque envoi.
 
 ### Brassard
 - Choix du matériel et devis (jalon 4 de 1re année), schéma de câblage présumé vérifié sur les fiches techniques, solutions pour les pièces manquantes sans rien commander.
@@ -57,7 +57,7 @@
 - [ ] **Essayer l'application sur un téléphone Android** (Android Studio, voir le README) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
 - [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
 - [ ] **Boîtier** : exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.
-- [ ] Mettre à jour le **diagramme de Gantt** avec la nouvelle date de livraison (Maxence).
+- [x] **Diagramme de Gantt** mis à jour ([`gestion-projet/`](gestion-projet/README.md)) : plan de la 1re année et ce qu'il est devenu, 2e année jusqu'à la soutenance (dates de livraison et de soutenance à confirmer).
 - [ ] **Rapport du jalon 1** (2e année, à rendre le lundi 16 novembre) : ce qui a été fait depuis le jalon 4, pourquoi ces choix, les perspectives (cette feuille de route) et une courte conclusion.
 
 ## 2. À la réception du matériel
@@ -110,5 +110,5 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 |---|---|---|
 | **Valentin** | rapport du jalon 1, boîtier, essai de l'application sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
 | **Othmen** | test du faux brassard avec nRF Connect | connexion Bluetooth réelle avec l'application |
-| **Maxence** | Gantt | mesures, comparaison avec sa simulation |
+| **Maxence** | | mesures, comparaison avec sa simulation |
 | **Équipe** | | séance complète, vidéo de démonstration |

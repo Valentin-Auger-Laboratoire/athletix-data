@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:athletix_data/services/analyse/analyse_seance.dart';
 import 'package:athletix_data/services/analyse/export_pdf.dart';
+import 'package:athletix_data/services/analyse/export_soignants.dart';
 import 'package:athletix_data/services/api.dart';
 import 'package:athletix_data/services/brassard/mesure_emg.dart';
 import 'package:athletix_data/services/demo_api.dart';
@@ -160,6 +161,16 @@ void main() {
 
     test('suppression du compte impossible en démo', () async {
       expect((await DemoApi().supprimerCompte('x'))['status'], 'error');
+    });
+  });
+
+  group('Export CSV : sécurité', () {
+    test('un commentaire qui commence par = n\'est pas exécuté par Excel', () {
+      final csv = ExportSoignants.versCsv([
+        {'debut': '2026-11-10 18:00:00', 'commentaire': '=HYPERLINK("http://exemple.invalid")', 'indice_fatigue_pct': -5},
+      ]);
+      expect(csv, contains("'=HYPERLINK"));
+      expect(csv, contains(';-5;'), reason: 'les nombres négatifs restent des nombres');
     });
   });
 

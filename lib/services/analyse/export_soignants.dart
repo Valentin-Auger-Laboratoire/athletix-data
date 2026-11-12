@@ -36,6 +36,8 @@ class ExportSoignants {
       if (v == null) return '';
       if (v is bool) return v ? 'oui' : 'non';
       var t = v is double ? v.toString().replaceAll('.', ',') : v.toString();
+      // Texte saisi qui commence par = + - @ : Excel l'exécuterait comme une formule (injection CSV)
+      if (v is String && t.isNotEmpty && '=+-@\t\r'.contains(t[0])) t = "'$t";
       if (t.contains(';') || t.contains('"') || t.contains('\n')) t = '"${t.replaceAll('"', '""')}"';
       return t;
     }

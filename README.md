@@ -12,7 +12,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 
 | Membre | Rôle | Tâches principales |
 |---|---|---|
-| **Valentin Auger** | Chef de projet, matériel et application | **Projet** : pilotage, planning (MPM), choix du matériel et devis<br>**Brassard** : schéma électrique, [câblage présumé](hardware/README.md), acquisition et calcul RMS<br>**Application Flutter** : accueil, inscription et vérification par e-mail, connexion, questionnaire de profil et historique, conseils, catégories de sports et séances, classement, mode démo<br>**API PHP / MySQL** : comptes et code de vérification par e-mail, connexion par jeton, profils, performances, classement, état du brassard, base de données (`database.sql`)<br>**Application (suite, novembre 2026)** : connexion Bluetooth réelle, calibration, historique et détail des séances, graphiques et évolution, GPS, pas, météo et ceinture cardio, natation (résumé gardé dans le brassard), accessibilité et mode adapté, carnet PDF pour les soignants, séances envoyées plus tard sans réseau, RGPD (export et suppression du compte)<br>**Firmware final** du brassard (calculs testés sur ordinateur) et protocole de test<br>**Tests** de l'application, de l'API et du firmware, lancés automatiquement par GitHub<br>**Démo en ligne** (GitHub Pages) et captures d'écran<br>**Première piste, capteur cardiaque** : montage photopléthysmographe, code ESP32, simulation Wokwi, schéma d'implantation<br>**Documentation** : README, page électronique, page de la simulation (relecture, corrections et limites) |
+| **Valentin Auger** | Chef de projet, matériel et application | **Projet** : pilotage, planning (MPM), choix du matériel et devis<br>**Brassard** : schéma électrique, [câblage présumé](hardware/README.md), acquisition et calcul RMS<br>**Application Flutter** : accueil, inscription et vérification par e-mail, connexion, questionnaire de profil et historique, conseils, catégories de sports et séances, classement, mode démo<br>**API PHP / MySQL** : comptes et code de vérification par e-mail, connexion par jeton, profils, performances, classement, état du brassard, base de données (`database.sql`)<br>**Application (suite, novembre 2026)** : connexion Bluetooth réelle, calibration, historique et détail des séances, graphiques et évolution, GPS, pas, météo et ceinture cardio, natation (résumé gardé dans le brassard), accessibilité et mode adapté, carnet PDF pour les soignants, séances envoyées plus tard sans réseau, RGPD (export et suppression du compte)<br>**Firmware final** du brassard (calculs testés sur ordinateur) et protocole de test<br>**Gantt mis à jour** (2e année)<br>**Tests** de l'application, de l'API et du firmware, lancés automatiquement par GitHub<br>**Démo en ligne** (GitHub Pages) et captures d'écran<br>**Première piste, capteur cardiaque** : montage photopléthysmographe, code ESP32, simulation Wokwi, schéma d'implantation<br>**Documentation** : README, page électronique, page de la simulation (relecture, corrections et limites) |
 | **Maxence Olivier** | Simulation et planning | **simulation Simulink de la chaîne EMG** ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)) : modèle et résultats ; diagramme de Gantt |
 | **Othmen Al Bydeoi** | Architecture système | architecture Bluetooth Low Energy (GATT), intégration réseau, modèles de données (MCD, MLD, MCT), schémas ; dans le dépôt : la spécification [`architecture/`](architecture/README.md), le brassard simulé et l'écran de séance EMG de l'appli, l'enregistrement des séances et des calibrations (API PHP + [`migrations/`](migrations/001_brassard_emg.sql)), le firmware de test [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md) et les tests |
 
@@ -45,8 +45,8 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 Le matériel, demandé en juin 2026, a été commandé par l'école en novembre : livraison attendue **mi-décembre au plus tôt**. En attendant, **tout ce qui ne dépend pas des pièces est fait**.
 
 - ✅ **L'application est quasiment finie** et testée (dans le navigateur) : séances en direct avec le brassard simulé, natation, graphiques, évolution, téléphone (GPS, pas, météo, cardio), accessibilité, carnets pour les soignants, RGPD, envoi différé sans réseau.
-- ✅ **L'API** est testée sur une vraie base (68 vérifications), le **firmware final** est écrit et ses calculs sont testés sur ordinateur (41 vérifications), et GitHub relance tous les tests à chaque envoi.
-- 🔜 **Encore sans le matériel** : essayer l'application sur un téléphone Android, tester le faux brassard sur un ESP32, ajouter le boîtier, Gantt et rapport du jalon 1.
+- ✅ **L'API** est testée sur une vraie base (77 vérifications), le **firmware final** est écrit et ses calculs sont testés sur ordinateur (41 vérifications), et GitHub relance tous les tests à chaque envoi.
+- 🔜 **Encore sans le matériel** : essayer l'application sur un téléphone Android ([APK](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ajouter le boîtier, rapport du jalon 1. Planning : [diagramme de Gantt](gestion-projet/README.md).
 - ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation, autonomie, boîtier.
 
 Tout le détail (ce qui est fait, ce qui reste, cases à cocher, répartition) : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
@@ -102,6 +102,7 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 | `test/`, `tests/` | Tests de l'application (`flutter test`), de l'API (`tests/api/`) et des calculs du firmware (`tests/firmware/`) |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
 | `tools/` | `build_web.sh` : compile la version web et la copie dans `docs/` |
+| `gestion-projet/` | Diagramme de Gantt (Excel modifiable et images) |
 | `.github/workflows/` | Tests lancés par GitHub à chaque envoi (application, API sur MariaDB, firmware) |
 
 ## Fonctionnalités
@@ -172,6 +173,10 @@ flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=https://mon-ser
 
 ### 4. Application Android (pour le vrai brassard)
 Le Bluetooth du brassard s'utilise depuis l'application Android (le dossier `android/` est déjà prêt, avec les autorisations Bluetooth, localisation pour le GPS et vibration).
+
+**Le plus simple : l'APK déjà compilé.** GitHub compile l'application à chaque envoi et la publie ici : **[athletix-data.apk](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)**. Le télécharger sur le téléphone, l'ouvrir et accepter l'installation depuis cette source. Le mode démo marche sans serveur ; pour un vrai compte, l'adresse de l'API se règle dans la variable du dépôt `API_BASE_URL` (*Settings → Secrets and variables → Actions → Variables*), puis relancer le workflow « APK Android ».
+
+**Pour compiler soi-même :**
 1. Ouvrir le dossier du projet dans **Android Studio** (avec le plugin Flutter), brancher un téléphone Android en mode développeur.
 2. Sur le téléphone, `localhost` désigne le téléphone lui-même : il faut donner l'adresse du PC qui fait tourner XAMPP, sur le même Wi-Fi.
 ```bash
@@ -182,8 +187,8 @@ L'APK se trouve ensuite dans `build/app/outputs/flutter-apk/app-release.apk`. Re
 
 ### 5. Tests
 ```bash
-flutter test                                   # application (67 tests) : Bluetooth, séance, natation, GPS, évolution, exports, envoi différé, démo
-ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 68 vérifications
+flutter test                                   # application (68 tests) : Bluetooth, séance, natation, GPS, évolution, exports, envoi différé, démo
+ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 77 vérifications
 g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg   # calculs du firmware : 41 vérifications
 ```
 Les trois sont relancés par GitHub à chaque envoi ([`.github/workflows/tests.yml`](.github/workflows/tests.yml), badge en haut de page).
@@ -221,7 +226,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
-**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 68 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
+**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 77 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
@@ -288,7 +293,7 @@ The Bluetooth format, data models and network integration are described (in Fren
 2. **PHP backend**: place the repository in `htdocs/athletix-data`. Copy `backend/config.example.php` to `backend/config.local.php` (git-ignored), then fill in the MySQL credentials, the SMTP settings (Gmail address and **app password**) and `allowed_origin`.
 3. **Flutter app**: run `flutter pub get`, then `flutter run -d chrome --web-port 5000`. The API URL lives in `lib/config.dart`, or can be passed with `--dart-define=API_BASE_URL=...`.
 4. **Android app** (real armband): open the project in Android Studio and build with `--dart-define=API_BASE_URL=http://<PC IP>/athletix-data/backend`.
-5. **Tests**: `flutter test` (67 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (68 checks, on a test database only), and the firmware calculation tests in `tests/firmware/` (41 checks). GitHub reruns all three on every push.
+5. **Tests**: `flutter test` (68 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (77 checks, on a test database only), and the firmware calculation tests in `tests/firmware/` (41 checks). GitHub reruns all three on every push.
 6. **GitHub Pages**: `bash tools/build_web.sh` (builds, copies to `docs/`, adds a version number so browsers never keep an old copy), then enable Pages on `main` / `docs`.
 
 ## Personal data (GDPR)
