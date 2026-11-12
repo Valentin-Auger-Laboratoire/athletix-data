@@ -50,7 +50,7 @@ L'objectif : quand les pièces arrivent, il ne reste plus qu'à souder, flasher 
 
 ### Projet
 - [ ] Mettre à jour le **diagramme de Gantt** avec la nouvelle date de livraison (Maxence).
-- [ ] Préparer le prochain point d'avancement : ce qui est fait, ce qui bloque (le matériel), ce qui est prévu.
+- [ ] Rédiger le rapport du jalon 1 (voir §3) : ce qui est fait, ce qui bloque (le matériel), ce qui est prévu.
 
 ## 2. À la réception du matériel
 
@@ -72,7 +72,8 @@ Dans cet ordre, en notant chaque résultat :
 
 - [ ] Vidéo de démonstration du brassard réel avec l'application.
 - [ ] README et captures mis à jour avec les vraies mesures (remplacer « câblage présumé » par le câblage réel, photo du montage sans visage).
-- [ ] Points d'avancement avec l'encadrant du MESPI : à chaque point, montrer ce qui a été coché ici depuis la fois précédente. Le projet est terminé quand le brassard réel fonctionne avec l'application.
+- [ ] **Jalon 1 du MESPI (2e année)** : rapport d'avancement, dans la continuité des jalons 1 à 4 de 1re année. Ce qui a été fait depuis le jalon 4 (devis), pourquoi ces choix, les perspectives (cette feuille de route) et une courte conclusion.
+- [ ] Jalons suivants et soutenance : objectif du semestre impair (S3), un **prototype** qui fonctionne. Le projet est terminé quand le brassard réel marche avec l'application.
 - [ ] Ensuite, si le temps le permet : pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques (fatigue musculaire, température, vibration), voir le [README](README.md#rencontre-avec-une-patiente-atteinte-de-sclérose-en-plaques).
 
 ## Proposition de répartition
