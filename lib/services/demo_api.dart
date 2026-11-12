@@ -32,6 +32,9 @@ class DemoApi implements AthletixApi {
     },
   ];
 
+  /// Séances enregistrées pendant la démo (en mémoire seulement).
+  final List<Map<String, String>> _seances = [];
+
   Future<T> _later<T>(T value) => Future.delayed(const Duration(milliseconds: 300), () => value);
 
   Map<String, dynamic> get _horsDemo =>
@@ -71,6 +74,16 @@ class DemoApi implements AthletixApi {
   Future<Map<String, dynamic>> saveProfil(Map<String, String> profil) {
     _profils.insert(0, {...profil, 'created_at': DateTime.now().toString().substring(0, 19)});
     return _later({"status": "success", "message": "Profil enregistré (démo, en mémoire)"});
+  }
+
+  @override
+  Future<Map<String, dynamic>> saveSeance(Map<String, String> seance) {
+    _seances.add(seance);
+    return _later({
+      "status": "success",
+      "message": "Séance enregistrée (démo, en mémoire)",
+      "session_id": _seances.length,
+    });
   }
 
   @override

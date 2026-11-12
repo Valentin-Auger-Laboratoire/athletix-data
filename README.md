@@ -52,7 +52,7 @@ La chaîne de mesure a été modélisée sous Simulink avant le câblage, à tit
 
 Ce brassard n'est **pas un dispositif médical**. Une activité physique adaptée se fait avec l'accord et le suivi des soignants, et ces données de santé devraient être protégées (consentement, RGPD).
 
-> **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application ci-dessous date de cette étape : elle affiche encore des battements par minute simulés.
+> **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application a d'abord été construite à cette étape ; l'écran de séance affiche maintenant l'intensité musculaire (simulée).
 
 ▶️ **Démo en ligne (sans serveur, données fictives) :** https://valentin-auger-laboratoire.github.io/athletix-data/ puis « Essayer la démo ».
 
@@ -63,22 +63,21 @@ Ce brassard n'est **pas un dispositif médical**. Une activité physique adapté
 ## Architecture
 
 ```
-Capteur PPG (LED IR + phototransistor + LM358)
-        │  signal analogique
-        ▼
-ESP32 (hardware/sketch.ino) ──► port série          ⚠️ pas encore relié à l'appli
-        ┊
-        ┊  (prévu : Bluetooth / Wi-Fi → update_hardware.php)
-        ▼
-Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ──► MySQL (database.sql)
+Muscle ──► MyoWare 2.0 ──► ESP32-S3 ══ Bluetooth LE (GATT) ══► Application Flutter ══ HTTPS ══► API PHP ──► MySQL
+                           (RMS, % MVC, alerte)                 (affichage, résumé)             (backend/)  (database.sql
+                                                                                                            + migrations/)
 ```
+
+Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration réseau sont décrits dans [`architecture/`](architecture/README.md). Pour l'instant, l'application utilise un **brassard simulé** qui produit les vrais paquets Bluetooth ; un firmware de test pour ESP32 est dans [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md).
 
 | Dossier | Contenu |
 |---|---|
 | `lib/` | Application Flutter (écrans, `config.dart`, couche API, mode démo) |
 | `backend/` | API PHP : inscription, vérification par e-mail, connexion, profils, classement, état du brassard |
 | `hardware/` | Câblage présumé du brassard EMG, simulation Simulink, et fichiers du premier capteur cardiaque : code ESP32, simulation Wokwi ([détails](hardware/README.md)) |
+| `architecture/` | Spécification Bluetooth (GATT), MCD / MLD, MCT, intégration réseau |
 | `database.sql` | Structure de la base + 1 compte de démo fictif |
+| `migrations/` | Mises à jour de la base (brassard, calibrations, résultats EMG) |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
 
 ## Fonctionnalités
@@ -93,8 +92,8 @@ Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ─�
 
 ## Ce qui est simulé (à lire avant d'évaluer le projet)
 
-- **Fréquence cardiaque** : pendant une séance, les BPM sont des valeurs **aléatoires** entre 60 et 100, et l'écran l'indique (« BPM simulés – brassard non relié »). Le capteur est lu par l'ESP32, mais il n'est pas encore relié à l'application.
-- **Mesures du brassard pendant une séance** (activité musculaire moyenne, pic de contraction, efforts intenses, relâchement, en % de la contraction maximale) : valeurs d'exemple fixes, marquées « valeur d'exemple ».
+- **Intensité musculaire** : pendant une séance, l'écran affiche le % de la contraction maximale (MVC) venant d'un **brassard simulé** (profil repos / 40 % / 95 % / 50 %). Les paquets suivent le vrai format Bluetooth, mais aucun muscle n'est mesuré, et l'écran l'indique. La séance est ensuite enregistrée comme « données simulées ».
+- **Mesure propre à chaque discipline** (activité musculaire moyenne, pic de contraction, efforts intenses, relâchement, en % de la contraction maximale), affichée sous l'intensité : valeurs d'exemple fixes, marquées « valeur d'exemple ».
 - **« IA »** : les conseils sont produits par des **règles `if/else`**, pas par un modèle entraîné (mention « Conseils générés par règles »). Ils ne remplacent pas un avis médical.
 - **Mode démo** : compte et données **fictifs**, gardés en mémoire et perdus au rechargement de la page.
 - **Simulation Simulink de la chaîne EMG** : c'est une expérimentation. Le signal du muscle est généré, la référence des 100 % (1,85 V) est supposée, et rien n'a encore été mesuré sur le vrai brassard.
@@ -108,6 +107,7 @@ Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ─�
 ### 1. Base de données
 Démarre MySQL dans XAMPP, puis importe `database.sql` (phpMyAdmin → Importer, ou `mysql -u root < database.sql`).
 Cela crée la base `athletix-pro` et un compte de démo fictif : `demo@exemple.com` / `demo1234`.
+Importe ensuite `migrations/001_brassard_emg.sql` (tables du brassard, des calibrations et des résultats de séance).
 
 ### 2. Backend PHP
 1. Copie (ou clone) le dépôt dans `htdocs/athletix-data` pour que l'API réponde sur `http://localhost/athletix-data/backend/`.
@@ -165,22 +165,17 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 The armband is **not a medical device**; adapted physical activity should be supervised by carers, and health data must be protected (consent, GDPR).
 
-**History:** the project first explored a heart-rate sensor (photoplethysmograph on an ESP32); its code and Wokwi simulation are kept in `hardware/`. The app below dates from that stage and still shows simulated heart rates.
+**History:** the project first explored a heart-rate sensor (photoplethysmograph on an ESP32); its code and Wokwi simulation are kept in `hardware/`. The app was first built at that stage; the workout screen now shows (simulated) muscle intensity.
 
 ▶️ **Live demo (no server, fictional data):** https://valentin-auger-laboratoire.github.io/athletix-data/ then “Essayer la démo” (Try the demo).
 
 ## Architecture
 
 ```
-PPG sensor (IR LED + phototransistor + LM358)
-        │  analog signal
-        ▼
-ESP32 (hardware/sketch.ino) ──► serial port         ⚠️ not yet connected to the app
-        ┊
-        ┊  (planned: Bluetooth / Wi-Fi → update_hardware.php)
-        ▼
-Flutter Web app (lib/) ──HTTP POST──► PHP API (backend/) ──► MySQL (database.sql)
+Muscle ──► MyoWare 2.0 ──► ESP32-S3 ══ Bluetooth LE (GATT) ══► Flutter app ══ HTTPS ══► PHP API ──► MySQL
 ```
+
+The Bluetooth format, data models and network integration are described (in French) in [`architecture/`](architecture/README.md). For now the app uses a **simulated armband** that produces the real Bluetooth packets; a test firmware for the ESP32 is in [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md).
 
 ## Features
 
@@ -194,8 +189,8 @@ Flutter Web app (lib/) ──HTTP POST──► PHP API (backend/) ──► MyS
 
 ## What is simulated
 
-- **Heart rate**: during a workout, BPM values are **random** numbers between 60 and 100, and the screen says so. The ESP32 reads the sensor, but it is not yet connected to the app.
-- **Armband readings during a workout** (average muscle activity, peak contraction, intense efforts, relaxation, in % of maximum contraction): fixed example values, labelled as such.
+- **Muscle intensity**: during a workout, the % of maximum contraction comes from a **simulated armband** that follows the real Bluetooth packet format. No muscle is measured, the screen says so, and the session is saved as simulated data.
+- **Discipline-specific reading** (average muscle activity, peak contraction, intense efforts, relaxation, in % of maximum contraction), shown below the intensity: fixed example values, labelled as such.
 - **“AI”**: the advice comes from **if/else rules**, not a trained model. It is not medical advice.
 - **Demo mode**: **fictional** account and data, kept in memory and lost when the page reloads.
 - **Simulink model of the EMG chain**: an experiment. The muscle signal is generated, the 100 % reference (1.85 V) is assumed, and nothing has been measured on the real armband yet.
