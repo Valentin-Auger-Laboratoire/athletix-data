@@ -10,6 +10,8 @@ C'est une **expérimentation** : un modèle d'essai pour choisir les réglages a
 
 ## La chaîne modélisée (version finale)
 
+![Schéma du modèle Simulink : signal EMG brut, capteur MyoWare 2.0, puis conversion de l'ESP32-S3, calcul RMS et alerte](schema-modele.png)
+
 | Étape | Bloc Simulink | Réglage |
 |---|---|---|
 | **Signal du muscle** | bruit blanc limité en bande | échantillonné à 2 kHz (période 0,0005 s), puissance 7,1·10⁻⁹, graine 23341 |
@@ -64,6 +66,8 @@ The chain:
 - **MyoWare 2.0:** ×1000 gain, full-wave rectification, 5 Hz envelope filter.
 - **ESP32-S3:** 500 Hz sampling, 12-bit ADC on 0–3.3 V, 200 ms moving RMS of the envelope, normalisation to % of maximum voluntary contraction (MVC).
 - **Alert:** a high-effort alert with hysteresis (on at 75 %, off below 70 %).
+
+![Simulink model diagram](schema-modele.png)
 
 **Result:** the displayed intensity follows the requested effort (≈ 3 % at rest, 42–45 % for 40 %, 92–108 % for 95 %, 50–55 % for 50 %), and the alert turns on once, from about 2.3 s to 3.3 s, without flickering.
 
