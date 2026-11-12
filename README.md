@@ -151,10 +151,6 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
-![Simulink model of the EMG chain](hardware/simulation-emg/schema-modele.png)
-
-![Simulation result: high-effort alert (top) and intensity in % MVC with the 75 % threshold (bottom)](hardware/simulation-emg/resultat-simulation-corrigee.png)
-
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
 - **Heat sensitivity**: add a skin temperature sensor and a break alert.
