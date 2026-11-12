@@ -54,6 +54,7 @@
 ## 1. Reste à faire sans le matériel
 
 - [x] **Règle de score du classement validée** (12 novembre 2026) : 10 points par séance mesurée + minutes × intensité moyenne ÷ 50, sur 30 jours, séances simulées exclues ([`MCD_MLD.md`](architecture/MCD_MLD.md) §5).
+- [ ] **Héberger l'API sur le PC portable** (Valentin) : XAMPP + ngrok avec le domaine fixe gratuit, puis mettre l'adresse dans la variable `API_BASE_URL` du dépôt et relancer la compilation de l'APK (marche à suivre : README, Installation §5).
 - [ ] **Essayer l'application sur un téléphone Android** (Android Studio, voir le README) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
 - [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
 - [ ] **Boîtier** : exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.

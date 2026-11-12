@@ -51,6 +51,18 @@ Le matériel, demandé en juin 2026, a été commandé par l'école en novembre 
 
 Tout le détail (ce qui est fait, ce qui reste, cases à cocher, répartition) : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
 
+### Planning (diagramme de Gantt)
+
+Fichier modifiable et détails : [`gestion-projet/`](gestion-projet/README.md). Dates à confirmer : livraison du matériel et soutenance.
+
+**2e année** (septembre 2026 → janvier 2027) :
+
+![Gantt de la 2e année : travail fait sans le matériel, attente de la commande, étapes à la réception, fin du projet](gestion-projet/gantt-annee2.png)
+
+**1re année** : le plan d'origine et ce que chaque tâche est devenue :
+
+![Gantt de la 1re année : plan d'origine (tâches A à I) et statut de chaque tâche](gestion-projet/gantt-annee1.png)
+
 ## Rencontre avec une patiente atteinte de sclérose en plaques
 
 > [!NOTE]
@@ -185,7 +197,19 @@ flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.20/athle
 ```
 L'APK se trouve ensuite dans `build/app/outputs/flutter-apk/app-release.apk`. Remplacer `192.168.1.20` par l'adresse IP du PC (`ipconfig` sous Windows). Le `http://` est autorisé pour le prototype ; à passer en HTTPS pour un vrai déploiement.
 
-### 5. Tests
+### 5. Héberger l'API sur son PC (XAMPP + ngrok)
+
+Pas besoin de serveur : l'API tourne sur un PC avec XAMPP, et **ngrok** la rend joignable depuis Internet en HTTPS (le téléphone n'a pas besoin d'être sur le même Wi-Fi). L'application envoie déjà l'en-tête qui évite la page d'avertissement de ngrok.
+1. XAMPP : démarrer Apache et MySQL, dépôt dans `htdocs/athletix-data`, base et migrations importées (étapes 1 et 2).
+2. Installer ngrok (site officiel, compte gratuit), puis une seule fois : `ngrok config add-authtoken <jeton du compte>`.
+3. Lancer le tunnel vers Apache. Le compte gratuit donne **un domaine fixe** (tableau de bord ngrok → *Domains*) : avec lui, l'adresse ne change pas à chaque lancement.
+```bash
+ngrok http --url=mon-domaine.ngrok-free.app 80
+```
+4. L'adresse de l'API devient `https://mon-domaine.ngrok-free.app/athletix-data/backend`. La mettre dans la variable du dépôt `API_BASE_URL` (*Settings → Secrets and variables → Actions → Variables*), puis relancer la compilation (*Actions → APK Android → Run workflow*) et réinstaller l'APK.
+5. Le PC doit rester allumé, avec XAMPP et ngrok lancés, pendant que l'application est utilisée.
+
+### 6. Tests
 ```bash
 flutter test                                   # application (68 tests) : Bluetooth, séance, natation, GPS, évolution, exports, envoi différé, démo
 ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 77 vérifications
@@ -193,7 +217,7 @@ g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp 
 ```
 Les trois sont relancés par GitHub à chaque envoi ([`.github/workflows/tests.yml`](.github/workflows/tests.yml), badge en haut de page).
 
-### 6. Version web pour GitHub Pages
+### 7. Version web pour GitHub Pages
 ```bash
 bash tools/build_web.sh
 ```
@@ -226,7 +250,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
-**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 77 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
+**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 77 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md). Planning (Gantt charts): [`gestion-projet/`](gestion-projet/README.md).
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
@@ -292,9 +316,10 @@ The Bluetooth format, data models and network integration are described (in Fren
 1. **Database**: start MySQL (XAMPP) and import `database.sql`, then the migrations `001` to `004` in `migrations/`, in order. This creates a fictional demo account: `demo@exemple.com` / `demo1234`.
 2. **PHP backend**: place the repository in `htdocs/athletix-data`. Copy `backend/config.example.php` to `backend/config.local.php` (git-ignored), then fill in the MySQL credentials, the SMTP settings (Gmail address and **app password**) and `allowed_origin`.
 3. **Flutter app**: run `flutter pub get`, then `flutter run -d chrome --web-port 5000`. The API URL lives in `lib/config.dart`, or can be passed with `--dart-define=API_BASE_URL=...`.
-4. **Android app** (real armband): open the project in Android Studio and build with `--dart-define=API_BASE_URL=http://<PC IP>/athletix-data/backend`.
-5. **Tests**: `flutter test` (68 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (77 checks, on a test database only), and the firmware calculation tests in `tests/firmware/` (41 checks). GitHub reruns all three on every push.
-6. **GitHub Pages**: `bash tools/build_web.sh` (builds, copies to `docs/`, adds a version number so browsers never keep an old copy), then enable Pages on `main` / `docs`.
+4. **Hosting the API on a PC**: XAMPP plus an **ngrok** tunnel (`ngrok http --url=<free static domain> 80`), then set the repository variable `API_BASE_URL` to `https://<domain>/athletix-data/backend` and rerun the “APK Android” workflow.
+5. **Android app** (real armband): download the ready-made [athletix-data.apk](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk) built by GitHub, or open the project in Android Studio and build with `--dart-define=API_BASE_URL=...`.
+6. **Tests**: `flutter test` (68 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (77 checks, on a test database only), and the firmware calculation tests in `tests/firmware/` (41 checks). GitHub reruns all three on every push.
+7. **GitHub Pages**: `bash tools/build_web.sh` (builds, copies to `docs/`, adds a version number so browsers never keep an old copy), then enable Pages on `main` / `docs`.
 
 ## Personal data (GDPR)
 

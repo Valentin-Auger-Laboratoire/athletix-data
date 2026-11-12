@@ -42,16 +42,54 @@
   <text x="455" y="322" font-size="13" fill="#333">empilé, sortie jack 3,5 mm,</text>
   <text x="455" y="338" font-size="13" fill="#333">interrupteur sur ENV</text>
 
-  <!-- ===== Câble jack : 3 conducteurs ===== -->
-  <path d="M650 280 L 800 280 L 800 265 L 900 265" fill="none" stroke="#e0a100" stroke-width="5"/>
-  <path d="M650 310 L 820 310 L 820 305 L 900 305" fill="none" stroke="#d62d2d" stroke-width="5"/>
-  <path d="M650 340 L 840 340 L 840 345 L 900 345" fill="none" stroke="#222" stroke-width="5"/>
-  <text x="640" y="112" font-size="14" font-weight="bold" fill="#333">câble audio jack 3,5 mm recyclé (pointe / bague / corps, voir ci-dessous)</text>
-  <text x="640" y="130" font-size="12" fill="#555">vieux câble « aux » stéréo, 3 contacts (2 anneaux noirs sur la fiche)</text>
-  <text x="640" y="146" font-size="12" fill="#555">coupé, fils soudés à la carte : pas d'embase à acheter</text>
-  <text x="680" y="273" font-size="13" fill="#9a6f00">pointe : signal</text>
-  <text x="680" y="303" font-size="13" fill="#b01e1e">bague : +3,3 V</text>
-  <text x="680" y="333" font-size="13" fill="#222">corps : GND</text>
+  <!-- ===== Câble jack : prise du Link Shield → fiche mâle → câble → 3 fils soudés sur la carte ===== -->
+  <!-- prise femelle 3,5 mm au bord du Link Shield -->
+  <rect x="636" y="296" width="26" height="28" rx="3" fill="#333"/>
+  <circle cx="649" cy="310" r="6" fill="#111" stroke="#888" stroke-width="1.5"/>
+  <text x="600" y="380" font-size="12" font-weight="bold" fill="#333">prise jack (femelle)</text>
+  <path d="M649 368 L 649 326" stroke="#999" stroke-width="1.2" fill="none"/>
+  <!-- fiche mâle enfoncée dans la prise : pointe, bague, corps -->
+  <rect x="662" y="303" width="12" height="14" rx="5" fill="#e0a100"/>
+  <rect x="674" y="303" width="3" height="14" fill="#111"/>
+  <rect x="677" y="303" width="12" height="14" fill="#d62d2d"/>
+  <rect x="689" y="303" width="3" height="14" fill="#111"/>
+  <rect x="692" y="303" width="16" height="14" fill="#555"/>
+  <rect x="708" y="299" width="30" height="22" rx="4" fill="#9a9a9a" stroke="#666" stroke-width="1.5"/>
+  <text x="676" y="290" font-size="12" font-weight="bold" fill="#333">fiche mâle</text>
+  <!-- câble (gaine grise) puis séparation en 3 fils -->
+  <path d="M738 310 L 790 310" stroke="#8a8a8a" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M790 310 C 815 310, 815 265, 840 265 L 884 265" fill="none" stroke="#e0a100" stroke-width="4"/>
+  <path d="M790 310 L 884 305" fill="none" stroke="#d62d2d" stroke-width="4"/>
+  <path d="M790 310 C 815 310, 815 345, 840 345 L 884 345" fill="none" stroke="#222" stroke-width="4"/>
+  <!-- soudures sur la carte -->
+  <circle cx="886" cy="265" r="6" fill="#c0c0c0" stroke="#666" stroke-width="2"/>
+  <circle cx="886" cy="305" r="6" fill="#c0c0c0" stroke="#666" stroke-width="2"/>
+  <circle cx="886" cy="345" r="6" fill="#c0c0c0" stroke="#666" stroke-width="2"/>
+  <text x="742" y="334" font-size="11" fill="#555">câble</text>
+  <text x="828" y="258" font-size="11" fill="#9a6f00">pointe</text>
+  <text x="828" y="298" font-size="11" fill="#b01e1e">bague</text>
+  <text x="828" y="363" font-size="11" fill="#222">corps</text>
+  <text x="848" y="384" font-size="11" fill="#555">soudures</text>
+  <path d="M870 378 L 884 352" stroke="#999" stroke-width="1.2" fill="none"/>
+
+  <!-- ===== Zoom : la fiche jack et ses 3 contacts ===== -->
+  <rect x="430" y="398" width="450" height="130" rx="10" fill="#fafafa" stroke="#bbb" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="446" y="420" font-size="13" font-weight="bold" fill="#333">Zoom : fiche du câble audio recyclé (3,5 mm, 3 contacts)</text>
+  <rect x="452" y="445" width="34" height="26" rx="12" fill="#e0a100"/>
+  <rect x="486" y="445" width="7" height="26" fill="#111"/>
+  <rect x="493" y="445" width="34" height="26" fill="#d62d2d"/>
+  <rect x="527" y="445" width="7" height="26" fill="#111"/>
+  <rect x="534" y="445" width="48" height="26" fill="#555"/>
+  <rect x="582" y="438" width="70" height="40" rx="6" fill="#9a9a9a" stroke="#666" stroke-width="1.5"/>
+  <path d="M652 458 L 690 458" stroke="#8a8a8a" stroke-width="12" stroke-linecap="round"/>
+  <text x="456" y="492" font-size="11" fill="#9a6f00">pointe</text>
+  <text x="496" y="492" font-size="11" fill="#b01e1e">bague</text>
+  <text x="540" y="492" font-size="11" fill="#222">corps</text>
+  <text x="700" y="447" font-size="12" fill="#9a6f00">pointe = signal → A0</text>
+  <text x="700" y="465" font-size="12" fill="#b01e1e">bague = +3,3 V → 3V3</text>
+  <text x="700" y="483" font-size="12" fill="#222">corps = masse → GND</text>
+  <text x="446" y="508" font-size="11" fill="#555">Vieux câble « aux » stéréo : 2 anneaux noirs = 3 contacts (pas de câble à micro).</text>
+  <text x="446" y="521" font-size="11" fill="#555">Autre bout coupé : repérer chaque fil au multimètre, souder sur la carte, gaine thermo.</text>
 
   <!-- ===== SparkFun Thing Plus ESP32-S3 ===== -->
   <rect x="900" y="150" width="270" height="300" rx="14" fill="#e6f0ea" stroke="#2f7d4f" stroke-width="3"/>
