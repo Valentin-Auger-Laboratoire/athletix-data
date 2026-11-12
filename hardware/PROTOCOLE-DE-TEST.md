@@ -94,7 +94,11 @@ Le prototype n'est **pas étanche** : ce test se fait à sec, en éloignant le t
 
 ## Comparer à la simulation
 
-Remplir après l'étape 5, et l'ajouter au README :
+⚠️ Électrodes sur la peau et brassard relié en USB : **PC portable débranché du secteur** (ou isolateur USB).
+
+**Automatique** : enregistrer une séance par le port USB pendant qu'on suit deux fois le cycle d'effort de la simulation, puis lancer `python mesures/comparer_simulation.py essai.txt`. Le script produit la figure (mesure et modèle superposés) et vérifie tous les critères ci-dessous : marche à suivre dans [`mesures/`](../mesures/README.md).
+
+Puis reporter les valeurs ici, et les ajouter au README :
 
 | Phase | Simulation | Mesure réelle |
 |---|---|---|

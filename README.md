@@ -47,13 +47,13 @@ Le matériel, demandé en juin 2026, a été commandé par l'école en novembre 
 - ✅ **L'application est quasiment finie** et testée (dans le navigateur) : séances en direct avec le brassard simulé, natation, graphiques, évolution, téléphone (GPS, pas, météo, cardio), accessibilité, carnets pour les soignants, RGPD, envoi différé sans réseau.
 - ✅ **L'API** est testée sur une vraie base (77 vérifications), le **firmware final** est écrit et ses calculs sont testés sur ordinateur (41 vérifications), et GitHub relance tous les tests à chaque envoi.
 - 🔜 **Encore sans le matériel** : essayer l'application sur un téléphone Android ([APK](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ajouter le boîtier, rapport du jalon 1. Planning : [diagramme de Gantt](gestion-projet/README.md).
-- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation, autonomie, boîtier.
+- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation ([automatique](mesures/README.md)), autonomie, boîtier.
 
 Tout le détail (ce qui est fait, ce qui reste, cases à cocher, répartition) : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
 
 ### Planning (diagramme de Gantt)
 
-Fichier modifiable et détails : [`gestion-projet/`](gestion-projet/README.md). Dates à confirmer : livraison du matériel et soutenance.
+Fichier modifiable et détails : [`gestion-projet/`](gestion-projet/README.md). Dates à confirmer : livraison du matériel et soutenance. Voir aussi l'**[analyse des risques](gestion-projet/analyse-des-risques.md)** (batterie, électrodes, eau, données de santé, projet).
 
 **2e année** (septembre 2026 → janvier 2027) :
 
@@ -82,6 +82,10 @@ Ce brassard n'est **pas un dispositif médical**. Une activité physique adapté
 > **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application a d'abord été construite à cette étape ; l'écran de séance affiche maintenant l'intensité musculaire (simulée).
 
 ▶️ **Démo en ligne (sans serveur, données fictives) :** https://valentin-auger-laboratoire.github.io/athletix-data/ puis « Essayer la démo ».
+
+**La démo en vidéo** (70 s, brassard simulé) : séance en direct, ressenti, détail d'une course avec son parcours, évolution, natation. Version MP4 pour une présentation : [`media/demo-application.mp4`](media/demo-application.mp4).
+
+<img src="media/demo-application.gif" alt="Démonstration de l'application : séance en direct, détail d'une séance, évolution et natation" width="270">
 
 | Accueil et objectif de la semaine | Séance en direct (brassard simulé) | Détail : parcours et intensité |
 |---|---|---|
@@ -114,7 +118,9 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 | `test/`, `tests/` | Tests de l'application (`flutter test`), de l'API (`tests/api/`) et des calculs du firmware (`tests/firmware/`) |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
 | `tools/` | `build_web.sh` : compile la version web et la copie dans `docs/` |
-| `gestion-projet/` | Diagramme de Gantt (Excel modifiable et images) |
+| `media/` | Vidéo de démonstration de l'application (MP4 et GIF) |
+| `gestion-projet/` | Diagramme de Gantt (Excel modifiable et images) et [analyse des risques](gestion-projet/analyse-des-risques.md) |
+| `mesures/` | Outils pour comparer le vrai brassard à la simulation (enregistrement par USB, figure et rapport automatiques) |
 | `.github/workflows/` | Tests lancés par GitHub à chaque envoi (application, API sur MariaDB, firmware) |
 
 ## Fonctionnalités
@@ -250,7 +256,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
-**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 77 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md). Planning (Gantt charts): [`gestion-projet/`](gestion-projet/README.md).
+**Project status.** The hardware, requested in June 2026, was ordered by the school in November (expected mid-December at the earliest). Everything that does not depend on the parts is done: the **app is nearly finished** and tested in the browser, the API passes 77 checks on a real database, the final firmware is written and its calculations pass 41 checks on a computer, and GitHub reruns all tests on every push. The leaderboard rule was validated on 12 November 2026. Next: try the app on an Android phone (the APK is built by GitHub), then follow the test protocol when the hardware arrives. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md). Planning (Gantt charts) and risk analysis: [`gestion-projet/`](gestion-projet/README.md). Demo video: [`media/demo-application.mp4`](media/demo-application.mp4).
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.

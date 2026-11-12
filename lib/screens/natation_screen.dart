@@ -130,7 +130,10 @@ class _NatationScreenState extends State<NatationScreen> {
       if (reponse['status'] == 'success') {
         await b.effacerHorsLigne(); // seulement une fois enregistrée : rien n'est perdu
         Api.seancesModifiees.value++;
-        final liste = await Api.current.getSeances(limite: 1);
+        // Par son numéro, pas « la plus récente » : une longue séance (natation) commence avant une
+        // séance courte finie juste avant, et ne serait pas la première de la liste.
+        final id = (reponse['session_id'] as num?)?.toInt() ?? -1;
+        final liste = await Api.current.getSeance(id);
         final seances = liste['seances'] as List? ?? [];
         if (!mounted) return;
         messenger.showSnackBar(const SnackBar(content: Text('Séance récupérée et enregistrée'), backgroundColor: Colors.green));

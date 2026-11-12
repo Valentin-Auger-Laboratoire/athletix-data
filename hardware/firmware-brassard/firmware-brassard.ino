@@ -29,6 +29,11 @@ const uint8_t ADRESSE_JAUGE = 0x36;    // MAX17048, jauge de batterie de la Thin
 const uint16_t SATURATION_MV = 3250;   // convertisseur quasiment au maximum (3,3 V)
 const uint8_t BATTERIE_FAIBLE = 10;    // en %
 
+// Journal des mesures sur le port USB (CSV, 50 lignes/s pendant une mesure) pour comparer
+// le brassard à la simulation : mesures/capturer.py puis mesures/comparer_simulation.py.
+// Une ligne : "M,ms,mV brut,RMS mV,intensité %,alerte". Les autres messages ne commencent pas par "M,".
+const bool JOURNAL_SERIE = true;
+
 // ---- UUID : identiques à lib/services/brassard/gatt_athletix.dart ----
 #define UUID_SERVICE        "abad0000-b097-4a54-8315-c2971fc04ce6"
 #define UUID_MESURE         "abad0001-b097-4a54-8315-c2971fc04ce6"
@@ -316,6 +321,9 @@ void loop() {
         Serial.println("Enregistrement sans connexion terminé (5 min de repos)");
         changerEtat(ETAT_REPOS);  // économise la batterie en attendant la lecture
       }
+    }
+    if (JOURNAL_SERIE && etat == ETAT_MESURE) {
+      Serial.printf("M,%lu,%u,%u,%u,%u\n", (unsigned long)maintenant, mv, rms, intensite, enAlerte ? 1 : 0);
     }
     if (connecte) {
       uint8_t paquet[8];

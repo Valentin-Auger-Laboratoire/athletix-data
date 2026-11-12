@@ -46,6 +46,11 @@
 - Migrations `001` à `004` (relançables sans erreur).
 - 77 vérifications sur une vraie base, relancées automatiquement par GitHub à chaque envoi.
 
+### Préparation des essais et gestion de projet
+- **Comparaison automatique avec la simulation** ([`mesures/`](mesures/README.md)) : le firmware écrit ses mesures sur le port USB, un script les enregistre, puis un autre les compare au modèle de la simulation (figure et rapport avec les critères du protocole). Testé sur des données simulées.
+- **Analyse des risques** ([`gestion-projet/analyse-des-risques.md`](gestion-projet/analyse-des-risques.md)) : gravité × apparition × détection, et actions prioritaires (pas d'essai dans l'eau sans boîtier étanche, PC portable débranché du secteur pendant une capture USB, polarité de la batterie).
+- **Diagramme de Gantt** mis à jour et **vidéo de démonstration** de l'application ([`media/`](media/demo-application.mp4)).
+
 ### Brassard
 - Choix du matériel et devis (jalon 4 de 1re année), schéma de câblage présumé vérifié sur les fiches techniques, solutions pour les pièces manquantes sans rien commander.
 - Format Bluetooth complet ([`GATT.md`](architecture/GATT.md)), firmware de test et **firmware final 1.1** (RMS, % MVC, alerte, calibration, saturation, batterie, natation), calculs testés sur ordinateur.
@@ -72,7 +77,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 - [ ] **MyoWare sans électrodes** : alimentation 3,3 V, tension de sortie au multimètre (proche de 0 V au repos).
 - [ ] **MyoWare avec électrodes** sur le biceps : la tension monte quand on contracte.
 - [ ] **Firmware final**, puis **calibration** (contraction maximale).
-- [ ] **Comparer à la simulation** : au repos ≈ quelques %, effort moyen ≈ 40 à 50 %, effort fort > 75 % avec l'alerte qui s'allume une seule fois. Ajuster les seuils si besoin.
+- [ ] **Comparer à la simulation** (script prêt : [`mesures/`](mesures/README.md), enregistrement par USB puis figure et rapport automatiques) : au repos ≈ quelques %, effort moyen ≈ 40 à 50 %, effort fort > 75 % avec l'alerte qui s'allume une seule fois. Ajuster les seuils si besoin.
 - [ ] **Séance complète** avec l'application : connexion Bluetooth, mesure, résumé enregistré en base.
 - [ ] **Séance sans connexion** (natation, mais **hors de l'eau**) : démarrer, éloigner le téléphone, revenir, récupérer le résumé.
 - [ ] **Autonomie** : brassard allumé en continu, noter la durée (objectif : plus de 2 h).

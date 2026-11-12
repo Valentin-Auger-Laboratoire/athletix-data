@@ -226,7 +226,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       ));
       Api.seancesModifiees.value++;
       // Ouvre le détail de la séance qui vient d'être enregistrée
-      final liste = await Api.current.getSeances(limite: 1);
+      // Par son numéro, pas « la plus récente » : une longue séance (natation) commence avant une
+      // séance courte finie juste avant, et ne serait pas la première de la liste.
+      final id = (reponse['session_id'] as num?)?.toInt() ?? -1;
+      final liste = await Api.current.getSeance(id);
       final seances = liste['seances'] as List? ?? [];
       if (!mounted) return;
       if (seances.isNotEmpty) {

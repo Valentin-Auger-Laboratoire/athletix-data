@@ -143,6 +143,18 @@ void main() {
       expect(b['deja_enregistree'], isTrue);
     });
 
+    test('une longue séance enregistrée après une courte se retrouve par son numéro', () async {
+      final api = DemoApi();
+      await api.saveSeance(seanceMinimale(FileEnvoi.nouvelUuid())..['duree_s'] = '60');
+      final longue = await api.saveSeance({...seanceMinimale(FileEnvoi.nouvelUuid()), 'duree_s': '3000', 'discipline': 'Natation'});
+      // « la plus récente » (par début) n'est pas la natation, qui a commencé avant…
+      final premiere = ((await api.getSeances(limite: 1))['seances'] as List).single as Map;
+      expect(premiere['discipline'], isNot('Natation'));
+      // … mais son numéro la retrouve
+      final detail = ((await api.getSeance(longue['session_id'] as int))['seances'] as List).single as Map;
+      expect(detail['discipline'], 'Natation');
+    });
+
     test('la liste n\'a pas le tracé, le détail oui', () async {
       final api = DemoApi();
       final liste = (await api.getSeances())['seances'] as List;
