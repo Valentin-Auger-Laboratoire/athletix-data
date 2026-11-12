@@ -47,8 +47,11 @@
 
 Link Shield empilé sur le capteur, **interrupteur du Link Shield sur ENV et alimentation sur ON**, câble jack relié à la carte (pointe → A0, bague → 3V3, corps → GND).
 
+Préparation du câble (pas d'embase à acheter) : couper un câble audio stéréo 3,5 mm à 3 contacts, repérer les fils au multimètre (continuité avec la pointe, la bague et le corps de la fiche restante), étiqueter, souder, gainer.
+
 | # | Vérification | Attendu | Mesuré | OK ? |
 |---|---|---|---|---|
+| 4.0 | Câble coupé : chaque fil repéré au multimètre, aucun court-circuit entre deux fils | 3 fils distincts | | |
 | 4.1 | Tension entre bague et corps du jack | ≈ 3,3 V | | |
 | 4.2 | Sans électrodes : tension pointe ↔ corps | proche de 0 V | | |
 | 4.3 | Électrodes posées (2 sur le biceps dans l'axe du muscle, référence au coude), bras relâché | faible, stable (quelques dizaines de mV) | | |

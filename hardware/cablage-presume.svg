@@ -42,8 +42,8 @@
   <path d="M650 280 L 800 280 L 800 265 L 900 265" fill="none" stroke="#e0a100" stroke-width="5"/>
   <path d="M650 310 L 820 310 L 820 305 L 900 305" fill="none" stroke="#d62d2d" stroke-width="5"/>
   <path d="M650 340 L 840 340 L 840 345 L 900 345" fill="none" stroke="#222" stroke-width="5"/>
-  <text x="690" y="236" font-size="14" font-weight="bold" fill="#333">câble jack-jack 3,5 mm</text>
-  <text x="690" y="254" font-size="13" fill="#555">+ embase (à commander)</text>
+  <text x="690" y="236" font-size="14" font-weight="bold" fill="#333">câble audio jack 3,5 mm</text>
+  <text x="690" y="254" font-size="13" fill="#555">(coupé, fils soudés à la carte)</text>
   <text x="680" y="273" font-size="13" fill="#9a6f00">pointe : signal</text>
   <text x="680" y="303" font-size="13" fill="#b01e1e">bague : +3,3 V</text>
   <text x="680" y="333" font-size="13" fill="#222">corps : GND</text>

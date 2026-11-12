@@ -24,13 +24,15 @@ Le matériel n'est pas encore reçu. Ce schéma montre comment les composants co
 
 Fichiers : `cablage-presume.svg` (source du schéma) et `cablage-presume.png` (image).
 
-### À compléter dans la commande
+### Pièces qui manquent au devis : comment faire sans commander
 
-| Pièce | Pourquoi |
+La commande est passée. Rien à racheter : tout se fait avec le matériel déjà commandé (kit de soudure WTS100, fils FC25, gaine thermo) et des objets courants.
+
+| Ce qui manque | Solution sans commande |
 |---|---|
-| **Câble jack 3,5 mm mâle-mâle, 3 contacts (TRS)** | le Link Shield sort par un jack, câble vendu à part (absent du devis) |
-| **Embase jack 3,5 mm TRS à souder** (ou couper un câble jack et souder les 3 fils) | relier le câble jack aux broches A0 / 3V3 / GND de la carte |
-| **Électrodes de rechange** (SEN-12969) | à usage unique : un paquet ne suffit pas pour tous les essais |
+| **Câble jack 3,5 mm** (le Link Shield sort par un jack, câble vendu à part) | Prendre un **vieux câble audio « aux » stéréo** (voiture, enceinte, ancien casque), 3,5 mm mâle-mâle. Vérifier qu'il a **3 contacts** : la fiche montre **2 anneaux noirs** (pointe / bague / corps). Une fiche à 3 anneaux noirs (câble de casque avec micro, 4 contacts) est à éviter. |
+| **Embase jack** pour relier le câble à la carte | Pas besoin : **couper le câble** à un bout, dénuder les 3 fils, repérer au multimètre (mode continuité) lequel va à la pointe, à la bague et au corps de la fiche restante, puis les **souder** sur A0 (pointe), 3V3 (bague) et GND (corps). Gaine thermo sur chaque soudure. |
+| **Électrodes de rechange** | Le MyoWare utilise des **électrodes à pression standard**, les mêmes que pour un ECG : celles d'une pharmacie ou de la salle de TP de l'école conviennent. En attendant, une électrode peut resservir quelques fois si on la recolle sur son film protecteur après usage (le gel sèche à l'air). Peau propre et sèche avant de les poser. |
 
 ### Programmes et tests
 

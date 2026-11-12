@@ -46,7 +46,7 @@ L'objectif : quand les pièces arrivent, il ne reste plus qu'à souder, flasher 
 - [ ] **Tester le faux brassard** ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) : un **ESP32 classique suffit** (celui de la première piste par exemple). Le flasher et vérifier avec l'appli gratuite nRF Connect que les paquets arrivent, puis avec l'application quand `BrassardBle` est prêt.
 - [x] **Firmware final** (fait : [`hardware/firmware-brassard/`](hardware/firmware-brassard/README.md), calculs testés sur ordinateur, à flasher) : partir du faux brassard, `SOURCE_SIMULEE 0`, broche du MyoWare, et ajouter le niveau de batterie dans le service Bluetooth (remplace `hardware_status`).
 - [x] **Vérifier les fiches techniques** (fait : A0 = GPIO10, jauge MAX17048 en I2C, Link Shield sur ENV, jack pointe / bague / corps ; à confirmer sur la carte reçue) (SparkFun Thing Plus ESP32-S3, MyoWare 2.0, Link Shield) et corriger le [câblage présumé](hardware/README.md) si besoin : broche analogique exacte, alimentation, sortie du Link Shield.
-- [ ] **Compléter la commande si possible** (liste dans [`hardware/README.md`](hardware/README.md#à-compléter-dans-la-commande)) : le Link Shield sort le signal par un jack 3,5 mm (câble jack et petite embase à prévoir), les électrodes sont à usage unique (prévoir un paquet de rechange). Le câble Qwiic ne sert pas pour le signal.
+- [x] **Pièces manquantes au devis** : pas besoin de commander. Câble audio stéréo 3,5 mm recyclé, coupé et soudé à la carte (pas d'embase), électrodes ECG à pression standard (pharmacie ou salle de TP). Détail dans [`hardware/README.md`](hardware/README.md#pièces-qui-manquent-au-devis--comment-faire-sans-commander).
 - [ ] **Boîtier** : le modèle Fusion 360 est fait (Valentin). Reste à l'exporter en STEP et STL, avec quelques captures, et à l'ajouter au dépôt. Prévoir de vérifier les cotes une fois les pièces en main.
 - [x] **Protocole de test écrit** ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) (voir §2) avec les résultats attendus, pour comparer la mesure réelle à la simulation.
 
@@ -80,7 +80,7 @@ Dans cet ordre, en notant chaque résultat :
 
 ## 4. Compléter l'application : le téléphone en plus du brassard
 
-L'application n'est pas qu'un écran pour le brassard : le **téléphone** apporte ses propres mesures, et les deux ensemble doivent donner un suivi complet. Ces idées viennent des jalons de 1re année (« dashboard performances : historique, graphiques de progression, records personnels », « score de fatigue », « GPS ou accéléromètre », « interface médecin / kinésithérapeute ») et de la rencontre avec la patiente atteinte de sclérose en plaques. **Tout ceci peut se faire sans le matériel.**
+L'application n'est pas qu'un écran pour le brassard : le **téléphone** apporte ses propres mesures, et les deux ensemble doivent donner un suivi complet. Ces idées sont celles de Valentin (historique, graphiques de progression, records personnels, score de fatigue, GPS et accéléromètre du téléphone, export pour les soignants) et celles de la rencontre avec la patiente atteinte de sclérose en plaques. **Tout ceci peut se faire sans le matériel.**
 
 ### Ce que le téléphone peut mesurer
 - [ ] **GPS** pour la course, le vélo, le ski : distance, vitesse, allure, dénivelé, tracé du parcours.

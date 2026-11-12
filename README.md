@@ -43,7 +43,7 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 Le matériel, demandé en juin 2026, vient d'être commandé par l'école : livraison attendue **dans un mois au plus tôt**. En attendant, tout ce qui ne dépend pas des pièces est préparé.
 
 - ✅ **Fait** : application et démo en ligne, API PHP / MySQL testée sur une vraie base, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé vérifié sur les fiches SparkFun, boîtier modélisé sous Fusion 360 (fichiers à ajouter). Et depuis le 12 novembre : connexion Bluetooth réelle, écrans Brassard, Calibration, Mes séances et consentement, classement calculé à partir des mesures, projet Android, firmware final, protocole de test.
-- 🔜 **Encore sans le matériel** : tester le faux brassard sur un ESP32, valider la règle de score, compléter la commande (câble jack, embase, électrodes), ajouter le boîtier, Gantt et rapport du jalon 1.
+- 🔜 **Encore sans le matériel** : tester le faux brassard sur un ESP32, valider la règle de score, préparer le câble jack (câble audio recyclé, sans rien commander), ajouter le boîtier, Gantt et rapport du jalon 1.
 - ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation, autonomie, boîtier.
 
 Détail, cases à cocher et répartition proposée : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
