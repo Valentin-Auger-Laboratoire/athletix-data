@@ -59,7 +59,11 @@
   <text x="920" y="392" font-size="13" fill="#333">500 mesures/s, RMS 200 ms,</text>
   <text x="920" y="410" font-size="13" fill="#333">alerte 75 % / 70 %</text>
   <rect x="1150" y="395" width="20" height="40" fill="#555"/><text x="1182" y="412" font-size="13" fill="#555">prise</text><text x="1182" y="428" font-size="13" fill="#555">batterie JST</text>
-  <rect x="1060" y="440" width="50" height="14" rx="4" fill="#777"/><text x="985" y="485" font-size="13" fill="#555">USB-C</text>
+  <rect x="1060" y="440" width="50" height="14" rx="4" fill="#777"/>
+  <line x1="1085" y1="454" x2="1085" y2="488" stroke="#777" stroke-width="5"/>
+  <rect x="955" y="488" width="200" height="56" rx="10" fill="#f4f4f6" stroke="#777" stroke-width="2"/>
+  <text x="975" y="511" font-size="14" font-weight="bold" fill="#333">câble USB-C</text>
+  <text x="975" y="531" font-size="12" fill="#555">recharge 5 V, programmation</text>
 
   <!-- ===== Bluetooth vers téléphone ===== -->
   <path d="M1170 230 Q 1210 200 1250 230" fill="none" stroke="#2f6fd6" stroke-width="3"/>
@@ -87,6 +91,15 @@
   <path d="M650 640 L 1172 640 L 1172 435" stroke="#222" stroke-width="5" fill="none"/>
   <text x="900" y="580" font-size="13" fill="#b01e1e">fil rouge FC25R + gaine thermo</text>
   <text x="900" y="665" font-size="13" fill="#222">fil noir FC25N + gaine thermo</text>
+
+  <!-- ===== Légende ===== -->
+  <rect x="40" y="572" width="340" height="112" rx="10" fill="#fafafa" stroke="#ccc" stroke-width="1.5"/>
+  <text x="56" y="594" font-size="14" font-weight="bold" fill="#333">Légende</text>
+  <line x1="56" y1="612" x2="96" y2="612" stroke="#e0a100" stroke-width="5"/><text x="106" y="617" font-size="13" fill="#333">signal analogique (enveloppe)</text>
+  <line x1="56" y1="632" x2="96" y2="632" stroke="#d62d2d" stroke-width="5"/><text x="106" y="637" font-size="13" fill="#333">+3,3 V capteur / + batterie</text>
+  <line x1="56" y1="652" x2="96" y2="652" stroke="#222" stroke-width="5"/><text x="106" y="657" font-size="13" fill="#333">masse (GND)</text>
+  <line x1="220" y1="652" x2="260" y2="652" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/><text x="268" y="657" font-size="13" fill="#333">électrodes</text>
+  <path d="M56 676 Q 76 664 96 676" fill="none" stroke="#2f6fd6" stroke-width="3"/><text x="106" y="678" font-size="13" fill="#333">Bluetooth LE (sans fil)</text>
 
   <!-- ===== Notes ===== -->
   <text x="40" y="712" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Brochage exact à vérifier sur les fiches SparkFun.</text>

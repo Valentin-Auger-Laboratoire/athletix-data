@@ -77,7 +77,7 @@ Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ─�
 |---|---|
 | `lib/` | Application Flutter (écrans, `config.dart`, couche API, mode démo) |
 | `backend/` | API PHP : inscription, vérification par e-mail, connexion, profils, classement, état du brassard |
-| `hardware/` | Code ESP32, simulation Wokwi, script du schéma de montage ([détails](hardware/README.md)) |
+| `hardware/` | Câblage présumé du brassard EMG, simulation Simulink, et fichiers du premier capteur cardiaque : code ESP32, simulation Wokwi ([détails](hardware/README.md)) |
 | `database.sql` | Structure de la base + 1 compte de démo fictif |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
 
