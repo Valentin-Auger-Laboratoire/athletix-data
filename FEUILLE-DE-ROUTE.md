@@ -50,7 +50,7 @@ L'objectif : quand les pièces arrivent, il ne reste plus qu'à souder, flasher 
 
 ### Projet
 - [ ] Mettre à jour le **diagramme de Gantt** avec la nouvelle date de livraison (Maxence).
-- [ ] Préparer ce qui ne dépend pas du matériel pour le rendu final : plan du rapport, diapositives, captures de l'application.
+- [ ] Préparer le prochain point d'avancement : ce qui est fait, ce qui bloque (le matériel), ce qui est prévu.
 
 ## 2. À la réception du matériel
 
@@ -72,7 +72,7 @@ Dans cet ordre, en notant chaque résultat :
 
 - [ ] Vidéo de démonstration du brassard réel avec l'application.
 - [ ] README et captures mis à jour avec les vraies mesures (remplacer « câblage présumé » par le câblage réel, photo du montage sans visage).
-- [ ] Rapport final et soutenance du MESPI.
+- [ ] Points d'avancement avec l'encadrant du MESPI : à chaque point, montrer ce qui a été coché ici depuis la fois précédente. Le projet est terminé quand le brassard réel fonctionne avec l'application.
 - [ ] Ensuite, si le temps le permet : pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques (fatigue musculaire, température, vibration), voir le [README](README.md#rencontre-avec-une-patiente-atteinte-de-sclérose-en-plaques).
 
 ## Proposition de répartition
