@@ -82,15 +82,15 @@ Application Flutter Web (lib/) ──HTTP POST──► API PHP (backend/) ─�
 - Inscription avec **code de vérification envoyé par e-mail** (6 chiffres, valable 10 minutes, 5 essais maximum, bouton « Renvoyer le code »).
 - Connexion avec mot de passe haché (`password_hash`) et **jeton de session** ; un compte non vérifié ne peut pas se connecter.
 - 5 familles de sports (environ 25 disciplines), avec un écran de séance par discipline.
-- Questionnaire de profil (objectif, niveau, taille, poids, fréquence, blessures, antécédents cardio, sommeil, stress) avec **historique** des profils.
-- Conseils personnalisés calculés à partir du profil.
+- Questionnaire de profil (objectif, niveau, taille, poids, fréquence, blessures, antécédents cardio, sommeil, stress) avec **historique** des profils ; à la mise à jour, il reprend les réponses précédentes.
+- Conseils calculés à partir de tout le profil : rythme selon le niveau et la fréquence déclarée, objectif, taille et poids (IMC, protéines), blessures, stress, sommeil, antécédents.
 - Classement des athlètes (score total de leurs performances).
 - **Mode démo** utilisable sans backend.
 
 ## Ce qui est simulé (à lire avant d'évaluer le projet)
 
 - **Fréquence cardiaque** : pendant une séance, les BPM sont des valeurs **aléatoires** entre 60 et 100, et l'écran l'indique (« BPM simulés – brassard non relié »). Le capteur est lu par l'ESP32, mais il n'est pas encore relié à l'application.
-- **Vitesse, répétitions, stabilité…** : valeurs d'exemple fixes, marquées « valeur d'exemple ».
+- **Mesures du brassard pendant une séance** (activité musculaire moyenne, pic de contraction, efforts intenses, relâchement, en % de la contraction maximale) : valeurs d'exemple fixes, marquées « valeur d'exemple ».
 - **« IA »** : les conseils sont produits par des **règles `if/else`**, pas par un modèle entraîné (mention « Conseils générés par règles »). Ils ne remplacent pas un avis médical.
 - **Mode démo** : compte et données **fictifs**, gardés en mémoire et perdus au rechargement de la page.
 - **Simulation Simulink de la chaîne EMG** : c'est une expérimentation. Le signal du muscle est généré, la référence des 100 % (1,85 V) est supposée, et rien n'a encore été mesuré sur le vrai brassard.
@@ -183,15 +183,15 @@ Flutter Web app (lib/) ──HTTP POST──► PHP API (backend/) ──► MyS
 - Sign-up with an **e-mailed verification code** (6 digits, valid for 10 minutes, at most 5 attempts, resend button).
 - Login with hashed passwords (`password_hash`) and a **session token**; unverified accounts cannot log in.
 - 5 sport families (about 25 disciplines), each with a workout screen.
-- Profile questionnaire (goal, level, height, weight, frequency, injuries, cardiac history, sleep, stress) with a **history** of profiles.
-- Personalised advice computed from the profile.
+- Profile questionnaire (goal, level, height, weight, frequency, injuries, cardiac history, sleep, stress) with a **history** of profiles; when updating, it starts from the previous answers.
+- Advice computed from the whole profile: pace from level and declared frequency, goal, height and weight (BMI, protein), injuries, stress, sleep, history.
 - Athlete leaderboard (total score of recorded performances).
 - **Demo mode** that works without any backend.
 
 ## What is simulated
 
 - **Heart rate**: during a workout, BPM values are **random** numbers between 60 and 100, and the screen says so. The ESP32 reads the sensor, but it is not yet connected to the app.
-- **Speed, reps, stability…**: fixed example values, labelled as such.
+- **Armband readings during a workout** (average muscle activity, peak contraction, intense efforts, relaxation, in % of maximum contraction): fixed example values, labelled as such.
 - **“AI”**: the advice comes from **if/else rules**, not a trained model. It is not medical advice.
 - **Demo mode**: **fictional** account and data, kept in memory and lost when the page reloads.
 - **Simulink model of the EMG chain**: an experiment. The muscle signal is generated, the 100 % reference (1.85 V) is assumed, and nothing has been measured on the real armband yet.

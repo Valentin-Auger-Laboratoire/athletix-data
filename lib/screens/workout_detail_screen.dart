@@ -4,13 +4,14 @@ import 'package:athletix_data/services/sensor_service.dart';
 class WorkoutDetailScreen extends StatefulWidget {
   final String categoryName;
   final Color categoryColor;
-  final String engineType;
+  /// Mesure EMG affichée pendant la séance (voir [_buildMesure]).
+  final String mesure;
 
   const WorkoutDetailScreen({
     super.key,
     required this.categoryName,
     required this.categoryColor,
-    this.engineType = 'GPS_CARDIO',
+    required this.mesure,
   });
 
   @override
@@ -68,7 +69,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                 padding: EdgeInsets.symmetric(vertical: 30),
                 child: Divider(color: Colors.white24, indent: 50, endIndent: 50),
               ),
-              _buildEngineInterface(),
+              _buildMesure(),
               const SizedBox(height: 50),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -87,31 +88,36 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     );
   }
 
-  Widget _buildEngineInterface() {
-    switch (widget.engineType) {
-      case 'GPS_CARDIO':
-        return _engineTile(Icons.speed, "VITESSE ESTIMÉE", "12.4 km/h", Colors.blue);
-      case 'GYRO_POWER':
-        return _engineTile(Icons.fitness_center, "RÉPÉTITIONS", "12 REPS", Colors.red);
-      case 'ACCEL_SPRINT':
-        return _engineTile(Icons.bolt, "CHARGE D'EXPLOSIVITÉ", "High", Colors.green);
-      case 'OFFLINE':
-        return _engineTile(Icons.waves, "MODE AQUATIQUE", "Stockage interne...", Colors.cyan);
-      case 'STABILITY':
-        return _engineTile(Icons.balance, "STABILITÉ / FOCUS", "98%", Colors.purple);
+  /// Ce que le brassard EMG (MyoWare 2.0) peut mesurer selon le type de sport.
+  /// % MVC = pourcentage de la contraction maximale volontaire.
+  Widget _buildMesure() {
+    switch (widget.mesure) {
+      case 'ACTIVITE_MOYENNE':
+        return _mesureTile(Icons.show_chart, "ACTIVITÉ MUSCULAIRE MOYENNE", "38 % MVC", Colors.blue);
+      case 'PIC_CONTRACTION':
+        return _mesureTile(Icons.fitness_center, "PIC DE CONTRACTION", "92 % MVC", Colors.red);
+      case 'EFFORTS_INTENSES':
+        return _mesureTile(Icons.bolt, "EFFORTS INTENSES (> 75 % MVC)", "14", Colors.green);
+      case 'HORS_LIGNE':
+        return _mesureTile(Icons.waves, "MESURES GARDÉES DANS LE BRASSARD", "Envoi après la séance", Colors.cyan,
+          note: "le Bluetooth ne passe pas sous l'eau");
+      case 'RELACHEMENT':
+        return _mesureTile(Icons.self_improvement, "RELÂCHEMENT MUSCULAIRE", "6 % MVC", Colors.purple);
       default:
         return const SizedBox();
     }
   }
 
-  Widget _engineTile(IconData icon, String label, String value, Color color) {
+  Widget _mesureTile(IconData icon, String label, String value, Color color, {String? note}) {
     return Column(
       children: [
         Icon(icon, color: color, size: 30),
         const SizedBox(height: 8),
         Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 12)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w500)),
-        const Text("valeur d'exemple", style: TextStyle(color: Colors.white38, fontSize: 11)),
+        Text(value, textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w500)),
+        Text(note == null ? "valeur d'exemple" : "valeur d'exemple · $note",
+          style: const TextStyle(color: Colors.white38, fontSize: 11)),
       ],
     );
   }

@@ -5,14 +5,14 @@ class SelectionScreen extends StatelessWidget {
   final String categoryName;
   final Color categoryColor;
   final List<String> subCategories;
-  final String categoryEngine;
+  final String categoryMesure;
 
   const SelectionScreen({
     super.key,
     required this.categoryName,
     required this.categoryColor,
     required this.subCategories,
-    required this.categoryEngine,
+    required this.categoryMesure,
   });
 
   @override
@@ -51,7 +51,7 @@ class SelectionScreen extends StatelessWidget {
                     builder: (context) => WorkoutDetailScreen(
                       categoryName: sport,
                       categoryColor: categoryColor,
-                      engineType: categoryEngine,
+                      mesure: categoryMesure,
                     ),
                   ),
                 );

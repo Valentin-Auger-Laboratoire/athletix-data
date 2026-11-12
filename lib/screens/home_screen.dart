@@ -54,14 +54,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // La description de chaque catégorie est construite à partir de sa liste de sports :
+  // elle ne peut plus oublier un sport. 'mesure' = ce que le brassard EMG affiche pendant la séance.
   final List<Map<String, dynamic>> categories = [
-    {'name': 'Endurance & Cardio', 'icon': Icons.directions_run, 'color': Colors.blue, 'desc': '(Running, Trail, Cyclisme, VTT, Ski)', 'subCategories': ['Running', 'Trail', 'Cyclisme', 'VTT', 'Ski', 'Aviron'], 'engine': 'GPS_CARDIO',},
-    {'name': 'Force & Intensité', 'icon': Icons.fitness_center, 'color': Colors.red, 'desc': '(Muscu, Crossfit, HIIT, Fitness)', 'subCategories': ['Musculation', 'Crossfit', 'Haltérophilie', 'HIIT', 'Fitness'], 'engine': 'GYRO_POWER',},
-    {'name': 'Duel & Collectif', 'icon': Icons.sports_tennis, 'color': Colors.green, 'desc': '(Foot, Tennis, Basket, Boxe)', 'subCategories': ['Football', 'Tennis', 'Basketball', 'Handball', 'Boxe'], 'engine': 'ACCEL_SPRINT',},
-    {'name': 'Milieu Aquatique', 'icon': Icons.pool, 'color': Colors.cyan, 'desc': '(Natation, Water-polo, Paddle, Surf)', 'subCategories': ['Natation', 'Aquabike', 'Water-polo', 'Paddle', 'Surf'], 'engine': 'OFFLINE',},
-    {'name': 'Zen & Posture', 'icon': Icons.self_improvement, 'color': Colors.purple, 'desc': '(Yoga, Pilates, Tir à l\'arc, Golf)', 'subCategories': ['Yoga', 'Pilates', 'Tir à l\'arc', 'Golf', 'Apnée'], 'engine': 'STABILITY',},
-    {'name': 'Performances', 'icon': Icons.analytics, 'color': Colors.orange, 'desc': '(Classement des athlètes)', 'subCategories': [], 'engine': 'NONE',},
+    {'name': 'Endurance & Cardio', 'icon': Icons.directions_run, 'color': Colors.blue, 'subCategories': ['Running', 'Trail', 'Cyclisme', 'VTT', 'Ski', 'Aviron'], 'mesure': 'ACTIVITE_MOYENNE',},
+    {'name': 'Force & Intensité', 'icon': Icons.fitness_center, 'color': Colors.red, 'subCategories': ['Musculation', 'Crossfit', 'Haltérophilie', 'HIIT', 'Fitness'], 'mesure': 'PIC_CONTRACTION',},
+    {'name': 'Duel & Collectif', 'icon': Icons.sports_tennis, 'color': Colors.green, 'subCategories': ['Football', 'Tennis', 'Basketball', 'Handball', 'Boxe'], 'mesure': 'EFFORTS_INTENSES',},
+    {'name': 'Milieu Aquatique', 'icon': Icons.pool, 'color': Colors.cyan, 'subCategories': ['Natation', 'Aquabike', 'Water-polo', 'Paddle', 'Surf', 'Apnée'], 'mesure': 'HORS_LIGNE',},
+    {'name': 'Zen & Posture', 'icon': Icons.self_improvement, 'color': Colors.purple, 'subCategories': ['Yoga', 'Pilates', 'Tir à l\'arc', 'Golf'], 'mesure': 'RELACHEMENT',},
+    {'name': 'Performances', 'icon': Icons.analytics, 'color': Colors.orange, 'desc': '(Classement des athlètes)', 'subCategories': <String>[], 'mesure': 'AUCUNE',},
   ];
+
+  String _description(Map<String, dynamic> cat) =>
+      cat['desc'] ?? '(${List<String>.from(cat['subCategories']).join(', ')})';
+
+  /// Icône de batterie qui suit le niveau réel (inconnu, faible, puis par paliers).
+  IconData _batteryIcon(int? niveau) {
+    if (niveau == null) return Icons.battery_unknown;
+    if (niveau <= 10) return Icons.battery_alert;
+    if (niveau >= 95) return Icons.battery_full;
+    const paliers = [
+      Icons.battery_0_bar, Icons.battery_1_bar, Icons.battery_2_bar, Icons.battery_3_bar,
+      Icons.battery_4_bar, Icons.battery_5_bar, Icons.battery_6_bar,
+    ];
+    return paliers[(niveau * 7 ~/ 100).clamp(0, 6)];
+  }
 
   // ✅ Bloc IA : ouvre IaResultScreen si un profil existe, sinon le questionnaire
   void _onIaTap() {
@@ -83,18 +100,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ✅ Déconnexion et changement de compte → écran de connexion
-  //    (quitter la démo ramène à l'accueil, d'où l'on peut relancer la démo)
-  Future<void> _goToLogin() async {
-    final wasDemo = Api.isDemo;
+  /// Ferme la session puis ouvre [destination].
+  /// - « Changer de compte » : directement l'écran de connexion, pour entrer un autre compte ;
+  /// - « Se déconnecter » / « Quitter la démo » : retour à la page d'accueil de l'appli.
+  Future<void> _closeSession(Widget destination) async {
     Navigator.pop(context); // ferme le menu
     await Api.logout();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => wasDemo ? const LandingScreen() : const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => destination),
       (route) => false,
     );
   }
@@ -152,8 +167,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: const Icon(Icons.switch_account, color: Colors.blue, size: 22),
                 ),
-                title: const Text("Changer de compte", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                onTap: _goToLogin,
+                title: Text(Api.isDemo ? "Se connecter avec un compte" : "Changer de compte",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: const Text("Ouvre l'écran de connexion",
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+                onTap: () => _closeSession(const LoginScreen()),
               ),
               ListTile(
                 leading: Container(
@@ -166,7 +184,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 title: Text(Api.isDemo ? "Quitter la démo" : "Se déconnecter",
                   style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
-                onTap: _goToLogin,
+                subtitle: const Text("Retour à la page d'accueil",
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+                onTap: () => _closeSession(const LandingScreen()),
               ),
             ],
           ),
@@ -235,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(batteryLevel == null ? Icons.battery_unknown : Icons.battery_full,
+                      Icon(_batteryIcon(batteryLevel),
                         color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
                       Text(batteryLevel == null ? "—" : "$batteryLevel%",
@@ -326,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           categoryName: cat['name'],
                           categoryColor: cat['color'],
                           subCategories: List<String>.from(cat['subCategories'] ?? []),
-                          categoryEngine: cat['engine'] ?? 'GPS_CARDIO',
+                          categoryMesure: cat['mesure'],
                         ),
                       ));
                     }
@@ -347,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 5),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(cat['desc'], textAlign: TextAlign.center,
+                          child: Text(_description(cat), textAlign: TextAlign.center,
                             style: const TextStyle(fontSize: 9, color: Colors.white70)),
                         ),
                       ],

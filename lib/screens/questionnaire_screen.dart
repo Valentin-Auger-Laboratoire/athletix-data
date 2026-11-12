@@ -5,7 +5,10 @@ import 'package:athletix_data/services/api.dart';
 import 'ia_result_screen.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
-  const QuestionnaireScreen({super.key});
+  /// Profil précédent : s'il est fourni, le questionnaire est pré-rempli avec ses réponses.
+  final Map<String, dynamic>? initial;
+
+  const QuestionnaireScreen({super.key, this.initial});
 
   @override
   State<QuestionnaireScreen> createState() => _QuestionnaireScreenState();
@@ -24,6 +27,36 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   String _sleepQuality = 'Moyenne';
   int _stressLevel = 5;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.initial;
+    if (p == null) return;
+    String choix(String cle, List<String> valeurs, String defaut) {
+      final v = p[cle]?.toString();
+      return valeurs.contains(v) ? v! : defaut;
+    }
+    double borne(String cle, double mini, double maxi, double defaut) {
+      final v = double.tryParse(p[cle]?.toString() ?? '');
+      return v == null ? defaut : v.clamp(mini, maxi).toDouble();
+    }
+    _selectedGoal = choix('objectif_principal', _objectifs, _selectedGoal);
+    _selectedLevel = choix('niveau_sportif', _niveaux, _selectedLevel);
+    _weight = borne('poids', 40, 160, _weight);
+    _height = borne('taille', 120, 220, _height);
+    _frequency = borne('frequence', 1, 7, _frequency.toDouble()).round();
+    _selectedInjury = choix('pathologies_blessures', _blessures, _selectedInjury);
+    _hasPersonalCardioIssue = p['antecedents_cardio_perso']?.toString() == '1';
+    _hasFamilyCardioHistory = p['antecedents_cardio_famille']?.toString() == '1';
+    _sleepQuality = choix('qualite_sommeil', _sommeils, _sleepQuality);
+    _stressLevel = borne('niveau_stress', 1, 10, _stressLevel.toDouble()).round();
+  }
+
+  static const _objectifs = ['Endurance', 'Prise de masse', 'Perte de poids', 'Santé'];
+  static const _niveaux = ['Débutant', 'Intermédiaire', 'Pro'];
+  static const _blessures = ['Aucune', 'Genou', 'Dos', 'Épaule', 'Cheville'];
+  static const _sommeils = ['Mauvaise', 'Moyenne', 'Bonne', 'Excellente'];
 
   Future<void> _saveProfileToDatabase() async {
     setState(() => _isLoading = true);
@@ -85,6 +118,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   : "Données de santé : n'entre que des valeurs fictives sur une instance de test.",
               style: const TextStyle(color: Colors.white38, fontSize: 11),
             ),
+            if (widget.initial != null) ...[
+              const SizedBox(height: 6),
+              const Text("Tes réponses précédentes sont déjà remplies : modifie seulement ce qui a changé.",
+                style: TextStyle(color: Colors.orange, fontSize: 11)),
+            ],
             const SizedBox(height: 25),
 
             // 1. OBJECTIF
@@ -94,7 +132,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               isExpanded: true,
               dropdownColor: Colors.grey[900],
               style: const TextStyle(color: Colors.orange, fontSize: 16),
-              items: <String>['Endurance', 'Prise de masse', 'Perte de poids', 'Santé']
+              items: _objectifs
                   .map((String value) => DropdownMenuItem(value: value, child: Text(value)))
                   .toList(),
               onChanged: (val) => setState(() => _selectedGoal = val!),
@@ -140,7 +178,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             const Text("Ton niveau actuel :", style: TextStyle(color: Colors.white)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: ['Débutant', 'Intermédiaire', 'Pro'].map((level) {
+              children: _niveaux.map((level) {
                 return ChoiceChip(
                   label: Text(level),
                   selected: _selectedLevel == level,
@@ -155,7 +193,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             const Text("Anciennes blessures ou actuelles ?", style: TextStyle(color: Colors.white)),
             Wrap(
               spacing: 8,
-              children: ['Aucune', 'Genou', 'Dos', 'Épaule', 'Cheville'].map((injury) {
+              children: _blessures.map((injury) {
                 return ChoiceChip(
                   label: Text(injury),
                   selected: _selectedInjury == injury,
@@ -198,7 +236,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               isExpanded: true,
               dropdownColor: Colors.grey[900],
               style: const TextStyle(color: Colors.white, fontSize: 16),
-              items: ['Mauvaise', 'Moyenne', 'Bonne', 'Excellente']
+              items: _sommeils
                   .map((val) => DropdownMenuItem(value: val, child: Text(val)))
                   .toList(),
               onChanged: (val) => setState(() => _sleepQuality = val!),

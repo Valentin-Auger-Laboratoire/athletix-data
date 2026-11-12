@@ -42,38 +42,112 @@ class _IaResultScreenState extends State<IaResultScreen> {
     });
   }
 
+  /// Nombre de séances par semaine conseillé selon le niveau : (minimum, maximum).
+  static const Map<String, List<int>> _plageSeances = {
+    'Débutant': [2, 3],
+    'Intermédiaire': [3, 4],
+    'Pro': [4, 6],
+  };
+
+  /// IMC = poids (kg) / taille (m)². Null si une valeur manque.
+  double? _imc(Map<String, dynamic> profil) {
+    final poids = double.tryParse(profil['poids']?.toString() ?? '');
+    final taille = double.tryParse(profil['taille']?.toString() ?? '');
+    if (poids == null || taille == null || taille <= 0) return null;
+    final m = taille / 100;
+    return poids / (m * m);
+  }
+
+  /// 22.1 → « 22,1 » (écriture française).
+  String _virgule(double x) => x.toStringAsFixed(1).replaceAll('.', ',');
+
+  /// Conseils produits par des règles simples (pas d'IA entraînée).
+  /// Le nombre de séances n'est donné qu'à UN endroit (carte « Rythme »), calculé
+  /// à partir du niveau ET de la fréquence déclarée : les cartes ne se contredisent pas.
   List<Map<String, dynamic>> _generateAdvice() {
-    List<Map<String, dynamic>> conseils = [];
+    final List<Map<String, dynamic>> conseils = [];
     final profil = widget.profil;
+    final objectif = profil['objectif_principal']?.toString() ?? '';
+    final niveau = profil['niveau_sportif']?.toString() ?? 'Débutant';
+    final frequence = int.tryParse(profil['frequence']?.toString() ?? '') ?? 0;
+    final poids = double.tryParse(profil['poids']?.toString() ?? '');
+    final imc = _imc(profil);
+    final plage = _plageSeances[niveau] ?? const [2, 3];
+    final mini = plage[0], maxi = plage[1];
 
-    if (profil['objectif_principal'] == 'Endurance') {
+    // 1. Rythme : niveau + fréquence déclarée
+    String rythme;
+    if (frequence > maxi) {
+      rythme = 'Tu as indiqué $frequence séances par semaine. Au niveau $niveau, vise plutôt $mini à $maxi séances '
+          'avec des jours de repos entre elles : le muscle progresse pendant la récupération.';
+    } else if (frequence < mini) {
+      rythme = 'Tu as indiqué $frequence séance${frequence > 1 ? 's' : ''} par semaine. Au niveau $niveau, '
+          'tu peux monter progressivement jusqu\'à $mini à $maxi séances, en ajoutant une séance à la fois.';
+    } else {
+      rythme = 'Tes $frequence séances par semaine correspondent au niveau $niveau ($mini à $maxi). Garde ce rythme et '
+          'augmente plutôt la durée ou la difficulté petit à petit.';
+    }
+    if (niveau == 'Débutant') {
+      rythme += ' Commence par des séances de 30 minutes et écoute ton corps.';
+    } else if (niveau == 'Intermédiaire') {
+      rythme += ' Varie les séances (une plus intense, les autres plus faciles) pour continuer à progresser.';
+    } else if (niveau == 'Pro') {
+      rythme += ' Prévois une semaine plus légère toutes les 3 à 4 semaines.';
+    }
+    conseils.add({'icon': Icons.calendar_month, 'color': Colors.amber,
+      'titre': 'Rythme conseillé — niveau $niveau', 'conseil': rythme,});
+
+    // 2. Objectif (sans nombre de séances, pour ne pas contredire la carte Rythme)
+    if (objectif == 'Endurance') {
+      String c = 'Fais la plupart de tes séances à allure facile (tu peux parler en courant) et une seule séance plus intense par semaine.';
+      if (imc != null && imc >= 30) {
+        c += ' Pour ménager tes articulations, alterne avec le vélo ou la natation.';
+      }
       conseils.add({'icon': Icons.directions_run, 'color': Colors.blue,
-        'titre': 'Objectif Endurance détecté',
-        'conseil': 'Privilégie des séances longues à faible intensité. Vise 3-4 sorties/semaine avec 70% de ta fréquence cardiaque max.',});
-    } else if (profil['objectif_principal'] == 'Prise de masse') {
+        'titre': 'Objectif Endurance', 'conseil': c,});
+    } else if (objectif == 'Prise de masse') {
+      String c = 'Travaille en séries lourdes (6 à 12 répétitions) et augmente la charge peu à peu.';
+      if (poids != null) {
+        final bas = (poids * 1.6).round(), haut = (poids * 2.0).round();
+        c += ' Repère courant : environ $bas à $haut g de protéines par jour pour ${poids.round()} kg.';
+      }
       conseils.add({'icon': Icons.fitness_center, 'color': Colors.red,
-        'titre': 'Objectif Force détecté',
-        'conseil': 'Concentre-toi sur des séries lourdes (4-6 reps). Assure-toi de consommer suffisamment de protéines après chaque séance.',});
-    } else if (profil['objectif_principal'] == 'Perte de poids') {
-      conseils.add({'icon': Icons.local_fire_department, 'color': Colors.orange,
-        'titre': 'Objectif Minceur détecté',
-        'conseil': 'Combine cardio HIIT et musculation légère. Crée un déficit calorique modéré de 300-500 kcal/jour.',});
-    } else if (profil['objectif_principal'] == 'Santé') {
+        'titre': 'Objectif Prise de masse', 'conseil': c,});
+    } else if (objectif == 'Perte de poids') {
+      if (imc != null && imc < 18.5) {
+        conseils.add({'icon': Icons.warning_amber, 'color': Colors.red,
+          'titre': 'Objectif Perte de poids — à revoir',
+          'conseil': 'Ton IMC calculé (${_virgule(imc)}) est déjà sous 18,5. Perdre du poids n\'est pas conseillé : parles-en à un médecin avant.',});
+      } else {
+        conseils.add({'icon': Icons.local_fire_department, 'color': Colors.orange,
+          'titre': 'Objectif Perte de poids',
+          'conseil': 'Combine cardio et renforcement musculaire, avec un léger déficit (300 à 500 kcal par jour). '
+              'Vise une perte lente, autour de 0,5 kg par semaine.',});
+      }
+    } else if (objectif == 'Santé') {
       conseils.add({'icon': Icons.favorite, 'color': Colors.pink,
-        'titre': 'Objectif Santé détecté',
-        'conseil': 'Varie les activités : marche, natation, yoga. L\'important c\'est la régularité, pas l\'intensité !',});
+        'titre': 'Objectif Santé',
+        'conseil': 'Varie les activités (marche, natation, yoga). L\'important est la régularité, pas l\'intensité.',});
     }
 
-    if (profil['niveau_sportif'] == 'Débutant') {
-      conseils.add({'icon': Icons.star_border, 'color': Colors.amber,
-        'titre': 'Débutant — Progression douce',
-        'conseil': 'Commence par 2-3 séances/semaine de 30 min. Augmente progressivement. Écoute ton corps avant tout.',});
-    } else if (profil['niveau_sportif'] == 'Pro') {
-      conseils.add({'icon': Icons.star, 'color': Colors.amber,
-        'titre': 'Niveau Pro — Intensité maximale',
-        'conseil': 'Tu peux viser 5-6 séances/semaine. Intègre des cycles de surcharge progressive et des semaines de décharge.',});
+    // 3. Corpulence (poids + taille)
+    if (imc != null) {
+      String c;
+      if (imc < 18.5) {
+        c = 'IMC ${_virgule(imc)} : sous la zone habituelle (18,5 à 25). Mange suffisamment autour des séances.';
+      } else if (imc < 25) {
+        c = 'IMC ${_virgule(imc)} : dans la zone habituelle (18,5 à 25).';
+      } else if (imc < 30) {
+        c = 'IMC ${_virgule(imc)} : un peu au-dessus de la zone habituelle. Les activités portées (vélo, natation) ménagent les genoux.';
+      } else {
+        c = 'IMC ${_virgule(imc)} : privilégie les activités portées (vélo, natation, marche) et demande conseil à un médecin pour reprendre.';
+      }
+      c += ' L\'IMC ne distingue pas le muscle de la graisse : c\'est un repère, pas un diagnostic.';
+      conseils.add({'icon': Icons.monitor_weight, 'color': Colors.teal,
+        'titre': 'Taille et poids', 'conseil': c,});
     }
 
+    // 4. Blessures
     final blessure = profil['pathologies_blessures']?.toString() ?? '';
     if (blessure != 'Aucune' && blessure.isNotEmpty) {
       String cb = 'Adapte ton entraînement en fonction de cette zone.';
@@ -87,27 +161,28 @@ class _IaResultScreenState extends State<IaResultScreen> {
         cb = 'Fais des exercices de proprioception. Évite les terrains accidentés et préfère la piscine.';
       }
       conseils.add({'icon': Icons.healing, 'color': Colors.red[300],
-        'titre': '⚠️ Blessure $blessure détectée', 'conseil': cb,});
+        'titre': '⚠️ Blessure $blessure signalée', 'conseil': cb,});
     }
 
-    int stress = int.tryParse(profil['niveau_stress']?.toString() ?? '5') ?? 5;
+    // 5. Stress et sommeil
+    final stress = int.tryParse(profil['niveau_stress']?.toString() ?? '5') ?? 5;
     if (stress >= 7) {
       conseils.add({'icon': Icons.self_improvement, 'color': Colors.purple,
-        'titre': 'Stress élevé détecté',
+        'titre': 'Stress élevé',
         'conseil': 'Intègre quelques minutes de respiration calme ou de méditation avant ta séance, et garde les séances intenses pour les jours plus sereins.',});
     }
-
     if (profil['qualite_sommeil'] == 'Mauvaise') {
       conseils.add({'icon': Icons.bedtime, 'color': Colors.indigo,
         'titre': 'Récupération insuffisante',
         'conseil': 'Un sommeil insuffisant freine la récupération et les performances. Évite le sport intense tard le soir et garde des horaires de coucher réguliers.',});
     }
 
+    // 6. Antécédents cardio
     if (profil['antecedents_cardio_perso']?.toString() == '1' ||
         profil['antecedents_cardio_famille']?.toString() == '1') {
       conseils.add({'icon': Icons.monitor_heart, 'color': Colors.red,
         'titre': 'Antécédents cardio-vasculaires signalés',
-        'conseil': 'Demande l\'avis d\'un médecin avant de reprendre ou d\'intensifier l\'entraînement. Ces conseils ne remplacent pas un avis médical.',});
+        'conseil': 'Demande l\'avis d\'un médecin avant de reprendre ou d\'intensifier l\'entraînement.',});
     }
 
     return conseils;
@@ -177,6 +252,11 @@ class _IaResultScreenState extends State<IaResultScreen> {
             // ONGLET 2 : CONSEILS IA
             _buildSectionTitle(Icons.auto_awesome, "CONSEILS GÉNÉRÉS PAR RÈGLES", Colors.blue),
             ...conseils.map((conseil) => _buildConseilCard(conseil)),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Text("Repères généraux : ils ne remplacent pas un avis médical.",
+                style: TextStyle(color: Colors.white38, fontSize: 11)),
+            ),
 
             const SizedBox(height: 25),
 
@@ -260,7 +340,7 @@ class _IaResultScreenState extends State<IaResultScreen> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const QuestionnaireScreen(),
+                      builder: (context) => QuestionnaireScreen(initial: widget.profil),
                     ),
                   );
                 },
