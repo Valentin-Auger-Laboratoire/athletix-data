@@ -1,0 +1,74 @@
+# Tests automatiques à chaque envoi sur GitHub : application, API sur une vraie base, firmware.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  application:
+    name: Application Flutter (analyse + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  api:
+    name: API PHP sur MariaDB
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+      - name: Syntaxe PHP
+        run: for f in backend/*.php; do php -l "$f"; done
+      - name: Client MySQL pointé sur le conteneur de test
+        run: |
+          sudo apt-get install -y mariadb-client
+          printf '[client]\nhost=127.0.0.1\nuser=root\npassword=test\n' > ~/.my.cnf
+      - name: Base de test (schéma + migrations)
+        run: |
+          mysql < database.sql
+          for m in migrations/*.sql; do mysql < "$m"; done
+      - name: Configuration de test (aucun secret)
+        run: |
+          cat > backend/config.local.php <<'PHP'
+          <?php
+          return ['db_host' => '127.0.0.1', 'db_user' => 'root', 'db_pass' => 'test', 'db_name' => 'athletix-pro',
+                  'smtp_host' => '127.0.0.1', 'smtp_port' => 2525, 'allowed_origin' => 'http://localhost:5000'];  // pas d'e-mail en test
+          PHP
+      - name: Scénario complet de l'API
+        run: |
+          php -S 127.0.0.1:8080 -t backend > /tmp/php.log 2>&1 &
+          sleep 2
+          ATHLETIX_TEST=1 bash tests/api/test_api.sh | tee /tmp/api.log
+          grep -q ', 0 FAIL' /tmp/api.log
+
+  firmware:
+    name: Calculs du firmware (sans carte)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: g++ -std=c++17 -Wall -Wextra -Werror -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg
+      - run: ./test_emg

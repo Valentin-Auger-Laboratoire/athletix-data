@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -301,6 +303,217 @@ class CourbesEvolution extends StatelessWidget {
             Text(nom, style: const TextStyle(color: Colors.white70, fontSize: 11)),
           ]),
       ]),
+    ]);
+  }
+}
+
+/// Couleur de la zone d'intensité (mêmes couleurs que [BarreZones]).
+Color couleurZone(num intensite) => intensite < 20
+    ? Colors.blueGrey
+    : intensite < 50
+        ? Colors.green
+        : intensite < 75
+            ? Colors.orange
+            : Colors.redAccent;
+
+/// Point d'un tracé : [lat, lon, secondes, intensité] (format du serveur).
+typedef PointTrace = List<num>;
+
+/// Vitesse (km/h) et distance cumulée (km) pour chaque point, vitesse lissée sur ~30 s.
+({List<double> distanceKm, List<double> vitesseKmh}) profilTrace(List<PointTrace> t) {
+  double d(PointTrace a, PointTrace b) {
+    const r = 6371000.0;
+    double rad(num x) => x * 3.141592653589793 / 180;
+    final dLat = rad(b[0] - a[0]), dLon = rad(b[1] - a[1]);
+    final h = _sin2(dLat / 2) + _cos(rad(a[0])) * _cos(rad(b[0])) * _sin2(dLon / 2);
+    return 2 * r * _asin(_sqrt(h));
+  }
+
+  final cumul = <double>[0];
+  for (var i = 1; i < t.length; i++) {
+    cumul.add(cumul.last + d(t[i - 1], t[i]));
+  }
+  final vitesses = <double>[];
+  for (var i = 0; i < t.length; i++) {
+    // fenêtre de ±15 s autour du point
+    var a = i, b = i;
+    while (a > 0 && t[i][2] - t[a - 1][2] <= 15) {
+      a--;
+    }
+    while (b < t.length - 1 && t[b + 1][2] - t[i][2] <= 15) {
+      b++;
+    }
+    if (a == b) {
+      if (b < t.length - 1) {
+        b++;
+      } else if (a > 0) {
+        a--;
+      }
+    }
+    final dt = (t[b][2] - t[a][2]).toDouble();
+    vitesses.add(dt <= 0 ? 0 : (cumul[b] - cumul[a]) / dt * 3.6);
+  }
+  return (distanceKm: cumul.map((m) => m / 1000).toList(), vitesseKmh: vitesses);
+}
+
+double _sin2(double x) => math.pow(math.sin(x), 2).toDouble();
+double _cos(double x) => math.cos(x);
+double _asin(double x) => math.asin(x.clamp(-1.0, 1.0));
+double _sqrt(double x) => math.sqrt(x);
+
+/// Tracé du parcours vu de dessus, coloré par l'intensité musculaire.
+/// Pas de fond de carte : aucune requête vers un service de cartes, et le tracé
+/// arrive déjà sans ses 200 premiers et derniers mètres.
+class CarteParcours extends StatelessWidget {
+  const CarteParcours({super.key, required this.trace, this.hauteur = 220});
+
+  final List<PointTrace> trace;
+  final double hauteur;
+
+  @override
+  Widget build(BuildContext context) {
+    if (trace.length < 2) return SizedBox(height: hauteur);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        height: hauteur,
+        width: double.infinity,
+        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10)),
+        child: CustomPaint(painter: _PeintreParcours(trace)),
+      ),
+      const SizedBox(height: 6),
+      Wrap(spacing: 12, runSpacing: 4, children: [
+        for (final (nom, c) in BarreZones.zones)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 12, height: 3, color: c),
+            const SizedBox(width: 4),
+            Text(nom, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+          ]),
+        const Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.circle, size: 9, color: Colors.white),
+          SizedBox(width: 4),
+          Text('départ', style: TextStyle(color: Colors.white54, fontSize: 10)),
+        ]),
+      ]),
+    ]);
+  }
+}
+
+class _PeintreParcours extends CustomPainter {
+  _PeintreParcours(this.t);
+
+  final List<PointTrace> t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Projection équirectangulaire (suffisante sur quelques kilomètres), mêmes échelles en x et y
+    final lat0 = t.map((p) => p[0]).reduce((a, b) => a + b) / t.length;
+    final kx = 111195 * math.cos(lat0 * math.pi / 180), ky = 111195.0;
+    final xs = t.map((p) => p[1] * kx).toList(), ys = t.map((p) => -p[0] * ky).toList();
+    final minX = xs.reduce(math.min), maxX = xs.reduce(math.max);
+    final minY = ys.reduce(math.min), maxY = ys.reduce(math.max);
+    const marge = 16.0;
+    final largeurM = math.max(maxX - minX, 1.0), hauteurM = math.max(maxY - minY, 1.0);
+    final echelle = math.min((size.width - 2 * marge) / largeurM, (size.height - 2 * marge) / hauteurM);
+    final dx = (size.width - largeurM * echelle) / 2, dy = (size.height - hauteurM * echelle) / 2;
+    Offset o(int i) => Offset(dx + (xs[i] - minX) * echelle, dy + (ys[i] - minY) * echelle);
+
+    final trait = Paint()
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    for (var i = 1; i < t.length; i++) {
+      trait.color = couleurZone(t[i][3]);
+      canvas.drawLine(o(i - 1), o(i), trait);
+    }
+    canvas.drawCircle(o(0), 6, Paint()..color = Colors.white);
+    canvas.drawCircle(o(t.length - 1), 6, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 2);
+
+    // Barre d'échelle : longueur ronde la plus proche du quart de la largeur
+    final cible = (size.width / 4) / echelle;
+    final options = [50, 100, 200, 250, 500, 1000, 2000, 5000];
+    final m = options.lastWhere((v) => v <= cible, orElse: () => 50);
+    final px = m * echelle;
+    final y = size.height - 10;
+    final p = Paint()
+      ..color = Colors.white70
+      ..strokeWidth = 2;
+    canvas.drawLine(Offset(10, y), Offset(10 + px, y), p);
+    final texte = TextPainter(
+      text: TextSpan(text: m >= 1000 ? '${m ~/ 1000} km' : '$m m', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    texte.paint(canvas, Offset(14 + px, y - 7));
+  }
+
+  @override
+  bool shouldRepaint(_PeintreParcours old) => !identical(old.t, t);
+}
+
+/// Vitesse et intensité musculaire le long du parcours (axe commun : la distance).
+class VitesseIntensite extends StatelessWidget {
+  const VitesseIntensite({super.key, required this.trace});
+
+  final List<PointTrace> trace;
+
+  Widget _courbe(List<double> x, List<double> y, Color c, String unite, double hauteur,
+      {bool axeX = false, required double pas}) {
+    // Échelle ronde : un multiple du pas au-dessus du maximum
+    final maxY = math.max(pas, (y.reduce(math.max) / pas).ceil() * pas).toDouble();
+    return SizedBox(
+      height: hauteur,
+      child: LineChart(LineChartData(
+        minX: 0,
+        maxX: x.last,
+        minY: 0,
+        maxY: maxY,
+        gridData: const FlGridData(show: true, drawVerticalLine: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 46,
+              interval: pas,
+              // le 0 du graphique du haut chevaucherait le maximum de celui du bas
+              getTitlesWidget: (v, m) => v == 0 && !axeX ? const SizedBox() : _titre(v, m, (z) => '${z.round()} $unite'),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: axeX,
+              reservedSize: 22,
+              interval: x.last <= 0 ? 1 : x.last / 4,
+              getTitlesWidget: (v, m) => _titre(v, m, (z) => '${decimalFr(z, 1)} km'),
+            ),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [for (var i = 0; i < x.length; i++) FlSpot(x[i], y[i])],
+            isCurved: true,
+            curveSmoothness: 0.2,
+            color: c,
+            barWidth: 2,
+            dotData: const FlDotData(show: false),
+          ),
+        ],
+      )),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (trace.length < 3) return const SizedBox();
+    final p = profilTrace(trace);
+    return Column(children: [
+      _courbe(p.distanceKm, p.vitesseKmh, Colors.lightBlueAccent, 'km/h', 110, pas: 4),
+      const SizedBox(height: 8),
+      _courbe(p.distanceKm, [for (final pt in trace) pt[3].toDouble()], Colors.orange, '%', 130, axeX: true, pas: 25),
+      const SizedBox(height: 4),
+      const Text('En haut : vitesse (GPS) · en bas : intensité musculaire (brassard)',
+          style: TextStyle(color: Colors.white38, fontSize: 11)),
     ]);
   }
 }

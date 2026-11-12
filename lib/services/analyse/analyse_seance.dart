@@ -25,6 +25,13 @@ class AnalyseSeance {
   MesureEmg? _precedente;
 
   final List<int> _courbe = [];
+
+  /// Repos minimal entre deux séries (musculation).
+  static const int reposEntreSeriesMs = 20000;
+  int _series = 0, _finContractionMs = 0;
+
+  /// Séries : groupes de contractions séparés d'au moins 20 s de repos.
+  int get nbSeries => _series;
   int _sommeBloc = 0, _nbBloc = 0, _debutBlocMs = 0, _tempsMs = 0;
 
   /// Moyennes de chaque minute, pour l'indice de fatigue.
@@ -56,9 +63,12 @@ class AnalyseSeance {
     // Contractions (hystérésis, comme l'alerte du brassard)
     if (!_enContraction && m.intensitePct >= seuilContractionHaut) {
       _enContraction = true;
+      // Nouvelle série si le muscle s'est reposé assez longtemps depuis la contraction précédente
+      if (_contractions == 0 || _tempsMs - _finContractionMs >= reposEntreSeriesMs) _series++;
       _contractions++;
     } else if (_enContraction && m.intensitePct < seuilContractionBas) {
       _enContraction = false;
+      _finContractionMs = _tempsMs;
     }
 
     // Courbe résumée : moyenne de chaque bloc de 5 s
@@ -118,6 +128,7 @@ class AnalyseSeance {
       'temps_zone_moderee_s': '$tempsModereeS',
       'temps_zone_soutenue_s': '$tempsSoutenueS',
       'nb_contractions': '$nbContractions',
+      'nb_series': '$nbSeries',
       if (indice != null) 'indice_fatigue_pct': '$indice',
       if (c.isNotEmpty) 'courbe': '[${c.take(2000).join(',')}]',
     };

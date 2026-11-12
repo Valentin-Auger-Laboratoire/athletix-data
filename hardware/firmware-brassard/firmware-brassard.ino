@@ -35,15 +35,17 @@ const uint8_t BATTERIE_FAIBLE = 10;    // en %
 #define UUID_CONTROLE       "abad0002-b097-4a54-8315-c2971fc04ce6"
 #define UUID_CONFIGURATION  "abad0003-b097-4a54-8315-c2971fc04ce6"
 #define UUID_ETAT           "abad0004-b097-4a54-8315-c2971fc04ce6"
+#define UUID_HORS_LIGNE     "abad0005-b097-4a54-8315-c2971fc04ce6"
 
-const char *VERSION_FIRMWARE = "1.0.0";
+const char *VERSION_FIRMWARE = "1.1.0";  // 1.1 : enregistrement sans connexion (natation)
 
-enum : uint8_t { CMD_DEMARRER = 0x01, CMD_ARRETER = 0x02, CMD_CALIBRER = 0x03, CMD_SEUIL = 0x04 };
+enum : uint8_t { CMD_DEMARRER = 0x01, CMD_ARRETER = 0x02, CMD_CALIBRER = 0x03, CMD_SEUIL = 0x04,
+                 CMD_DEMARRER_HORS_LIGNE = 0x05, CMD_EFFACER_HORS_LIGNE = 0x06 };
 enum : uint8_t { ETAT_REPOS = 0, ETAT_MESURE = 1, ETAT_CALIBRATION = 2, ETAT_ERREUR = 3 };
 enum : uint8_t { ERR_AUCUNE = 0, ERR_SATURATION = 1, ERR_BATTERIE = 2, ERR_CALIBRATION = 3, ERR_COMMANDE = 4 };
 
 // ---- État ----
-BLECharacteristic *carMesure, *carConfiguration, *carEtat, *carBatterie = nullptr;
+BLECharacteristic *carMesure, *carConfiguration, *carEtat, *carHorsLigne, *carBatterie = nullptr;
 volatile bool connecte = false;
 uint8_t etat = ETAT_REPOS;
 uint8_t codeErreur = ERR_AUCUNE;
@@ -55,6 +57,7 @@ Alerte alerte;
 Calibration calibration;
 FenetreRms<100> fenetre;               // 200 ms à 500 Hz, comme la simulation Simulink
 SurveillanceSaturation saturation;
+EnregistrementHorsLigne horsLigne;    // natation : résumé calculé dans le brassard
 
 // Les commandes arrivent dans la tâche Bluetooth : on les transmet à loop() par ces variables
 volatile int commandeEnAttente = -1;
@@ -134,6 +137,15 @@ class ConfigurationCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
+// Résumé hors ligne : la valeur est recalculée au moment où l'application la lit
+class HorsLigneCallbacks : public BLECharacteristicCallbacks {
+  void onRead(BLECharacteristic *c) override {
+    static uint8_t octets[EnregistrementHorsLigne::TAILLE_MAX];
+    unsigned n = horsLigne.encoder(octets, millis());
+    c->setValue(octets, n);
+  }
+};
+
 class ServeurCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *serveur, esp_ble_gatts_cb_param_t *param) override {
     connecte = true;
@@ -144,7 +156,9 @@ class ServeurCallbacks : public BLEServerCallbacks {
   }
   void onDisconnect(BLEServer *) override {
     connecte = false;
-    commandeEnAttente = CMD_ARRETER;  // plus personne n'écoute : on arrête la mesure
+    // Plus personne n'écoute : on arrête la mesure, SAUF pendant un enregistrement sans connexion
+    // (natation) qui continue jusqu'à ARRÊTER ou à l'arrêt automatique.
+    if (horsLigne.etat() != EnregistrementHorsLigne::EN_COURS) commandeEnAttente = CMD_ARRETER;
     Serial.println("Application déconnectée, nouvelle annonce");
     BLEDevice::startAdvertising();
   }
@@ -157,7 +171,17 @@ void executerCommande(int commande) {
       changerEtat(ETAT_MESURE);
       break;
     case CMD_ARRETER:
+      horsLigne.terminer(millis());
       if (etat != ETAT_REPOS) changerEtat(ETAT_REPOS);
+      break;
+    case CMD_DEMARRER_HORS_LIGNE:
+      alerte.reinitialiser();
+      horsLigne.demarrer(millis());
+      changerEtat(ETAT_MESURE);
+      Serial.println("Enregistrement sans connexion démarré");
+      break;
+    case CMD_EFFACER_HORS_LIGNE:
+      horsLigne.effacer();  // l'application l'a bien reçu et enregistré
       break;
     case CMD_CALIBRER:
       calibration.demarrer(millis());
@@ -222,6 +246,8 @@ void setup() {
   carEtat = service->createCharacteristic(UUID_ETAT, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
   carEtat->addDescriptor(new BLE2902());
   publierEtat();
+  carHorsLigne = service->createCharacteristic(UUID_HORS_LIGNE, BLECharacteristic::PROPERTY_READ);
+  carHorsLigne->setCallbacks(new HorsLigneCallbacks());
   service->start();
 
   BLEAdvertising *annonce = BLEDevice::getAdvertising();
@@ -274,19 +300,29 @@ void loop() {
     signaler(ERR_AUCUNE);
   }
 
-  // 4. Paquet de 8 octets à la fréquence configurée (50 Hz par défaut)
-  if (connecte && (etat == ETAT_MESURE || etat == ETAT_CALIBRATION) &&
-      maintenant - dernierEnvoiMs >= 1000u / config.frequenceHz) {
+  // 4. Mesure à la fréquence configurée (50 Hz par défaut) : paquet de 8 octets si l'application
+  //    écoute, et résumé gardé dans le brassard pendant un enregistrement sans connexion.
+  if ((etat == ETAT_MESURE || etat == ETAT_CALIBRATION) && maintenant - dernierEnvoiMs >= 1000u / config.frequenceHz) {
     dernierEnvoiMs = maintenant;
     uint8_t intensite = intensitePct(rms, config.refMvcMv);
     uint8_t drapeaux = 0;
-    if (etat == ETAT_MESURE && alerte.mettreAJour(intensite)) drapeaux |= BIT_ALERTE;
+    bool enAlerte = etat == ETAT_MESURE && alerte.mettreAJour(intensite);
+    if (enAlerte) drapeaux |= BIT_ALERTE;
     if (mv >= SATURATION_MV) drapeaux |= BIT_SATURATION;
     if (etat == ETAT_CALIBRATION) drapeaux |= BIT_CALIBRATION;
-    uint8_t paquet[8];
-    encoderMesure(paquet, maintenant, rms, intensite, drapeaux);
-    carMesure->setValue(paquet, 8);
-    carMesure->notify();
+    if (etat == ETAT_MESURE && horsLigne.etat() == EnregistrementHorsLigne::EN_COURS) {
+      horsLigne.ajouter(maintenant, intensite, enAlerte);
+      if (horsLigne.etat() == EnregistrementHorsLigne::TERMINE) {
+        Serial.println("Enregistrement sans connexion terminé (5 min de repos)");
+        changerEtat(ETAT_REPOS);  // économise la batterie en attendant la lecture
+      }
+    }
+    if (connecte) {
+      uint8_t paquet[8];
+      encoderMesure(paquet, maintenant, rms, intensite, drapeaux);
+      carMesure->setValue(paquet, 8);
+      carMesure->notify();
+    }
   }
 
   // 5. Batterie : lue toutes les 30 s, notifiée, alerte sous 10 %

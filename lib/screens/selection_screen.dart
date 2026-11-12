@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'natation_screen.dart';
 import 'workout_detail_screen.dart';
 
 class SelectionScreen extends StatelessWidget {
@@ -48,11 +49,14 @@ class SelectionScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => WorkoutDetailScreen(
-                      categoryName: sport,
-                      categoryColor: categoryColor,
-                      mesure: categoryMesure,
-                    ),
+                    // Sports dans l'eau : le brassard enregistre seul (pas de Bluetooth sous l'eau)
+                    builder: (context) => categoryMesure == 'HORS_LIGNE'
+                        ? NatationScreen(discipline: sport, couleur: categoryColor)
+                        : WorkoutDetailScreen(
+                            categoryName: sport,
+                            categoryColor: categoryColor,
+                            mesure: categoryMesure,
+                          ),
                   ),
                 );
               },

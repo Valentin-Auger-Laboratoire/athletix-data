@@ -138,6 +138,55 @@ int main() {
     VERIFIER(fronts == 1, "profil de la simulation : une seule alerte");
   }
 
+  // 9. Enregistrement sans connexion (natation)
+  {
+    EnregistrementHorsLigne e;
+    uint8_t o[EnregistrementHorsLigne::TAILLE_MAX];
+    VERIFIER(e.encoder(o, 0) == 20 && o[0] == 1 && o[1] == EnregistrementHorsLigne::VIDE, "vide au départ");
+    // 10 min de nage : 40 % (alerte entre 60 et 120 s, à 90 %), puis 6 min au bord à 2 %
+    uint32_t t = 5000;
+    e.demarrer(t);
+    for (uint32_t ms = 0; ms <= 600000; ms += 20) {
+      bool fort = ms >= 60000 && ms < 120000;
+      e.ajouter(t + ms, fort ? 90 : 40, fort);
+    }
+    uint32_t finNage = t + 600000;
+    for (uint32_t ms = 20; ms <= 360000; ms += 20) e.ajouter(finNage + ms, 2, false);
+    VERIFIER(e.etat() == EnregistrementHorsLigne::TERMINE, "arrêt automatique après 5 min de repos");
+    unsigned n = e.encoder(o, finNage + 20 + 3600000);  // lu 1 h après la fin (1re mesure de repos)
+    VERIFIER(lire16(&o[2]) == 600, "durée = la nage seule (10 min)");
+    VERIFIER(o[8] == 45, "intensité moyenne : 40 × 0,9 + 90 × 0,1 = 45 %");
+    VERIFIER(o[9] == 90, "maximum");
+    VERIFIER(lire16(&o[10]) == 60, "60 s d'effort intense");
+    VERIFIER(lire16(&o[12]) == 1, "une alerte");
+    uint32_t ilYa = o[14] | (o[15] << 8) | (o[16] << 16) | ((uint32_t)o[17] << 24);
+    VERIFIER(ilYa == 3600, "fin il y a 1 h");
+    VERIFIER(o[18] == 30 && o[19] == 20 && n == 40, "20 points de courbe (un toutes les 30 s)");
+    VERIFIER(o[20] == 40 && o[22] == 90 && o[23] == 90 && o[24] == 40, "courbe : 40 %, puis 90 % de 60 à 120 s");
+    e.effacer();
+    VERIFIER(e.encoder(o, 0) == 20 && o[1] == EnregistrementHorsLigne::VIDE, "effacé après lecture");
+  }
+  {
+    // Arrêt demandé avant les 5 min, trou de liaison ignoré, plafond de 200 points
+    EnregistrementHorsLigne e;
+    uint8_t o[EnregistrementHorsLigne::TAILLE_MAX];
+    e.demarrer(0);
+    for (uint32_t ms = 0; ms <= 120000; ms += 20) e.ajouter(ms, 50, false);
+    e.ajouter(130000, 50, false);  // 10 s sans mesure : pas compté
+    e.terminer(130000);
+    e.encoder(o, 130000);
+    VERIFIER(e.etat() == EnregistrementHorsLigne::TERMINE && lire16(&o[2]) == 120, "arrêt demandé, trou non compté");
+    EnregistrementHorsLigne longue;
+    longue.demarrer(0);
+    for (uint32_t ms = 0; ms <= 7200000; ms += 100) longue.ajouter(ms, 30, false);  // 2 h
+    VERIFIER(longue.encoder(o, 0) == 20 + 200 && o[19] == 200, "courbe plafonnée à 200 points");
+    longue.ajouter(7200100, 30, false);
+    longue.terminer(7200100);
+    longue.ajouter(7200200, 30, false);
+    longue.encoder(o, 7200200);
+    VERIFIER(lire16(&o[2]) == 7200, "plus rien n'est ajouté après la fin");
+  }
+
   printf("%d vérifications réussies, %d échecs\n", ok, ko);
   return ko == 0 ? 0 : 1;
 }

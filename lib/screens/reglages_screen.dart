@@ -39,6 +39,33 @@ class ReglagesScreen extends StatelessWidget {
           _interrupteur(Reglages.alertesVoix, Icons.record_voice_over, 'Alertes à voix haute',
               'L\'alerte est annoncée (« Effort intense »), utile si l\'écran est difficile à lire.'),
           const SizedBox(height: 18),
+          const Text('OBJECTIF', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
+          const SizedBox(height: 6),
+          ValueListenableBuilder<int>(
+            valueListenable: Reglages.objectifSeances,
+            builder: (context, n, _) => Card(
+              color: Colors.grey[900],
+              child: ListTile(
+                leading: const Icon(Icons.flag_outlined, color: Colors.orange),
+                title: Text('$n séance${n > 1 ? 's' : ''} par semaine',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: const Text("Affiché sur l'accueil.", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  IconButton(
+                    tooltip: 'Moins',
+                    onPressed: n > 1 ? () => Reglages.changerObjectif(n - 1) : null,
+                    icon: const Icon(Icons.remove_circle_outline, color: Colors.white70),
+                  ),
+                  IconButton(
+                    tooltip: 'Plus',
+                    onPressed: n < 14 ? () => Reglages.changerObjectif(n + 1) : null,
+                    icon: const Icon(Icons.add_circle_outline, color: Colors.white70),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
           const Text('MODE ADAPTÉ', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
           const SizedBox(height: 6),
           _interrupteur(

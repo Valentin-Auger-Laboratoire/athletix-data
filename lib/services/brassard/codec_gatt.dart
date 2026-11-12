@@ -81,6 +81,8 @@ class CommandeBrassard {
   static List<int> demarrer() => [GattAthletix.cmdDemarrer];
   static List<int> arreter() => [GattAthletix.cmdArreter];
   static List<int> calibrer() => [GattAthletix.cmdCalibrer];
+  static List<int> demarrerHorsLigne() => [GattAthletix.cmdDemarrerHorsLigne];
+  static List<int> effacerHorsLigne() => [GattAthletix.cmdEffacerHorsLigne];
 
   /// Refusée côté application si seuilBas ≥ seuilHaut, comme côté brassard.
   static List<int> reglerSeuil(int seuilHaut, int seuilBas) {

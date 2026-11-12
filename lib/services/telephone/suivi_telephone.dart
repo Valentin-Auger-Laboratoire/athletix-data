@@ -11,7 +11,10 @@ import 'trace_gps.dart';
 /// En mode démo (ou si le GPS est refusé), [simuler] produit un parcours inventé à ~10 km/h,
 /// signalé comme tel à l'écran.
 class SuiviTelephone {
-  SuiviTelephone({required this.gps, required this.pas, this.simuler = false});
+  SuiviTelephone({required this.gps, required this.pas, this.simuler = false, this.intensiteActuelle});
+
+  /// Intensité musculaire du moment, gardée avec chaque point GPS (tracé coloré).
+  final int Function()? intensiteActuelle;
 
   final bool gps;
   final bool pas;
@@ -65,7 +68,8 @@ class SuiviTelephone {
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.best, distanceFilter: 3),
       ).listen(
         (p) => trace.ajouter(PointGps(p.latitude, p.longitude,
-            altitude: p.altitude, precisionM: p.accuracy, tempsMs: _chrono.elapsedMilliseconds)),
+            altitude: p.altitude, precisionM: p.accuracy, tempsMs: _chrono.elapsedMilliseconds,
+            intensite: intensiteActuelle?.call())),
         onError: (_) => probleme = 'Signal GPS perdu',
       ));
     } catch (e) {
@@ -86,6 +90,7 @@ class SuiviTelephone {
         altitude: 35 + 8 * sin(angle),
         precisionM: 5,
         tempsMs: _chrono.elapsedMilliseconds,
+        intensite: intensiteActuelle?.call(),
       ));
       if (pas) podometre.pas += (t.round() % 4 == 0) ? 2 : 3; // ≈ 165 pas/min
     });

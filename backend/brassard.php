@@ -115,3 +115,44 @@ function courbe_post(): ?string
     }
     return json_encode(array_values($valeurs));
 }
+
+/** Tracé GPS facultatif : JSON [[lat, lon, secondes, intensité], …], 500 points au plus. */
+function trace_post(): ?string
+{
+    $brut = $_POST['trace'] ?? '';
+    if ($brut === '') {
+        return null;
+    }
+    $points = json_decode((string) $brut, true);
+    if (!is_array($points) || count($points) < 2 || count($points) > 500) {
+        json_out(["status" => "error", "message" => "Champ invalide : trace (2 à 500 points)"], 400);
+    }
+    $propre = [];
+    $t_precedent = -1;
+    foreach ($points as $p) {
+        if (!is_array($p) || count($p) !== 4) {
+            json_out(["status" => "error", "message" => "Champ invalide : trace ([lat, lon, s, %] attendu)"], 400);
+        }
+        [$lat, $lon, $t, $i] = array_values($p);
+        if (!is_numeric($lat) || !is_numeric($lon) || abs($lat) > 90 || abs($lon) > 180
+            || !is_int($t) || $t < $t_precedent || $t > 21600 || !is_int($i) || $i < 0 || $i > 255) {
+            json_out(["status" => "error", "message" => "Champ invalide : point de trace hors limites"], 400);
+        }
+        $t_precedent = $t;
+        $propre[] = [round((float) $lat, 5), round((float) $lon, 5), $t, $i];
+    }
+    return json_encode($propre);
+}
+
+/** Identifiant de séance tiré par le téléphone (UUID v4), facultatif. */
+function uuid_post(): ?string
+{
+    $brut = strtolower(trim((string) ($_POST['client_uuid'] ?? '')));
+    if ($brut === '') {
+        return null;
+    }
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $brut)) {
+        json_out(["status" => "error", "message" => "Champ invalide : client_uuid"], 400);
+    }
+    return $brut;
+}

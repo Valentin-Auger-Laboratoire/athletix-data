@@ -36,9 +36,21 @@ class Reglages {
     'reglage_mode_adapte': modeAdapte,
   };
 
+  /// Objectif de séances par semaine (accueil).
+  static final ValueNotifier<int> objectifSeances = ValueNotifier(3);
+
+  static Future<void> changerObjectif(int n) async {
+    objectifSeances.value = n.clamp(1, 14);
+    try {
+      await (await SharedPreferences.getInstance()).setInt('reglage_objectif_seances', objectifSeances.value);
+    } catch (_) {}
+  }
+
   static Future<void> charger() async {
     try {
       final p = await SharedPreferences.getInstance();
+      final objectif = p.getInt('reglage_objectif_seances');
+      if (objectif != null) objectifSeances.value = objectif;
       _tous.forEach((cle, notif) {
         final v = p.getBool(cle);
         if (v != null) notif.value = v;

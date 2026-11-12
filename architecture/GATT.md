@@ -26,7 +26,8 @@ Brassard Athletix (serveur GATT)
     ├── Mesure EMG            abad0001-…   Notify          8 octets (§4)
     ├── Point de contrôle     abad0002-…   Write           commandes (§5)
     ├── Configuration         abad0003-…   Read, Write     5 octets (§6)
-    └── État                  abad0004-…   Read, Notify    2 octets (§7)
+    ├── État                  abad0004-…   Read, Notify    2 octets (§7)
+    └── Résumé hors ligne     abad0005-…   Read            20 à 220 octets (§11, firmware 1.1)
 ```
 
 Tous les UUID du service Athletix partagent la même base, seuls les 8 premiers caractères changent :
@@ -38,6 +39,7 @@ Tous les UUID du service Athletix partagent la même base, seuls les 8 premiers 
 | Point de contrôle | `abad0002-b097-4a54-8315-c2971fc04ce6` |
 | Configuration | `abad0003-b097-4a54-8315-c2971fc04ce6` |
 | État | `abad0004-b097-4a54-8315-c2971fc04ce6` |
+| Résumé hors ligne | `abad0005-b097-4a54-8315-c2971fc04ce6` |
 
 **Pourquoi réutiliser les services standards ?** Batterie et informations de l'appareil existent déjà dans la norme Bluetooth. N'importe quel outil (nRF Connect, Chrome, Android) sait les lire sans code spécial.
 
@@ -93,6 +95,8 @@ L'application écrit une commande. Le premier octet est le code de la commande, 
 | `0x02` | ARRÊTER | — | revient à l'état « repos », les notifications EMG s'arrêtent |
 | `0x03` | CALIBRER | — | état « calibration » pendant 3 s : l'utilisateur serre le muscle au maximum. La valeur RMS la plus haute devient la référence 100 % (§6) |
 | `0x04` | RÉGLER LE SEUIL | `seuil_haut` uint8, `seuil_bas` uint8 | change les seuils d'alerte (en %). Refusé si `seuil_bas ≥ seuil_haut` |
+| `0x05` | DÉMARRER HORS LIGNE | — | comme DÉMARRER, et le brassard garde le résumé de la séance, **même si la liaison se coupe** (§11) |
+| `0x06` | EFFACER HORS LIGNE | — | efface le résumé, une fois enregistré par l'application |
 
 Une commande inconnue ou mal formée met l'état en « erreur » avec le code `4` (§7). Le brassard ne plante pas.
 
@@ -155,3 +159,29 @@ Application                                  Brassard
 | Lecture de la configuration et de l'état, commandes (tests) | `lib/services/brassard/codec_gatt.dart`, `test/ajouts_test.dart` | ✅ |
 | Connexion Bluetooth réelle dans l'app (Android et Chrome) | `lib/services/brassard/brassard_ble.dart` | ✅ écrite, ⏳ à tester avec une carte |
 | Firmware final (vrai MyoWare, jauge de batterie, intervalle 15–20 ms) | `hardware/firmware-brassard/` | ✅ calculs testés sur ordinateur (`tests/firmware/`), ⏳ à flasher |
+| Résumé hors ligne (natation, §11) : firmware 1.1, application, brassard simulé | `calcul_emg.h`, `hors_ligne.dart`, `natation_screen.dart` | ✅ testé sur ordinateur et dans l'application (simulé), ⏳ à essayer avec le vrai brassard dans l'eau |
+
+## 11. Résumé hors ligne — `abad0005` (Read), natation
+
+Le Bluetooth ne passe pas sous l'eau. Pour les sports aquatiques, l'application envoie `0x05` puis peut perdre la liaison : le brassard continue de mesurer et **calcule lui-même** le résumé de la séance. Au retour, l'application envoie `0x02` (ARRÊTER), lit `abad0005`, enregistre la séance sur le serveur, puis envoie `0x06` (EFFACER). Tant que l'effacement n'est pas fait, la séance reste dans le brassard : rien n'est perdu si l'envoi au serveur échoue.
+
+**Arrêt automatique** : après 5 minutes sous 10 % (sortie de l'eau), la séance est close à la **dernière activité** : le temps passé au bord ne compte pas.
+
+| Octets | Champ | Type | Sens |
+|---|---|---|---|
+| 0 | `version` | uint8 | 1 |
+| 1 | `etat` | uint8 | 0 vide, 1 en cours, 2 terminé |
+| 2–3 | `duree` | uint16 | s |
+| 4–7 | `nb_echantillons` | uint32 | mesures prises en compte |
+| 8 | `intensite_moyenne` | uint8 | % MVC |
+| 9 | `intensite_max` | uint8 | % MVC |
+| 10–11 | `temps_effort_intense` | uint16 | s, alerte allumée |
+| 12–13 | `nb_alertes` | uint16 | allumages de l'alerte |
+| 14–17 | `fin_il_y_a` | uint32 | s écoulées depuis la fin, au moment de la lecture (0 si en cours) |
+| 18 | `pas_courbe` | uint8 | s entre deux points (30) |
+| 19 | `nb_points` | uint8 | 0 à 200 |
+| 20… | `courbe` | uint8 × `nb_points` | intensité moyenne de chaque bloc de 30 s (200 points = 1 h 40) |
+
+La valeur dépasse les 20 octets d'une MTU par défaut : l'application la lit en **lecture longue** (gérée par Android et par `flutter_blue_plus`). `fin_il_y_a` est une durée mesurée par le brassard : l'application l'envoie au serveur (`fin_il_y_a_s`) pour dater la séance sans dépendre de l'heure du téléphone.
+
+Le calcul est dans `calcul_emg.h` (classe `EnregistrementHorsLigne`, testée sur ordinateur) ; le brassard simulé de l'application en utilise une copie en Dart, et un test vérifie que les deux produisent **les mêmes octets** sur le même scénario (`test/natation_test.dart`).

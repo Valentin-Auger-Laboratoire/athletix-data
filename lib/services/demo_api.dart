@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'api.dart';
 import 'demo_seances.dart';
 
@@ -81,13 +83,27 @@ class DemoApi implements AthletixApi {
 
   @override
   Future<Map<String, dynamic>> saveSeance(Map<String, String> seance) {
-    final id = _seances.length + 1;
+    final id = _seances.fold<int>(0, (m, s) => (s['id'] as int) > m ? s['id'] as int : m) + 1;
     final duree = int.tryParse(seance['duree_s'] ?? '') ?? 0;
-    final fin = DateTime.now();
+    final ilYa = int.tryParse(seance['fin_il_y_a_s'] ?? '') ?? 0;
+    final fin = DateTime.now().subtract(Duration(seconds: ilYa));
     String date(DateTime d) => d.toString().substring(0, 19);
     int? entier(String c) => int.tryParse(seance[c] ?? '');
     double? decimal(String c) => double.tryParse((seance[c] ?? '').replaceAll(',', '.'));
     String? texte(String c) => (seance[c] ?? '').trim().isEmpty ? null : seance[c]!.trim();
+    // Renvoi de la même séance : pas de doublon (comme le serveur)
+    final uuid = seance['client_uuid'];
+    if (uuid != null) {
+      for (final s in _seances) {
+        if (s['client_uuid'] == uuid) {
+          return _later({"status": "success", "session_id": s['id'], "deja_enregistree": true});
+        }
+      }
+    }
+    List<dynamic>? trace;
+    try {
+      if (seance['trace'] != null) trace = jsonDecode(seance['trace']!) as List;
+    } catch (_) {}
     List<int>? courbe;
     try {
       final brute = seance['courbe'];
@@ -95,7 +111,7 @@ class DemoApi implements AthletixApi {
         courbe = brute.substring(1, brute.length - 1).split(',').map((v) => int.parse(v.trim())).toList();
       }
     } catch (_) {}
-    _seances.insert(0, {
+    _seances.add({
       'id': id,
       'discipline': seance['discipline'] ?? '',
       'debut': date(fin.subtract(Duration(seconds: duree))),
@@ -119,7 +135,11 @@ class DemoApi implements AthletixApi {
       'commentaire': texte('commentaire'),
       'mode_adapte': seance['mode_adapte'] == '1',
       'courbe': courbe,
+      'nb_series': entier('nb_series'),
+      'trace': trace,
+      'client_uuid': seance['client_uuid'],
     });
+    _seances.sort((a, b) => (b['debut'] as String).compareTo(a['debut'] as String));
     return _later({
       "status": "success",
       "message": "Séance enregistrée (démo, en mémoire)",
@@ -127,11 +147,31 @@ class DemoApi implements AthletixApi {
     });
   }
 
+  /// Comme le serveur : la liste ne contient pas le tracé, le détail (getSeance) oui.
   @override
   Future<Map<String, dynamic>> getSeances({int limite = 100}) => _later({
         "status": "success",
-        "seances": List<Map<String, dynamic>>.from(_seances.take(limite.clamp(1, 500))),
+        "seances": [for (final s in _seances.take(limite.clamp(1, 500))) {...s, 'trace': null}],
       });
+
+  @override
+  Future<Map<String, dynamic>> getSeance(int id) => _later({
+        "status": "success",
+        "seances": [for (final s in _seances) if (s['id'] == id) Map<String, dynamic>.from(s)],
+      });
+
+  @override
+  Future<Map<String, dynamic>> exporterDonnees() => _later({
+        "status": "success",
+        "exporte_le": DateTime.now().toIso8601String(),
+        "compte": {"pseudo": "Athlète démo", "email": "demo@exemple.com", "sport": "Running"},
+        "profils": _profils,
+        "calibrations": _calibrations,
+        "seances": _seances,
+      });
+
+  @override
+  Future<Map<String, dynamic>> supprimerCompte(String motDePasse) => _later(_horsDemo);
 
   @override
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration) {

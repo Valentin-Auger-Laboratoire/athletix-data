@@ -8,6 +8,8 @@
 #   mysql -u root < database.sql
 #   mysql -u root < migrations/001_brassard_emg.sql
 #   mysql -u root < migrations/002_score_et_nettoyage.sql
+#   mysql -u root < migrations/003_contexte_telephone.sql
+#   mysql -u root < migrations/004_trace_series_hors_ligne.sql
 #   cp backend/config.example.php backend/config.local.php     # puis l'adapter
 #   php -S 127.0.0.1:8080 -t backend &                          # ou XAMPP
 #   ATHLETIX_TEST=1 B=http://127.0.0.1:8080 bash tests/api/test_api.sh
@@ -71,7 +73,7 @@ check "historique : séance Running avec résumé" '"discipline":"Running".*"int
 check "historique : séance simulée signalée" '"discipline":"Yoga","debut":"[^"]+","fin":"[^"]+","donnees_simulees":true' "$R"
 check "historique : mesures du téléphone et contexte" '"distance_m":5230,"denivele_m":48,"vitesse_moy_kmh":10.4,"nb_pas":6100,"fc_moy":148,"fc_max":176,"temperature_c":18.5' "$R"
 check "historique : ressenti, sommeil, mode adapté" '"ressenti_fatigue":6,"douleur":2,"sommeil":"Moyen","commentaire":"Jambes lourdes","mode_adapte":true' "$R"
-check "historique : zones, contractions, courbe" '"nb_contractions":42,"indice_fatigue_pct":12,"courbe":\[0,10,45,97,50,3\]' "$R"
+check "historique : zones, contractions, courbe" '"nb_contractions":42,"nb_series":null,"indice_fatigue_pct":12,"courbe":\[0,10,45,97,50,3\]' "$R"
 check "historique : limite" '"seances":\[\{[^]]*\}\]\}$' "$(post get_seances.php -d token=$T -d limite=1)"
 check "historique : sans jeton refusé" 'Session invalide' "$(post get_seances.php)"
 R=$(post get_hardware.php -d token=$T)
@@ -82,7 +84,36 @@ check "batterie hors plage" 'entre 0 et 100' "$(post save_calibration.php -d tok
 R=$(curl -s -X POST "$B/get_classement.php")
 check "classement" 'Testeur' "$R"
 check "classement : score EMG (séance simulée exclue)" '"pseudo":"Testeur","sport":"Running","score":40,"nb_seances":2' "$R"
+U=3f2a9c1e-7b4d-4e8a-9c2f-0a1b2c3d4e5f
+TR='[[48.85,2.35,0,10],[48.851,2.351,30,45],[48.852,2.352,60,80]]'
+R=$(post save_seance.php $S -d nb_series=4 -d client_uuid=$U -d "trace=$TR")
+check "séance avec tracé, séries et identifiant" '"session_id":[0-9]+' "$R"
+SID=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin)["session_id"])')
+check "renvoi de la même séance : pas de doublon" "\"session_id\":$SID,\"deja_enregistree\":true" "$(post save_seance.php $S -d client_uuid=$U)"
+check "une seule séance pour cet identifiant" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM sessions_entrainement WHERE client_uuid='$U'")"
+check "identifiant invalide refusé" 'client_uuid' "$(post save_seance.php $S -d client_uuid=pas-un-uuid)"
+check "tracé invalide refusé" 'trace' "$(post save_seance.php $S -d 'trace=[[95,2,0,10],[48,2,1,10]]')"
+check "tracé : temps qui recule refusé" 'trace' "$(post save_seance.php $S -d 'trace=[[48,2,10,10],[48,2,5,10]]')"
+R=$(post save_seance.php $S -d fin_il_y_a_s=86400)
+check "séance envoyée plus tard (hier)" '"session_id":[0-9]+' "$R"
+SID2=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin)["session_id"])')
+check "séance envoyée plus tard : date d'hier" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT DATEDIFF(NOW(), fin) FROM sessions_entrainement WHERE id=$SID2")"
+R=$(post get_seances.php -d token=$T -d id=$SID)
+check "détail d'une séance : tracé et séries" '"nb_series":4.*"trace":\[\[48.85,2.35,0,10\]' "$R"
+check "détail d'une séance : une seule" '^[^{]*\{[^{]*"seances":\[\{[^]]*\[\[[^}]*\}\]\}$' "$R"
+check "liste : sans le tracé" '"trace":null' "$(post get_seances.php -d token=$T -d limite=1)"
+check "détail : séance d'un autre refusée (aucun résultat)" '"seances":\[\]' "$(post get_seances.php -d token=$T -d id=999999)"
+R=$(post export_donnees.php -d token=$T)
+check "export RGPD : compte, profils, séances" '"compte":\{"pseudo":"Testeur","email":"test@exemple.fr".*"profils":\[\{.*"seances":\[\{' "$R"
+check "export RGPD : sans mot de passe ni jeton" '^[^$]*$' "$(echo "$R" | grep -o 'password_hash\|token_hash\|verification_code' || true)"
+check "suppression : mauvais mot de passe refusé" 'Mot de passe incorrect' "$(post supprimer_compte.php -d token=$T -d password=faux)"
 check "déconnexion" '"status":"success"' "$(post logout.php -d token=$T)"
 check "jeton révoqué" 'Session expirée' "$(post get_profil_ia.php -d token=$T)"
 check "renvoyer le code" '"status":"success"' "$(post resend_code.php -d email=inconnu@exemple.fr)"
+R=$(post login.php -d email=test@exemple.fr -d password=secret123)
+T=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
+check "suppression du compte" '"status":"success"' "$(post supprimer_compte.php -d token=$T -d password=secret123)"
+check "après suppression : connexion impossible" 'incorrect' "$(post login.php -d email=test@exemple.fr -d password=secret123)"
+check "après suppression : plus aucune donnée" '^0 0 0 0 0$' "$(mysql -uroot -N "$DB" -e "SELECT (SELECT COUNT(*) FROM users), (SELECT COUNT(*) FROM sessions_entrainement), (SELECT COUNT(*) FROM resultats_emg), (SELECT COUNT(*) FROM profil_ia), (SELECT COUNT(*) FROM calibrations)" | tr '\t' ' ')"
+check "après suppression : brassard gardé, délié" '^1 NULL$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*), MAX(user_id) FROM brassards" | tr '\t' ' ')"
 echo "---- $ok OK, $ko FAIL"

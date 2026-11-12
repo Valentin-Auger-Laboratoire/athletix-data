@@ -11,6 +11,7 @@ class GattAthletix {
   static const String pointDeControle = 'abad0002-b097-4a54-8315-c2971fc04ce6'; // Write
   static const String configuration = 'abad0003-b097-4a54-8315-c2971fc04ce6'; // Read, Write, 5 octets
   static const String etat = 'abad0004-b097-4a54-8315-c2971fc04ce6'; // Read, Notify, 2 octets
+  static const String horsLigne = 'abad0005-b097-4a54-8315-c2971fc04ce6'; // Read, 20 à 220 octets (natation)
 
   // Services et caractéristiques standards du Bluetooth
   static const String serviceBatterie = '0000180f-0000-1000-8000-00805f9b34fb';
@@ -24,6 +25,8 @@ class GattAthletix {
   static const int cmdArreter = 0x02;
   static const int cmdCalibrer = 0x03;
   static const int cmdReglerSeuil = 0x04; // suivi de seuil_haut, seuil_bas (en %)
+  static const int cmdDemarrerHorsLigne = 0x05; // mesure gardée dans le brassard (natation)
+  static const int cmdEffacerHorsLigne = 0x06; // après lecture et enregistrement
 
   // Valeurs par défaut de la configuration
   static const int seuilHautDefaut = 75;

@@ -158,7 +158,7 @@ void main() {
   });
 
   group('Évolution', () {
-    final evolution = Evolution(seancesDemo().map(SeanceResume.depuisApi).whereType<SeanceResume>());
+    final evolution = Evolution(seancesDemo(derniere: DateTime(2026, 11, 8, 20)).map(SeanceResume.depuisApi).whereType<SeanceResume>());
 
     test('six semaines, trois séances par semaine', () {
       expect(evolution.semaines.length, 6);
@@ -206,7 +206,7 @@ void main() {
 
   group('Séances de démo', () {
     test('toujours identiques et cohérentes', () {
-      final a = seancesDemo(), b = seancesDemo();
+      final a = seancesDemo(derniere: DateTime(2026, 11, 8, 20)), b = seancesDemo(derniere: DateTime(2026, 11, 8, 20));
       expect(a.length, 18);
       expect(a.first['debut'], b.first['debut']);
       for (final s in a) {

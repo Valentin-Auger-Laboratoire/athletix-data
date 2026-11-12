@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:athletix_data/services/api.dart';
+import 'package:athletix_data/services/file_envoi.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
@@ -61,7 +62,12 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   static const _sportsAPas = {'Running', 'Trail'};
   late final bool _gps = widget.mesure == 'ACTIVITE_MOYENNE';
   late final SuiviTelephone? _telephone = _gps
-      ? SuiviTelephone(gps: true, pas: _sportsAPas.contains(widget.categoryName), simuler: Api.isDemo)
+      ? SuiviTelephone(
+          gps: true,
+          pas: _sportsAPas.contains(widget.categoryName),
+          simuler: Api.isDemo,
+          intensiteActuelle: () => _derniere?.intensitePct ?? 0,
+        )
       : null;
   Meteo? _meteo;
   bool _meteoDemandee = false;
@@ -169,6 +175,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   }
 
   Map<String, String>? _envoi; // gardé pour réessayer sans reposer les questions
+  int _finMs = 0; // heure de fin, pour un envoi différé
 
   // Fin de séance : arrêter le brassard, demander le ressenti, envoyer le résumé (opération O6 du MCT)
   Future<void> _terminer() async {
@@ -201,7 +208,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         ..._cardio.versApi(),
         ...contexte,
         'mode_adapte': _modeAdapte ? '1' : '0',
+        'client_uuid': FileEnvoi.nouvelUuid(),
       };
+      _finMs = DateTime.now().millisecondsSinceEpoch;
     }
 
     if (!mounted) return;
@@ -215,6 +224,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             "${_resume.nbAlertes} alerte(s) d'effort intense"),
         backgroundColor: Colors.green,
       ));
+      Api.seancesModifiees.value++;
       // Ouvre le détail de la séance qui vient d'être enregistrée
       final liste = await Api.current.getSeances(limite: 1);
       final seances = liste['seances'] as List? ?? [];
@@ -225,6 +235,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       } else {
         navigator.pop();
       }
+    } else if (reponse['reseau'] == true) {
+      // Pas de réseau : la séance est gardée sur le téléphone et partira toute seule plus tard
+      await FileEnvoi.garder(_envoi!, finMs: _finMs);
+      Api.seancesModifiees.value++;
+      messenger.showSnackBar(const SnackBar(
+        content: Text("Pas de réseau : séance gardée sur le téléphone, elle sera envoyée automatiquement."),
+        backgroundColor: Colors.orange,
+      ));
+      navigator.pop();
     } else {
       // On reste sur l'écran pour ne pas perdre la séance : le bouton permet de réessayer
       setState(() {

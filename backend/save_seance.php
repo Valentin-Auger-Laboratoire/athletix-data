@@ -48,6 +48,13 @@ $zone_soutenue = entier_post_facultatif('temps_zone_soutenue_s', 0, 21600);
 $contractions = entier_post_facultatif('nb_contractions', 0, 65535);
 $fatigue      = entier_post_facultatif('indice_fatigue_pct', -100, 1000);
 $courbe       = courbe_post();
+$series       = entier_post_facultatif('nb_series', 0, 65535);
+$trace        = trace_post();
+$client_uuid  = uuid_post();
+// Séance envoyée plus tard (pas de réseau à la fin) : le téléphone indique depuis combien de
+// secondes elle est finie. Écart relatif mesuré par le téléphone, donc juste même si son horloge
+// est à la mauvaise heure (règle R6). 30 jours au plus.
+$il_y_a = entier_post('fin_il_y_a_s', 0, 2592000, 0);
 if ($fc_moy !== null && $fc_max !== null && $fc_moy > $fc_max) {
     json_out(["status" => "error", "message" => "Incohérent : la fréquence cardiaque moyenne dépasse la maximale"], 400);
 }
@@ -59,6 +66,19 @@ if (($_POST['ref_mvc_mv'] ?? '') !== '') {
 
 // mysqli ne lance pas d'exception ici (MYSQLI_REPORT_OFF dans bootstrap.php) :
 // chaque execute() est vérifié et une erreur annule toute la transaction.
+// Déjà reçue (renvoi après une réponse perdue) : on renvoie la même séance, sans doublon
+if ($client_uuid !== null) {
+    $stmt = $conn->prepare("SELECT id FROM sessions_entrainement WHERE user_id = ? AND client_uuid = ?");
+    $stmt->bind_param("is", $user_id, $client_uuid);
+    $stmt->execute();
+    $deja = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($deja) {
+        json_out(["status" => "success", "message" => "Séance déjà enregistrée", "session_id" => (int) $deja['id'],
+                  "deja_enregistree" => true]);
+    }
+}
+
 $conn->begin_transaction();
 try {
     $brassard_id = null;
@@ -72,12 +92,14 @@ try {
     $stmt = $conn->prepare(
         "INSERT INTO sessions_entrainement (user_id, brassard_id, discipline, debut, fin, donnees_simulees,
              distance_m, denivele_m, vitesse_moy_kmh, nb_pas, fc_moy, fc_max, temperature_c, humidite_pct,
-             meteo_code, ressenti_fatigue, douleur, sommeil, commentaire, mode_adapte)
-         VALUES (?, ?, ?, DATE_SUB(NOW(), INTERVAL ? SECOND), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+             meteo_code, ressenti_fatigue, douleur, sommeil, commentaire, mode_adapte, trace_gps, client_uuid)
+         VALUES (?, ?, ?, DATE_SUB(NOW(), INTERVAL ? SECOND), DATE_SUB(NOW(), INTERVAL ? SECOND),
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("iisiiiidiiidiiiissi", $user_id, $brassard_id, $discipline, $duree, $simule,
+    $debut_il_y_a = $duree + $il_y_a;
+    $stmt->bind_param("iisiiiiidiiidiiiississ", $user_id, $brassard_id, $discipline, $debut_il_y_a, $il_y_a, $simule,
         $distance, $denivele, $vitesse, $nb_pas, $fc_moy, $fc_max, $temp, $humidite,
-        $meteo, $ressenti, $douleur, $sommeil, $commentaire, $mode_adapte);
+        $meteo, $ressenti, $douleur, $sommeil, $commentaire, $mode_adapte, $trace, $client_uuid);
     if (!$stmt->execute()) {
         throw new RuntimeException($stmt->error);
     }
@@ -87,11 +109,11 @@ try {
     $stmt = $conn->prepare(
         "INSERT INTO resultats_emg (session_id, duree_s, nb_echantillons, intensite_moyenne_pct,
              intensite_max_pct, temps_effort_intense_s, nb_alertes, temps_zone_repos_s, temps_zone_moderee_s,
-             temps_zone_soutenue_s, nb_contractions, indice_fatigue_pct, courbe, ref_mvc_mv)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+             temps_zone_soutenue_s, nb_contractions, nb_series, indice_fatigue_pct, courbe, ref_mvc_mv)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("iiiiiiiiiiiisi", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
-        $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $fatigue, $courbe, $ref_mvc);
+    $stmt->bind_param("iiiiiiiiiiiiisi", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
+        $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $series, $fatigue, $courbe, $ref_mvc);
     if (!$stmt->execute()) {
         throw new RuntimeException($stmt->error);
     }

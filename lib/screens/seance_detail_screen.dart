@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:athletix_data/services/api.dart';
 import 'package:athletix_data/services/telephone/meteo.dart';
 import 'package:athletix_data/widgets/graphiques.dart';
 import 'historique_screen.dart';
@@ -43,6 +44,7 @@ class SeanceDetailScreen extends StatelessWidget {
               _chiffre('maximum', '${s['intensite_max_pct']} %'),
               _chiffre('alertes', '${s['nb_alertes']}'),
               if (_entier('nb_contractions') != null) _chiffre('contractions', '${_entier('nb_contractions')}'),
+              if ((_entier('nb_series') ?? 0) > 1) _chiffre('séries', '${_entier('nb_series')}'),
             ]),
             const SizedBox(height: 12),
             if (courbe.length >= 2) CourbeIntensite(valeurs: courbe, seuil: s['mode_adapte'] == true ? 60 : 75, pasS: 5),
@@ -73,15 +75,17 @@ class SeanceDetailScreen extends StatelessWidget {
             ]),
           if (_entier('distance_m') != null || _entier('nb_pas') != null)
             _section('Téléphone', [
-              Row(children: [
-                if (_entier('distance_m') != null) _chiffre('distance', '${decimalFr(_entier('distance_m')! / 1000, 2)} km'),
-                if (_decimal('vitesse_moy_kmh') != null) _chiffre('vitesse', '${decimalFr(_decimal('vitesse_moy_kmh')!, 1)} km/h'),
+              Wrap(spacing: 8, runSpacing: 12, children: [
+                if (_entier('distance_m') != null) _chiffreFixe('distance', '${decimalFr(_entier('distance_m')! / 1000, 2)} km'),
+                if (_decimal('vitesse_moy_kmh') != null) _chiffreFixe('vitesse', '${decimalFr(_decimal('vitesse_moy_kmh')!, 1)} km/h'),
                 if (_decimal('vitesse_moy_kmh') != null && _decimal('vitesse_moy_kmh')! >= 3)
-                  _chiffre('allure', _allure(_decimal('vitesse_moy_kmh')!)),
-                if (_entier('denivele_m') != null) _chiffre('dénivelé +', '${_entier('denivele_m')} m'),
-                if (_entier('nb_pas') != null) _chiffre('pas', '${_entier('nb_pas')}'),
+                  _chiffreFixe('allure', _allure(_decimal('vitesse_moy_kmh')!)),
+                if (_entier('denivele_m') != null) _chiffreFixe('dénivelé +', '${_entier('denivele_m')} m'),
+                if (_entier('nb_pas') != null) _chiffreFixe('pas', '${_entier('nb_pas')}'),
               ]),
             ]),
+          if (_entier('distance_m') != null && s['id'] != null)
+            _section('Parcours', [_SectionParcours(id: (s['id'] as num).toInt(), trace: s['trace'] as List?)]),
           if (_entier('fc_moy') != null)
             _section('Cœur (ceinture cardio)', [
               Row(children: [
@@ -152,10 +156,68 @@ class SeanceDetailScreen extends StatelessWidget {
         ]),
       );
 
+  Widget _chiffreFixe(String libelle, String valeur) => SizedBox(width: 96, child: Row(children: [_chiffre(libelle, valeur)]));
+
   Widget _texte(String libelle, String valeur) => RichText(
         text: TextSpan(children: [
           TextSpan(text: '$libelle : ', style: const TextStyle(color: Colors.white54)),
           TextSpan(text: valeur, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         ]),
       );
+}
+
+/// Tracé et profil vitesse / intensité. La liste des séances ne contient pas le tracé :
+/// il est chargé ici, pour cette séance seulement.
+class _SectionParcours extends StatefulWidget {
+  const _SectionParcours({required this.id, this.trace});
+
+  final int id;
+  final List? trace;
+
+  @override
+  State<_SectionParcours> createState() => _SectionParcoursState();
+}
+
+class _SectionParcoursState extends State<_SectionParcours> {
+  List<PointTrace>? _trace;
+  bool _charge = false;
+
+  static List<PointTrace>? _lire(List? brut) =>
+      brut?.map((p) => (p as List).map((v) => v as num).toList()).toList();
+
+  @override
+  void initState() {
+    super.initState();
+    _trace = _lire(widget.trace);
+    if (_trace == null) {
+      Api.current.getSeance(widget.id).then((r) {
+        final liste = r['seances'] as List? ?? [];
+        if (!mounted) return;
+        setState(() {
+          _charge = true;
+          if (liste.isNotEmpty) _trace = _lire((liste.first as Map)['trace'] as List?);
+        });
+      });
+    } else {
+      _charge = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _trace;
+    if (!_charge) return const Center(child: CircularProgressIndicator(color: Colors.orange));
+    if (t == null || t.length < 2) {
+      return const Text('Pas de tracé pour cette séance (parcours trop court, ou enregistré avant cette version).',
+          style: TextStyle(color: Colors.white38, fontSize: 12));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      CarteParcours(trace: t),
+      const SizedBox(height: 4),
+      const Text('Les 200 premiers et derniers mètres ne sont pas enregistrés (domicile).',
+          style: TextStyle(color: Colors.white38, fontSize: 11)),
+      const SizedBox(height: 14),
+      VitesseIntensite(trace: t),
+    ]);
+  }
 }

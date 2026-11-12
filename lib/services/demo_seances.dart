@@ -2,12 +2,13 @@ import 'dart:math';
 
 /// Séances FICTIVES de la démo, au format de get_seances.php, toutes faites avec le brassard simulé.
 ///
-/// Six semaines d'entraînement, toujours identiques (graine fixe), pour montrer les graphiques :
+/// Six semaines d'entraînement jusqu'à [derniere] (graine fixe), pour montrer les graphiques :
 /// la 4e semaine est volontairement moins bonne (mauvaises nuits, fatigue, douleur au genou)
 /// pour que l'écran « Mon évolution » ait quelque chose à expliquer.
 List<Map<String, dynamic>> seancesDemo({DateTime? derniere}) {
   final alea = Random(2026);
-  final fin = derniere ?? DateTime(2026, 11, 8, 20, 0); // dimanche soir : six semaines complètes
+  // Par défaut, jusqu'à maintenant : la semaine en cours a déjà ses premières séances (accueil)
+  final fin = derniere ?? DateTime.now();
   final lundiFin = DateTime(fin.year, fin.month, fin.day).subtract(Duration(days: fin.weekday - 1));
   final seances = <Map<String, dynamic>>[];
   String date(DateTime d) => d.toString().substring(0, 19);
@@ -106,6 +107,7 @@ List<Map<String, dynamic>> seancesDemo({DateTime? derniere}) {
         'sommeil': mauvaise ? 'Mauvais' : (alea.nextBool() ? 'Bon' : 'Moyen'),
         'commentaire': mauvaise && discipline == 'Running' ? 'Genou droit douloureux, nuits courtes cette semaine' : null,
         'mode_adapte': false,
+        'trace': course ? _traceDemo(discipline, duree, courbe, distance!, alea) : null,
       });
     }
   }
@@ -116,4 +118,30 @@ List<Map<String, dynamic>> seancesDemo({DateTime? derniere}) {
     seances[i]['id'] = seances.length - i;
   }
   return seances;
+}
+
+/// Parcours INVENTÉ (boucle autour d'un point fictif), un point toutes les ~10 s,
+/// intensité reprise de la courbe de la séance. Format du serveur : [lat, lon, s, %].
+List<List<num>> _traceDemo(String discipline, int duree, List<int> courbe, int distanceM, Random alea) {
+  const lat0 = 48.8350, lon0 = 2.4350;
+  final nb = min(300, duree ~/ 10);
+  // périmètre de la boucle = distance parcourue, en un tour
+  final rayonM = distanceM / (2 * pi);
+  final rLat = rayonM / 111195, rLon = rayonM / (111195 * cos(lat0 * pi / 180));
+  final forme = discipline == 'Trail' ? 0.35 : 0.15; // boucle plus irrégulière en trail
+  return [
+    for (var i = 0; i <= nb; i++)
+      () {
+        final t = i / nb;
+        final a = t * 2 * pi;
+        final r = 1 + forme * sin(3 * a);
+        final s = (t * duree).round();
+        return <num>[
+          ((lat0 + rLat * r * sin(a)) * 100000).round() / 100000,
+          ((lon0 + rLon * r * cos(a)) * 100000).round() / 100000,
+          s,
+          courbe[min(courbe.length - 1, s ~/ 5)],
+        ];
+      }(),
+  ];
 }

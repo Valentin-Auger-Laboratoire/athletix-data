@@ -194,4 +194,119 @@ class SurveillanceSaturation {
   bool enCours_ = false;
 };
 
+// ---- Enregistrement sans connexion (natation : le Bluetooth ne passe pas sous l'eau) ----
+// Le brassard calcule lui-même le résumé de la séance et une courbe (une valeur toutes les 30 s).
+// L'application le lit à la reconnexion (caractéristique abad0005, GATT.md §11).
+// Arrêt automatique : après 5 min sous 10 %, la séance est close à la DERNIÈRE activité
+// (le temps passé hors de l'eau, sur le bord, ne compte pas).
+class EnregistrementHorsLigne {
+ public:
+  static const uint8_t VERSION = 1;
+  static const uint8_t VIDE = 0, EN_COURS = 1, TERMINE = 2;
+  static const int MAX_POINTS = 200;                 // 200 × 30 s = 1 h 40
+  static const uint32_t PAS_COURBE_MS = 30000;
+  static const uint32_t ECART_MAX_MS = 1000;         // trou plus long : pas compté (comme l'application)
+  static const uint8_t SEUIL_REPOS = 10;             // %
+  static const uint32_t ARRET_AUTO_MS = 300000;      // 5 min
+  static const unsigned TAILLE_MAX = 20 + MAX_POINTS;
+
+  uint8_t etat() const { return etat_; }
+
+  void demarrer(uint32_t maintenantMs) {
+    a_ = Cumuls();
+    instantane_ = Cumuls();
+    etat_ = EN_COURS;
+    precedentMs_ = maintenantMs;
+    premier_ = true;
+    enRepos_ = false;
+    alerteAvant_ = false;
+    finMs_ = maintenantMs;
+  }
+
+  void effacer() { etat_ = VIDE; a_ = Cumuls(); }
+
+  // Une mesure (même fréquence que les notifications, 50 Hz).
+  void ajouter(uint32_t maintenantMs, uint8_t intensite, bool alerte) {
+    if (etat_ != EN_COURS) return;
+    uint32_t ecart = premier_ ? 0 : (uint32_t)(maintenantMs - precedentMs_);
+    premier_ = false;
+    precedentMs_ = maintenantMs;
+    if (ecart > ECART_MAX_MS) ecart = 0;
+
+    // Repos : on garde une copie des cumuls au début du repos, pour pouvoir y revenir
+    if (intensite < SEUIL_REPOS) {
+      if (!enRepos_) {
+        enRepos_ = true;
+        debutReposMs_ = maintenantMs;
+        instantane_ = a_;
+      } else if ((uint32_t)(maintenantMs - debutReposMs_) >= ARRET_AUTO_MS) {
+        a_ = instantane_;
+        finMs_ = debutReposMs_;
+        etat_ = TERMINE;
+        return;
+      }
+    } else {
+      enRepos_ = false;
+    }
+
+    a_.msTotal += ecart;
+    a_.somme += intensite;
+    a_.nb++;
+    if (intensite > a_.max) a_.max = intensite;
+    if (alerte) a_.msIntense += ecart;
+    if (alerte && !alerteAvant_) a_.alertes++;
+    alerteAvant_ = alerte;
+
+    a_.sommeBloc += intensite;
+    a_.nbBloc++;
+    if (a_.msTotal - a_.debutBlocMs >= PAS_COURBE_MS) {
+      if (a_.nbPoints < MAX_POINTS) a_.points[a_.nbPoints++] = (uint8_t)((a_.sommeBloc + a_.nbBloc / 2) / a_.nbBloc);
+      a_.sommeBloc = 0;
+      a_.nbBloc = 0;
+      a_.debutBlocMs = a_.msTotal;
+    }
+  }
+
+  // Arrêt demandé (commande ARRÊTER) : la séance finit maintenant.
+  void terminer(uint32_t maintenantMs) {
+    if (etat_ != EN_COURS) return;
+    etat_ = TERMINE;
+    finMs_ = maintenantMs;
+  }
+
+  // Valeur de la caractéristique (GATT.md §11). Renvoie le nombre d'octets écrits.
+  unsigned encoder(uint8_t *o, uint32_t maintenantMs) const {
+    o[0] = VERSION;
+    o[1] = etat_;
+    uint32_t duree = a_.msTotal / 1000;
+    ecrire16(&o[2], duree > 65535 ? 65535 : (uint16_t)duree);
+    ecrire32(&o[4], a_.nb);
+    o[8] = a_.nb == 0 ? 0 : (uint8_t)((a_.somme + a_.nb / 2) / a_.nb);
+    o[9] = a_.max;
+    uint32_t intense = a_.msIntense / 1000;
+    ecrire16(&o[10], intense > 65535 ? 65535 : (uint16_t)intense);
+    ecrire16(&o[12], a_.alertes);
+    ecrire32(&o[14], etat_ == TERMINE ? (uint32_t)(maintenantMs - finMs_) / 1000 : 0);
+    o[18] = PAS_COURBE_MS / 1000;
+    o[19] = (uint8_t)a_.nbPoints;
+    for (int i = 0; i < a_.nbPoints; i++) o[20 + i] = a_.points[i];
+    return 20 + a_.nbPoints;
+  }
+
+ private:
+  struct Cumuls {
+    uint32_t msTotal = 0, nb = 0, msIntense = 0, debutBlocMs = 0;
+    uint64_t somme = 0, sommeBloc = 0;
+    uint32_t nbBloc = 0;
+    uint16_t alertes = 0;
+    uint8_t max = 0;
+    int nbPoints = 0;
+    uint8_t points[MAX_POINTS] = {0};
+  };
+  Cumuls a_, instantane_;
+  uint8_t etat_ = VIDE;
+  uint32_t precedentMs_ = 0, debutReposMs_ = 0, finMs_ = 0;
+  bool premier_ = true, enRepos_ = false, alerteAvant_ = false;
+};
+
 }  // namespace athletix

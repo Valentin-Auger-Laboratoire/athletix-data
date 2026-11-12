@@ -1,14 +1,19 @@
+import 'dart:convert';
 import 'dart:math';
 
 /// Un point GPS (degrés, mètres, ms).
 class PointGps {
-  const PointGps(this.latitude, this.longitude, {this.altitude, this.precisionM = 10, required this.tempsMs});
+  const PointGps(this.latitude, this.longitude,
+      {this.altitude, this.precisionM = 10, required this.tempsMs, this.intensite});
 
   final double latitude;
   final double longitude;
   final double? altitude;
   final double precisionM;
   final int tempsMs;
+
+  /// Intensité musculaire (% MVC) au moment du point, pour colorer le tracé.
+  final int? intensite;
 }
 
 /// Calculs sur un parcours GPS : distance, dénivelé positif, vitesse. Sans dépendance au GPS
@@ -71,10 +76,37 @@ class TraceGps {
   /// Allure en minutes par km (course à pied), ou null à l'arrêt.
   double? get allureMinParKm => vitesseMoyKmh < 1 ? null : 60 / vitesseMoyKmh;
 
+  /// Tracé à envoyer : [[lat, lon, secondes, intensité], …], au plus [maxPoints] points.
+  /// Les [masquerM] premiers et derniers mètres sont retirés : le départ et l'arrivée
+  /// sont souvent le domicile. Null si le parcours est trop court pour en garder quelque chose.
+  List<List<num>>? traceAEnvoyer({int maxPoints = 500, double masquerM = 200}) {
+    if (points.length < 2) return null;
+    // distance cumulée de chaque point
+    final cumul = <double>[0];
+    for (var i = 1; i < points.length; i++) {
+      cumul.add(cumul.last + distance(points[i - 1], points[i]));
+    }
+    final total = cumul.last;
+    final gardes = [
+      for (var i = 0; i < points.length; i++)
+        if (cumul[i] >= masquerM && cumul[i] <= total - masquerM) points[i],
+    ];
+    if (gardes.length < 2) return null;
+    final pas = (gardes.length / maxPoints).ceil();
+    final t0 = points.first.tempsMs;
+    double arrondi(double v) => (v * 100000).round() / 100000; // ≈ 1 m
+    return [
+      for (var i = 0; i < gardes.length; i += pas)
+        [arrondi(gardes[i].latitude), arrondi(gardes[i].longitude), ((gardes[i].tempsMs - t0) / 1000).round(),
+         (gardes[i].intensite ?? 0).clamp(0, 255)],
+    ];
+  }
+
   Map<String, String> versApi() => {
         if (points.length >= 2) 'distance_m': '${distanceM.round()}',
         if (points.length >= 2) 'denivele_m': '${deniveleM.round()}',
         if (points.length >= 2) 'vitesse_moy_kmh': vitesseMoyKmh.toStringAsFixed(1),
+        if (traceAEnvoyer() case final t?) 'trace': jsonEncode(t),
       };
 }
 

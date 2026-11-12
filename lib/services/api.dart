@@ -38,6 +38,15 @@ abstract class AthletixApi {
   /// [limite] : nombre maximal de séances (les plus récentes), de 1 à 500.
   Future<Map<String, dynamic>> getSeances({int limite = 100});
 
+  /// Une séance avec son tracé GPS (get_seances.php avec `id`) : clé `seances` (0 ou 1 élément).
+  Future<Map<String, dynamic>> getSeance(int id);
+
+  /// RGPD : toutes mes données (backend/export_donnees.php).
+  Future<Map<String, dynamic>> exporterDonnees();
+
+  /// RGPD : supprimer mon compte et toutes mes données (backend/supprimer_compte.php).
+  Future<Map<String, dynamic>> supprimerCompte(String motDePasse);
+
   /// Enregistre une calibration (backend/save_calibration.php).
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration);
 }
@@ -48,6 +57,9 @@ class Api {
   static Session? session;
 
   static bool get isDemo => session?.demo ?? false;
+
+  /// Incrémenté à chaque séance enregistrée (ou mise en attente) : l'accueil se met à jour.
+  static final ValueNotifier<int> seancesModifiees = ValueNotifier(0);
 
   static void startDemo() {
     current = DemoApi();
@@ -88,7 +100,8 @@ class HttpApi implements AthletixApi {
       return json.decode(text) as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Erreur $script : $e");
-      return {"status": "error", "message": "Impossible de joindre le serveur"};
+      // `reseau` : l'envoi peut être retenté plus tard (voir FileEnvoi)
+      return {"status": "error", "message": "Impossible de joindre le serveur", "reseau": true};
     }
   }
 
@@ -129,6 +142,16 @@ class HttpApi implements AthletixApi {
   @override
   Future<Map<String, dynamic>> getSeances({int limite = 100}) =>
       _post("get_seances.php", {"limite": "$limite"}, auth: true);
+
+  @override
+  Future<Map<String, dynamic>> getSeance(int id) => _post("get_seances.php", {"id": "$id"}, auth: true);
+
+  @override
+  Future<Map<String, dynamic>> exporterDonnees() => _post("export_donnees.php", {}, auth: true);
+
+  @override
+  Future<Map<String, dynamic>> supprimerCompte(String motDePasse) =>
+      _post("supprimer_compte.php", {"password": motDePasse}, auth: true);
 
   @override
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration) =>

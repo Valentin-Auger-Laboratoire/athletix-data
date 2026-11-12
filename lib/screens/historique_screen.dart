@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:athletix_data/services/analyse/export_pdf.dart';
 import 'package:athletix_data/services/analyse/export_soignants.dart';
 import 'package:athletix_data/services/api.dart';
 import 'evolution_screen.dart';
@@ -49,10 +50,14 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
     });
   }
 
-  Future<void> _exporter() async {
+  Future<void> _exporter(String format) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ExportSoignants.partager(_seances);
+      if (format == 'pdf') {
+        await ExportPdf.partager(_seances, pseudo: Api.session?.pseudo ?? 'Athlète');
+      } else {
+        await ExportSoignants.partager(_seances);
+      }
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text("Export impossible : $e"), backgroundColor: Colors.red));
     }
@@ -72,10 +77,15 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
             icon: const Icon(Icons.insights),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EvolutionScreen())),
           ),
-          IconButton(
-            tooltip: 'Exporter pour un soignant (CSV)',
+          PopupMenuButton<String>(
+            tooltip: 'Exporter pour un soignant',
             icon: const Icon(Icons.ios_share),
-            onPressed: _seances.isEmpty ? null : _exporter,
+            enabled: _seances.isNotEmpty,
+            onSelected: _exporter,
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'pdf', child: Text('Carnet PDF (médecin, kiné)')),
+              PopupMenuItem(value: 'csv', child: Text('Tableau CSV (Excel)')),
+            ],
           ),
         ],
       ),

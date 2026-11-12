@@ -35,6 +35,7 @@ class BrassardBle implements SourceBrassard {
   late BluetoothCharacteristic _carControle;
   late BluetoothCharacteristic _carConfiguration;
   BluetoothCharacteristic? _carEtat;
+  BluetoothCharacteristic? _carHorsLigne;
   BluetoothCharacteristic? _carBatterie;
 
   String? _numeroSerie;
@@ -129,6 +130,7 @@ class BrassardBle implements SourceBrassard {
     _carControle = controle;
     _carConfiguration = configuration;
     _carEtat = trouver(GattAthletix.service, GattAthletix.etat);
+    _carHorsLigne = trouver(GattAthletix.service, GattAthletix.horsLigne); // firmware 1.1 et plus
     _carBatterie = trouver(GattAthletix.serviceBatterie, GattAthletix.niveauBatterie);
 
     // Informations de l'appareil (facultatives : un firmware de test peut ne pas les avoir)
@@ -232,6 +234,26 @@ class BrassardBle implements SourceBrassard {
   }
 
   /// Change les seuils d'alerte (commande 0x04), puis relit la configuration.
+  @override
+  Future<void> demarrerHorsLigne() async {
+    if (_carHorsLigne == null) {
+      throw ErreurBrassard("Ce brassard ne sait pas enregistrer sans connexion (firmware 1.1 nécessaire)");
+    }
+    await _envoyer(CommandeBrassard.demarrerHorsLigne());
+  }
+
+  @override
+  Future<ResumeHorsLigne> lireHorsLigne() async {
+    final c = _carHorsLigne;
+    if (c == null) {
+      throw ErreurBrassard("Ce brassard ne sait pas enregistrer sans connexion (firmware 1.1 nécessaire)");
+    }
+    return ResumeHorsLigne.depuisOctets(await c.read()); // lecture longue : jusqu'à 220 octets
+  }
+
+  @override
+  Future<void> effacerHorsLigne() => _envoyer(CommandeBrassard.effacerHorsLigne());
+
   @override
   Future<void> reglerSeuils(int seuilHaut, int seuilBas) async {
     await _envoyer(CommandeBrassard.reglerSeuil(seuilHaut, seuilBas));

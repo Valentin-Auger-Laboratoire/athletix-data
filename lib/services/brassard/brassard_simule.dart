@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'codec_gatt.dart';
 import 'gatt_athletix.dart';
+import 'hors_ligne.dart';
 import 'mesure_emg.dart';
 import 'source_brassard.dart';
 
@@ -44,6 +45,12 @@ class BrassardSimule implements SourceBrassard {
   int _seuilHaut = GattAthletix.seuilHautDefaut;
   int _seuilBas = GattAthletix.seuilBasDefaut;
   bool _calibration = false;
+
+  /// Enregistrement sans connexion : même calcul que le firmware (copie Dart).
+  final EnregistrementHorsLigne _horsLigne = EnregistrementHorsLigne();
+
+  /// Accélération du temps pour la démo de natation (×60 : 1 s réelle = 1 min de nage).
+  int accelerationHorsLigne = 1;
 
   /// Durée de la calibration (commande 0x03), comme le vrai brassard.
   static const Duration dureeCalibration = Duration(seconds: 3);
@@ -92,6 +99,14 @@ class BrassardSimule implements SourceBrassard {
     return 0;
   }
 
+  /// Profil de natation (temps simulé, en s) : longueurs à 45 %, virages à 15 %,
+  /// un sprint à 85 % toutes les 5 min. Jamais au repos, sinon l'arrêt automatique se déclencherait.
+  static double effortNage(double tempsS) {
+    final t = tempsS % 300;
+    if (t >= 240 && t < 270) return 85;
+    return (t % 40) < 34 ? 45 : 15;
+  }
+
   @override
   Future<void> demarrer() async {
     if (_minuteur != null || _flux.isClosed) return;
@@ -100,7 +115,23 @@ class BrassardSimule implements SourceBrassard {
   }
 
   @override
+  Future<void> demarrerHorsLigne() async {
+    _horsLigne.demarrer(_tempsHorsLigneMs);
+    await demarrer();
+  }
+
+  @override
+  Future<ResumeHorsLigne> lireHorsLigne() async =>
+      ResumeHorsLigne.depuisOctets(_horsLigne.encoder(_tempsHorsLigneMs));
+
+  @override
+  Future<void> effacerHorsLigne() async => _horsLigne.effacer();
+
+  int get _tempsHorsLigneMs => _chrono.elapsedMilliseconds * accelerationHorsLigne;
+
+  @override
   Future<void> arreter() async {
+    _horsLigne.terminer(_tempsHorsLigneMs);
     _minuteur?.cancel();
     _minuteur = null;
     _chrono.stop();
@@ -127,7 +158,8 @@ class BrassardSimule implements SourceBrassard {
     final ms = _chrono.elapsedMilliseconds;
 
     // Le muscle ne passe pas d'un effort à l'autre instantanément : lissage (≈ 0,15 s)
-    _intensiteLissee += (effortVise(ms / 1000) - _intensiteLissee) * 0.15;
+    final effort = _horsLigne.etat == ResumeHorsLigne.enCours ? effortNage(_tempsHorsLigneMs / 1000) : effortVise(ms / 1000);
+    _intensiteLissee += (effort - _intensiteLissee) * 0.15;
     final bruit = (_hasard.nextDouble() * 2 - 1) * 3; // ± 3 %
     final intensite = max(0, (_intensiteLissee + bruit).round());
 
@@ -148,6 +180,14 @@ class BrassardSimule implements SourceBrassard {
     // Même chemin que le Bluetooth : octets → décodeur
     for (final mesure in MesureEmg.depuisNotification(paquet)) {
       _flux.add(mesure);
+      if (_horsLigne.etat == ResumeHorsLigne.enCours) {
+        // Avec l'accélération, chaque mesure représente plusieurs mesures réelles (même valeur)
+        final t = _tempsHorsLigneMs;
+        final pas = periode.inMilliseconds;
+        for (var k = accelerationHorsLigne - 1; k >= 0; k--) {
+          _horsLigne.ajouter(t - k * pas, mesure.intensitePct, mesure.alerte);
+        }
+      }
     }
   }
 }

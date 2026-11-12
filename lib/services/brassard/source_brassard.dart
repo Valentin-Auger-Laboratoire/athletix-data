@@ -1,4 +1,7 @@
+import 'hors_ligne.dart';
 import 'mesure_emg.dart';
+
+export 'hors_ligne.dart' show ResumeHorsLigne;
 
 /// Ce que l'application attend d'un brassard, qu'il soit simulé ou réel.
 ///
@@ -44,6 +47,16 @@ abstract class SourceBrassard {
   /// au maximum. Renvoie la nouvelle référence 100 % MVC, en mV.
   /// Lève une [ErreurBrassard] si le brassard refuse (signal trop faible…).
   Future<int> calibrer();
+
+  /// Commande 0x05 : mesure gardée dans le brassard, même sans connexion (natation).
+  /// Elle continue jusqu'à [arreter] ou 5 min de repos (GATT.md §11).
+  Future<void> demarrerHorsLigne();
+
+  /// Lit le résumé gardé dans le brassard (caractéristique abad0005).
+  Future<ResumeHorsLigne> lireHorsLigne();
+
+  /// Commande 0x06 : efface le résumé, une fois enregistré sur le serveur.
+  Future<void> effacerHorsLigne();
 
   /// Libère les ressources (connexion, minuteurs).
   void fermer();

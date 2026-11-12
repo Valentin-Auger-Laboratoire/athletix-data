@@ -12,6 +12,8 @@ import 'brassard_screen.dart';
 import 'historique_screen.dart';
 import 'evolution_screen.dart';
 import 'reglages_screen.dart';
+import 'compte_screen.dart';
+import 'package:athletix_data/widgets/carte_semaine.dart';
 import 'consentement.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
@@ -236,6 +238,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.shield_outlined, color: Colors.teal, size: 22),
+                ),
+                title: const Text("Mon compte et mes données", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const CompteScreen()));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -393,6 +410,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: CarteSemaine(
+              onOuvrir: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EvolutionScreen())),
             ),
           ),
           Padding(

@@ -1,12 +1,15 @@
 <?php
 // Historique des séances de l'utilisateur connecté, avec leur résumé EMG et leur contexte.
 // Paramètre facultatif `limite` (1 à 500, 100 par défaut) : utilisé par l'écran d'évolution.
+// Paramètre facultatif `id` : une seule séance, avec son tracé GPS (écran de détail).
+// Le tracé n'est renvoyé qu'avec `id`, pour garder la liste légère.
 require __DIR__ . '/bootstrap.php';
 require_post();
 
 require __DIR__ . '/brassard.php';
 $user_id = require_user($conn);
 $limite = entier_post('limite', 1, 500, 100);
+$id = entier_post('id', 0, PHP_INT_MAX, 0);
 
 $stmt = $conn->prepare(
     "SELECT s.id, s.discipline, s.debut, s.fin, s.donnees_simulees,
@@ -16,14 +19,15 @@ $stmt = $conn->prepare(
             r.duree_s, r.intensite_moyenne_pct, r.intensite_max_pct,
             r.temps_effort_intense_s, r.nb_alertes, r.ref_mvc_mv,
             r.temps_zone_repos_s, r.temps_zone_moderee_s, r.temps_zone_soutenue_s,
-            r.nb_contractions, r.indice_fatigue_pct, r.courbe
+            r.nb_contractions, r.nb_series, r.indice_fatigue_pct, r.courbe,
+            IF(? > 0, s.trace_gps, NULL) AS trace_gps
      FROM sessions_entrainement s
      JOIN resultats_emg r ON r.session_id = s.id
-     WHERE s.user_id = ?
+     WHERE s.user_id = ? AND (? = 0 OR s.id = ?)
      ORDER BY s.debut DESC, s.id DESC
      LIMIT ?"
 );
-$stmt->bind_param("ii", $user_id, $limite);
+$stmt->bind_param("iiiii", $id, $user_id, $id, $id, $limite);
 $stmt->execute();
 $res = $stmt->get_result();
 
@@ -35,13 +39,15 @@ while ($row = $res->fetch_assoc()) {
     }
     foreach (['ref_mvc_mv', 'distance_m', 'denivele_m', 'nb_pas', 'fc_moy', 'fc_max', 'humidite_pct', 'meteo_code',
               'ressenti_fatigue', 'douleur', 'temps_zone_repos_s', 'temps_zone_moderee_s', 'temps_zone_soutenue_s',
-              'nb_contractions', 'indice_fatigue_pct'] as $c) {
+              'nb_contractions', 'nb_series', 'indice_fatigue_pct'] as $c) {
         $row[$c] = $row[$c] === null ? null : (int) $row[$c];
     }
     foreach (['vitesse_moy_kmh', 'temperature_c'] as $c) {
         $row[$c] = $row[$c] === null ? null : (float) $row[$c];
     }
     $row['courbe'] = $row['courbe'] === null ? null : json_decode($row['courbe'], true);
+    $row['trace'] = $row['trace_gps'] === null ? null : json_decode($row['trace_gps'], true);
+    unset($row['trace_gps']);
     $row['donnees_simulees'] = (int) $row['donnees_simulees'] === 1;
     $row['mode_adapte'] = (int) $row['mode_adapte'] === 1;
     $seances[] = $row;
