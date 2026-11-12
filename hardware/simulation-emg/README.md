@@ -2,7 +2,7 @@
 
 **🇫🇷 Français** · [🇬🇧 English](#english)
 
-Avant de câbler le brassard, l'équipe a modélisé sous **Simulink** toute la chaîne de mesure musculaire : du signal du muscle jusqu'à l'alerte envoyée à l'application. Le modèle s'appelle `AthletixData_EMG_Simulation`.
+Avant de câbler le brassard, **Maxence Olivier** a modélisé sous **Simulink** toute la chaîne de mesure musculaire : du signal du muscle jusqu'à l'alerte envoyée à l'application. Le modèle s'appelle `AthletixData_EMG_Simulation`.
 
 C'est une **expérimentation** : un modèle d'essai pour choisir les réglages avant le montage, pas une mesure sur le vrai brassard. Le signal du muscle est simulé et la référence des 100 % est supposée.
 
@@ -59,7 +59,7 @@ Le modèle final est dans ce dossier : [`AthletixData_EMG_Simulation.slx`](Athle
 
 ## Simulink simulation of the EMG chain (English)
 
-Before wiring the armband, the team modelled the whole muscle-measurement chain in **Simulink**. This is an **experiment**: a test model used to choose the settings before building, not a measurement on the real armband.
+Before wiring the armband, **Maxence Olivier** modelled the whole muscle-measurement chain in **Simulink**. This is an **experiment**: a test model used to choose the settings before building, not a measurement on the real armband.
 
 The chain:
 - **Muscle signal:** 2 kHz noise, 20–450 Hz band-pass filter, an effort profile (rest, 40 %, 95 %, 50 %, rest) and 50 Hz interference.

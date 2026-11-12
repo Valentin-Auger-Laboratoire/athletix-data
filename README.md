@@ -9,7 +9,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 | Membre | Rôle | Tâches principales |
 |---|---|---|
 | **Valentin Auger** | Matériel et application | schéma électrique du brassard, firmware ESP32, acquisition et calcul RMS, interface Flutter du prototype |
-| **Maxence Olivier** | Chef de projet et qualité | planning (Gantt, MPM), documentation technique, conformité, tests |
+| **Maxence Olivier** | Chef de projet et qualité | planning (Gantt, MPM), documentation technique, conformité, tests ; dans le dépôt : la **simulation Simulink de la chaîne EMG** ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)), modèle et résultats |
 | **Othmen Al Bydeoi** | Architecture système | architecture Bluetooth Low Energy (GATT), intégration réseau, modèles de données (MCD, MLD, MCT), schémas ; dans le dépôt : la spécification [`architecture/`](architecture/README.md), le brassard simulé et l'écran de séance EMG de l'appli, l'enregistrement des séances et des calibrations (API PHP + [`migrations/`](migrations/001_brassard_emg.sql)), le firmware de test [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md) et les tests |
 
 ## Le brassard (version finale)
@@ -22,7 +22,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 | Batterie **LiPo 3,7 V 1 500 mAh** + interrupteur | autonomie visée : plus de 2 h (environ 10 h estimées) |
 | Brassard élastique | maintien sur le biceps |
 
-La chaîne de mesure a été modélisée sous Simulink avant le câblage, à titre d'**expérimentation** : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). Dans ce modèle d'essai, l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas. Le modèle final est fourni : [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b ou plus récent).
+La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant le câblage, à titre d'**expérimentation** : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). Dans ce modèle d'essai, l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas. Le modèle final est fourni : [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b ou plus récent).
 
 **Le câblage présumé** : le matériel n'est pas encore reçu, ce schéma montre comment les composants commandés seront reliés (non testé) :
 
@@ -151,7 +151,7 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 A connected armband that measures muscle activity (electromyography, EMG) and a fitness-tracking app. Group project at EPISEN (French engineering school), February to June 2026.
 
-**Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
+**Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA; in the repository: the Simulink simulation of the EMG chain in `hardware/simulation-emg/`), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
 
