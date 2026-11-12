@@ -36,6 +36,16 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 
 ![Résultat de la simulation : alerte d'effort intense et intensité en % MVC](hardware/simulation-emg/resultat-simulation-corrigee.png)
 
+## Où en est le projet
+
+Le matériel, demandé en juin 2026, vient d'être commandé par l'école : livraison attendue **dans un mois au plus tôt**. En attendant, tout ce qui ne dépend pas des pièces est préparé.
+
+- ✅ **Fait** : application et démo en ligne, API PHP / MySQL, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé, firmware de test.
+- 🔜 **À faire sans le matériel** : connexion Bluetooth réelle dans l'application, écrans de calibration et d'historique, règle de score du classement, API testée sur un vrai serveur, faux brassard testé sur un ESP32, firmware final, boîtier, protocole de test.
+- ⏳ **À la réception** : vérification de la batterie, soudure, premiers tests, calibration, comparaison avec la simulation, séance complète enregistrée, autonomie, montage dans le boîtier.
+
+Détail, cases à cocher et répartition proposée : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
+
 ## Rencontre avec une patiente atteinte de sclérose en plaques
 
 > [!NOTE]
@@ -76,6 +86,7 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 | `backend/` | API PHP : inscription, vérification par e-mail, connexion, profils, classement, état du brassard |
 | `hardware/` | Câblage présumé du brassard EMG, simulation Simulink, et fichiers du premier capteur cardiaque : code ESP32, simulation Wokwi ([détails](hardware/README.md)) |
 | `architecture/` | Spécification Bluetooth (GATT), MCD / MLD, MCT, intégration réseau |
+| `FEUILLE-DE-ROUTE.md` | Ce qu'il reste à faire, avant et après la réception du matériel |
 | `database.sql` | Structure de la base + 1 compte de démo fictif |
 | `migrations/` | Mises à jour de la base (brassard, calibrations, résultats EMG) |
 | `docs/` | Version web compilée, publiée par GitHub Pages |
@@ -154,6 +165,8 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 **Team:** Valentin Auger (project lead, hardware and app: project management, planning (MPM), hardware choice and quote; armband wiring diagram and presumed wiring, acquisition and RMS; the whole Flutter app: home, e-mail-verified sign-up, login, profile questionnaire and history, advice, sport categories and workouts, leaderboard, demo mode; the PHP/MySQL API and database: accounts and e-mail codes, token login, profiles, performances, leaderboard, armband status; the online demo and screenshots; the first heart-rate sensor track: PPG circuit, ESP32 code, Wokwi simulation, layout diagram; the documentation), Maxence Olivier (simulation and planning: the Simulink model of the EMG chain in `hardware/simulation-emg/`, and the Gantt chart), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
+
+**Project status.** The hardware, requested in June 2026, has just been ordered by the school (expected in a month at the earliest). Done: app and online demo, PHP/MySQL API, Bluetooth format and data models, simulated armband, Simulink simulation, presumed wiring, test firmware. Next, without the hardware: real Bluetooth connection in the app, calibration and history screens, leaderboard scoring, API tested on a real server, test firmware tried on an ESP32, final firmware, enclosure, test protocol. Full roadmap (in French): [`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md).
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
