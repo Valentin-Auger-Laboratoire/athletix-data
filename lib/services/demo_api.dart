@@ -1,4 +1,5 @@
 import 'api.dart';
+import 'demo_seances.dart';
 
 /// Mode démo : aucune requête réseau, toutes les données sont FICTIVES et vivent en mémoire.
 /// Elles disparaissent quand on quitte la démo ou qu'on recharge la page.
@@ -32,20 +33,9 @@ class DemoApi implements AthletixApi {
     },
   ];
 
-  /// Séances de la démo (en mémoire seulement), au format de get_seances.php.
-  /// Deux séances d'exemple FICTIVES, faites avec le brassard simulé.
-  final List<Map<String, dynamic>> _seances = [
-    {
-      'id': 2, 'discipline': 'Musculation', 'debut': '2026-11-10 18:05:00', 'fin': '2026-11-10 18:35:00',
-      'donnees_simulees': true, 'duree_s': 1800, 'intensite_moyenne_pct': 46, 'intensite_max_pct': 104,
-      'temps_effort_intense_s': 240, 'nb_alertes': 6, 'ref_mvc_mv': 1850,
-    },
-    {
-      'id': 1, 'discipline': 'Running', 'debut': '2026-11-08 09:30:00', 'fin': '2026-11-08 10:10:00',
-      'donnees_simulees': true, 'duree_s': 2400, 'intensite_moyenne_pct': 31, 'intensite_max_pct': 78,
-      'temps_effort_intense_s': 35, 'nb_alertes': 1, 'ref_mvc_mv': 1850,
-    },
-  ];
+  /// Séances de la démo (en mémoire seulement), au format de get_seances.php :
+  /// six semaines FICTIVES faites avec le brassard simulé (voir demo_seances.dart).
+  final List<Map<String, dynamic>> _seances = seancesDemo();
   final List<Map<String, String>> _calibrations = [];
 
   Future<T> _later<T>(T value) => Future.delayed(const Duration(milliseconds: 300), () => value);
@@ -95,6 +85,16 @@ class DemoApi implements AthletixApi {
     final duree = int.tryParse(seance['duree_s'] ?? '') ?? 0;
     final fin = DateTime.now();
     String date(DateTime d) => d.toString().substring(0, 19);
+    int? entier(String c) => int.tryParse(seance[c] ?? '');
+    double? decimal(String c) => double.tryParse((seance[c] ?? '').replaceAll(',', '.'));
+    String? texte(String c) => (seance[c] ?? '').trim().isEmpty ? null : seance[c]!.trim();
+    List<int>? courbe;
+    try {
+      final brute = seance['courbe'];
+      if (brute != null && brute.length > 2) {
+        courbe = brute.substring(1, brute.length - 1).split(',').map((v) => int.parse(v.trim())).toList();
+      }
+    } catch (_) {}
     _seances.insert(0, {
       'id': id,
       'discipline': seance['discipline'] ?? '',
@@ -102,11 +102,23 @@ class DemoApi implements AthletixApi {
       'fin': date(fin),
       'donnees_simulees': seance['simule'] == '1',
       'duree_s': duree,
-      'intensite_moyenne_pct': int.tryParse(seance['intensite_moyenne_pct'] ?? '') ?? 0,
-      'intensite_max_pct': int.tryParse(seance['intensite_max_pct'] ?? '') ?? 0,
-      'temps_effort_intense_s': int.tryParse(seance['temps_effort_intense_s'] ?? '') ?? 0,
-      'nb_alertes': int.tryParse(seance['nb_alertes'] ?? '') ?? 0,
-      'ref_mvc_mv': int.tryParse(seance['ref_mvc_mv'] ?? ''),
+      'intensite_moyenne_pct': entier('intensite_moyenne_pct') ?? 0,
+      'intensite_max_pct': entier('intensite_max_pct') ?? 0,
+      'temps_effort_intense_s': entier('temps_effort_intense_s') ?? 0,
+      'nb_alertes': entier('nb_alertes') ?? 0,
+      'ref_mvc_mv': entier('ref_mvc_mv'),
+      for (final c in const [
+        'temps_zone_repos_s', 'temps_zone_moderee_s', 'temps_zone_soutenue_s', 'nb_contractions',
+        'indice_fatigue_pct', 'distance_m', 'denivele_m', 'nb_pas', 'fc_moy', 'fc_max', 'humidite_pct',
+        'meteo_code', 'ressenti_fatigue', 'douleur',
+      ])
+        c: entier(c),
+      'vitesse_moy_kmh': decimal('vitesse_moy_kmh'),
+      'temperature_c': decimal('temperature_c'),
+      'sommeil': texte('sommeil'),
+      'commentaire': texte('commentaire'),
+      'mode_adapte': seance['mode_adapte'] == '1',
+      'courbe': courbe,
     });
     return _later({
       "status": "success",
@@ -116,8 +128,10 @@ class DemoApi implements AthletixApi {
   }
 
   @override
-  Future<Map<String, dynamic>> getSeances() =>
-      _later({"status": "success", "seances": List<Map<String, dynamic>>.from(_seances)});
+  Future<Map<String, dynamic>> getSeances({int limite = 100}) => _later({
+        "status": "success",
+        "seances": List<Map<String, dynamic>>.from(_seances.take(limite.clamp(1, 500))),
+      });
 
   @override
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration) {

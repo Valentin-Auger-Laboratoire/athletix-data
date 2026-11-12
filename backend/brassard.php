@@ -59,3 +59,59 @@ function batterie_post(): ?int
     }
     return entier_post('batterie', 0, 100);
 }
+
+// Entier facultatif : null si le champ est absent ou vide, sinon contrôlé comme entier_post().
+function entier_post_facultatif(string $champ, int $min, int $max): ?int
+{
+    if (($_POST[$champ] ?? '') === '') {
+        return null;
+    }
+    return entier_post($champ, $min, $max);
+}
+
+// Nombre décimal facultatif (point ou virgule), contrôlé dans [min, max].
+function decimal_post_facultatif(string $champ, float $min, float $max): ?float
+{
+    $brut = $_POST[$champ] ?? '';
+    if ($brut === '') {
+        return null;
+    }
+    $brut = str_replace(',', '.', (string) $brut);
+    if (!is_numeric($brut)) {
+        json_out(["status" => "error", "message" => "Champ invalide : $champ doit être un nombre"], 400);
+    }
+    $v = (float) $brut;
+    if ($v < $min || $v > $max) {
+        json_out(["status" => "error", "message" => "Champ invalide : $champ doit être entre $min et $max"], 400);
+    }
+    return round($v, 1);
+}
+
+// Texte facultatif, coupé à $max caractères.
+function texte_post_facultatif(string $champ, int $max): ?string
+{
+    $t = trim((string) ($_POST[$champ] ?? ''));
+    if ($t === '') {
+        return null;
+    }
+    return mb_substr($t, 0, $max);
+}
+
+// Courbe résumée : tableau JSON d'au plus 2 000 entiers entre 0 et 255. Renvoie le JSON normalisé.
+function courbe_post(): ?string
+{
+    $brut = $_POST['courbe'] ?? '';
+    if ($brut === '') {
+        return null;
+    }
+    $valeurs = json_decode((string) $brut, true);
+    if (!is_array($valeurs) || count($valeurs) > 2000) {
+        json_out(["status" => "error", "message" => "Champ invalide : courbe (tableau d'au plus 2000 valeurs)"], 400);
+    }
+    foreach ($valeurs as $v) {
+        if (!is_int($v) || $v < 0 || $v > 255) {
+            json_out(["status" => "error", "message" => "Champ invalide : courbe (entiers de 0 à 255)"], 400);
+        }
+    }
+    return json_encode(array_values($valeurs));
+}

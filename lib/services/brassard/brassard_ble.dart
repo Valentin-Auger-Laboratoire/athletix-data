@@ -214,8 +214,10 @@ class BrassardBle implements SourceBrassard {
   @override
   int? get batteriePct => _batterie;
 
-  /// Seuils d'alerte actuels du brassard (en %).
+  @override
   int get seuilHaut => _config.seuilHaut;
+
+  @override
   int get seuilBas => _config.seuilBas;
 
   @override
@@ -230,6 +232,7 @@ class BrassardBle implements SourceBrassard {
   }
 
   /// Change les seuils d'alerte (commande 0x04), puis relit la configuration.
+  @override
   Future<void> reglerSeuils(int seuilHaut, int seuilBas) async {
     await _envoyer(CommandeBrassard.reglerSeuil(seuilHaut, seuilBas));
     await _lireConfiguration();

@@ -8,13 +8,14 @@
 | Partie | État |
 |---|---|
 | Application Flutter (comptes, profil, conseils, séances, classement, mode démo) | ✅ fait, démo en ligne |
-| API PHP / MySQL | ✅ testée sur une vraie base MariaDB : 41 vérifications ([`tests/api/`](tests/api/test_api.sh)) |
+| API PHP / MySQL | ✅ testée sur une vraie base MariaDB : 49 vérifications ([`tests/api/`](tests/api/test_api.sh)) |
 | Format Bluetooth (GATT), modèles de données, migrations | ✅ fait ([`architecture/`](architecture/README.md)) |
 | Brassard simulé dans l'application (vrais paquets Bluetooth) | ✅ fait, testé |
 | Simulation Simulink de la chaîne EMG | ✅ faite ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)) |
 | Câblage du brassard | ✅ schéma présumé vérifié sur les fiches SparkFun ([`hardware/`](hardware/README.md)), non testé |
 | Connexion Bluetooth réelle dans l'application (`BrassardBle`) | ✅ écrite, ⏳ à tester avec une carte |
 | Écrans Brassard, Calibration, Mes séances, consentement | ✅ faits, testés dans le navigateur |
+| Téléphone en plus du brassard (§4) : graphiques, GPS, pas, météo, cardio, ressenti, évolution, fatigue, accessibilité, export | ✅ faits, testés dans le navigateur, ⏳ GPS / capteurs / vibration à essayer sur un téléphone Android |
 | Règle de score du classement à partir des mesures EMG | ✅ proposée et codée, ⏳ à valider en équipe |
 | Projet Android | ✅ prêt (autorisations Bluetooth), ⏳ APK à compiler dans Android Studio |
 | Firmware de test ESP32 (faux brassard) | ✅ écrit, ⏳ jamais testé sur une carte |
@@ -80,34 +81,34 @@ Dans cet ordre, en notant chaque résultat :
 
 ## 4. Compléter l'application : le téléphone en plus du brassard
 
-L'application n'est pas qu'un écran pour le brassard : le **téléphone** apporte ses propres mesures, et les deux ensemble doivent donner un suivi complet. Ces idées sont celles de Valentin (historique, graphiques de progression, records personnels, score de fatigue, GPS et accéléromètre du téléphone, export pour les soignants) et celles de la rencontre avec la patiente atteinte de sclérose en plaques. **Tout ceci peut se faire sans le matériel.**
+L'application n'est pas qu'un écran pour le brassard : le **téléphone** apporte ses propres mesures, et les deux ensemble doivent donner un suivi complet. Ces idées sont celles de Valentin (historique, graphiques de progression, records personnels, score de fatigue, GPS et accéléromètre du téléphone, export pour les soignants) et celles de la rencontre avec la patiente atteinte de sclérose en plaques. **Tout ceci peut se faire sans le matériel.** Fait le 12 novembre 2026 (sauf les points laissés ouverts), testé dans le navigateur ; à essayer sur un téléphone Android.
 
 ### Ce que le téléphone peut mesurer
-- [ ] **GPS** pour la course, le vélo, le ski : distance, vitesse, allure, dénivelé, tracé du parcours.
-- [ ] **Accéléromètre** : cadence et nombre de pas en course, nombre de répétitions en musculation.
-- [ ] **Météo** à l'heure de la séance (température, humidité), récupérée en ligne avec la position : elle aide à expliquer une baisse de forme, et la chaleur compte beaucoup pour la sclérose en plaques.
-- [ ] **Fréquence cardiaque** : le brassard EMG sur le biceps **ne mesure pas** le rythme cardiaque. Solution simple : relier en Bluetooth une ceinture ou une montre cardio du commerce (service Bluetooth standard « Heart Rate », `0x180D`, que l'application peut lire avec le même package).
+- [x] **GPS** pour les sports d'endurance : distance, vitesse, allure, dénivelé (points imprécis et sauts ignorés). Reste : afficher le tracé du parcours sur une carte.
+- [x] **Accéléromètre** : nombre de pas en course et en trail. Reste : répétitions en musculation (on compte déjà les **contractions** avec le brassard).
+- [x] **Météo** (Open-Meteo, position arrondie à ~1 km) à l'heure de la séance (température, humidité), récupérée en ligne avec la position : elle aide à expliquer une baisse de forme, et la chaleur compte beaucoup pour la sclérose en plaques.
+- [x] **Fréquence cardiaque** (ceinture reliée dans l'écran Brassard, moyenne et maximum enregistrés) : le brassard EMG sur le biceps **ne mesure pas** le rythme cardiaque. Solution simple : relier en Bluetooth une ceinture ou une montre cardio du commerce (service Bluetooth standard « Heart Rate », `0x180D`, que l'application peut lire avec le même package).
 
 ### Graphiques
-- [ ] **Pendant la séance** : courbe de l'intensité musculaire en direct, avec le seuil d'alerte.
-- [ ] **Après la séance** : courbe complète, temps passé par zone d'intensité, et, avec le GPS, vitesse et intensité musculaire superposées.
-- [ ] **Évolution** semaine par semaine : nombre de séances, durée, intensité moyenne, temps d'effort intense, records personnels.
-- [ ] **Fatigue** : repérer les séances ou les semaines « moins bonnes » (intensité qui baisse pour un même effort, record pas atteint) et les relier au contexte.
+- [x] **Pendant la séance** : courbe de l'intensité musculaire en direct, avec le seuil d'alerte.
+- [x] **Après la séance** : courbe complète, temps passé par zone d'intensité, chiffres du GPS, du cœur et de la météo. Reste : vitesse et intensité superposées sur le même graphique.
+- [x] **Évolution** semaine par semaine : nombre de séances, durée, intensité moyenne, temps d'effort intense, records personnels.
+- [x] **Fatigue** (indice expérimental par séance + semaines moins bonnes) : repérer les séances ou les semaines « moins bonnes » (intensité qui baisse pour un même effort, record pas atteint) et les relier au contexte.
 
 ### Contexte de chaque séance (pour comprendre les baisses)
-- [ ] Après chaque séance : ressenti de fatigue (0 à 10), douleur ou blessure, sommeil de la nuit, avec la météo ajoutée automatiquement.
-- [ ] Graphique qui superpose la performance et ce contexte (« cette semaine-là : mauvais sommeil, chaleur, moins bon rendement »).
+- [x] Après chaque séance : ressenti de fatigue (0 à 10), douleur ou blessure, sommeil de la nuit, avec la météo ajoutée automatiquement.
+- [x] Graphique qui superpose (intensité et fatigue ressentie par semaine, causes listées sous les semaines moins bonnes) la performance et ce contexte (« cette semaine-là : mauvais sommeil, chaleur, moins bon rendement »).
 
 ### Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
 | Piste (README) | Où on en est |
 |---|---|
 | Force qui change d'un jour à l'autre : recalibrer à chaque séance | ✅ fait (écran de calibration, historique des calibrations) |
 | Données de santé protégées, consentement | ✅ fait (consentement au premier lancement, seul un résumé est stocké) |
-| **Fatigue** : la suivre et proposer une pause avant l'épuisement | ⏳ à faire : indicateur dans l'application à partir des séances ; la vraie mesure (baisse de la fréquence médiane) demande le signal **RAW** du MyoWare, lu à 1 kHz ou plus, donc un changement du firmware |
-| **Chaleur** : symptômes aggravés quand le corps chauffe | ⏳ à faire : météo par le téléphone (sans matériel) ; un capteur de température de la peau devrait être ajouté à la commande |
+| **Fatigue** : la suivre et proposer une pause avant l'épuisement | ✅ en partie : indice expérimental par séance, semaines moins bonnes, pause conseillée toutes les 10 min en mode adapté ; ⏳ la vraie mesure (baisse de la fréquence médiane) demande le signal **RAW** du MyoWare, lu à 1 kHz ou plus, donc un changement du firmware |
+| **Chaleur** : symptômes aggravés quand le corps chauffe | ✅ météo par le téléphone, avertissement chaleur en mode adapté ; ⏳ un capteur de température de la peau devrait être ajouté à la commande |
 | Raideurs et spasmes, asymétrie gauche / droite | ⏳ plus tard : activité au repos détectable avec un capteur ; la comparaison gauche / droite demande un **deuxième** brassard |
-| Gestes fins et vue parfois difficiles | ⏳ à faire : mode « grands boutons et texte agrandi », alertes par vibration du téléphone et par la voix |
-| Suivi avec les soignants | ⏳ à faire : export des séances et du carnet (PDF ou CSV) à donner au neurologue ou au kinésithérapeute |
+| Gestes fins et vue parfois difficiles | ✅ fait : grands caractères, alertes par vibration et à voix haute (écran Réglages) |
+| Suivi avec les soignants | ✅ fait : export CSV des séances avec le ressenti (bouton de « Mes séances ») ; ⏳ version PDF |
 
 ## Proposition de répartition
 

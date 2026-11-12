@@ -9,7 +9,13 @@
     <!-- Android 11 et moins -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+
+    <!-- GPS du téléphone pendant les séances d'endurance (geolocator) : distance, vitesse, dénivelé.
+         Sur Android 11 et moins, la même permission sert aussi à la recherche Bluetooth. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Vibration des alertes (accessibilité) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 
     <!-- usesCleartextTraffic : autorise http:// pour joindre XAMPP sur le réseau local pendant le

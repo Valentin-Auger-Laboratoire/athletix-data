@@ -35,7 +35,8 @@ abstract class AthletixApi {
   Future<Map<String, dynamic>> saveSeance(Map<String, String> seance);
 
   /// Historique des séances de l'utilisateur (backend/get_seances.php) : clé `seances`.
-  Future<Map<String, dynamic>> getSeances();
+  /// [limite] : nombre maximal de séances (les plus récentes), de 1 à 500.
+  Future<Map<String, dynamic>> getSeances({int limite = 100});
 
   /// Enregistre une calibration (backend/save_calibration.php).
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration);
@@ -126,7 +127,8 @@ class HttpApi implements AthletixApi {
       _post("save_seance.php", seance, auth: true);
 
   @override
-  Future<Map<String, dynamic>> getSeances() => _post("get_seances.php", {}, auth: true);
+  Future<Map<String, dynamic>> getSeances({int limite = 100}) =>
+      _post("get_seances.php", {"limite": "$limite"}, auth: true);
 
   @override
   Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration) =>

@@ -27,6 +27,31 @@ if ($intense > $duree) {
     json_out(["status" => "error", "message" => "Incohérent : le temps d'effort intense dépasse la durée de la séance"], 400);
 }
 
+// Facultatif : mesures du téléphone, contexte, résumé enrichi (migration 003)
+$distance   = entier_post_facultatif('distance_m', 0, 1000000);
+$denivele   = entier_post_facultatif('denivele_m', 0, 20000);
+$vitesse    = decimal_post_facultatif('vitesse_moy_kmh', 0, 150);
+$nb_pas     = entier_post_facultatif('nb_pas', 0, 200000);
+$fc_moy     = entier_post_facultatif('fc_moy', 30, 230);
+$fc_max     = entier_post_facultatif('fc_max', 30, 240);
+$temp       = decimal_post_facultatif('temperature_c', -50, 60);
+$humidite   = entier_post_facultatif('humidite_pct', 0, 100);
+$meteo      = entier_post_facultatif('meteo_code', 0, 99);
+$ressenti   = entier_post_facultatif('ressenti_fatigue', 0, 10);
+$douleur    = entier_post_facultatif('douleur', 0, 10);
+$sommeil    = texte_post_facultatif('sommeil', 20);
+$commentaire = texte_post_facultatif('commentaire', 500);
+$mode_adapte = ($_POST['mode_adapte'] ?? '0') === '1' ? 1 : 0;
+$zone_repos   = entier_post_facultatif('temps_zone_repos_s', 0, 21600);
+$zone_moderee = entier_post_facultatif('temps_zone_moderee_s', 0, 21600);
+$zone_soutenue = entier_post_facultatif('temps_zone_soutenue_s', 0, 21600);
+$contractions = entier_post_facultatif('nb_contractions', 0, 65535);
+$fatigue      = entier_post_facultatif('indice_fatigue_pct', -100, 1000);
+$courbe       = courbe_post();
+if ($fc_moy !== null && $fc_max !== null && $fc_moy > $fc_max) {
+    json_out(["status" => "error", "message" => "Incohérent : la fréquence cardiaque moyenne dépasse la maximale"], 400);
+}
+
 $ref_mvc = null;
 if (($_POST['ref_mvc_mv'] ?? '') !== '') {
     $ref_mvc = entier_post('ref_mvc_mv', 100, 3300);
@@ -45,10 +70,14 @@ try {
 
     // Début et fin fixés par le serveur : l'horloge du téléphone peut être fausse (règle R6)
     $stmt = $conn->prepare(
-        "INSERT INTO sessions_entrainement (user_id, brassard_id, discipline, debut, fin, donnees_simulees)
-         VALUES (?, ?, ?, DATE_SUB(NOW(), INTERVAL ? SECOND), NOW(), ?)"
+        "INSERT INTO sessions_entrainement (user_id, brassard_id, discipline, debut, fin, donnees_simulees,
+             distance_m, denivele_m, vitesse_moy_kmh, nb_pas, fc_moy, fc_max, temperature_c, humidite_pct,
+             meteo_code, ressenti_fatigue, douleur, sommeil, commentaire, mode_adapte)
+         VALUES (?, ?, ?, DATE_SUB(NOW(), INTERVAL ? SECOND), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("iisii", $user_id, $brassard_id, $discipline, $duree, $simule);
+    $stmt->bind_param("iisiiiidiiidiiiissi", $user_id, $brassard_id, $discipline, $duree, $simule,
+        $distance, $denivele, $vitesse, $nb_pas, $fc_moy, $fc_max, $temp, $humidite,
+        $meteo, $ressenti, $douleur, $sommeil, $commentaire, $mode_adapte);
     if (!$stmt->execute()) {
         throw new RuntimeException($stmt->error);
     }
@@ -57,10 +86,12 @@ try {
 
     $stmt = $conn->prepare(
         "INSERT INTO resultats_emg (session_id, duree_s, nb_echantillons, intensite_moyenne_pct,
-             intensite_max_pct, temps_effort_intense_s, nb_alertes, ref_mvc_mv)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+             intensite_max_pct, temps_effort_intense_s, nb_alertes, temps_zone_repos_s, temps_zone_moderee_s,
+             temps_zone_soutenue_s, nb_contractions, indice_fatigue_pct, courbe, ref_mvc_mv)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("iiiiiiii", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes, $ref_mvc);
+    $stmt->bind_param("iiiiiiiiiiiisi", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
+        $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $fatigue, $courbe, $ref_mvc);
     if (!$stmt->execute()) {
         throw new RuntimeException($stmt->error);
     }

@@ -24,6 +24,13 @@ abstract class SourceBrassard {
   /// Niveau de batterie en % (caractéristique standard 0x2A19), ou null si inconnu.
   int? get batteriePct;
 
+  /// Seuils de l'alerte d'effort intense (en %) : s'allume au seuil haut, s'éteint sous le bas.
+  int get seuilHaut;
+  int get seuilBas;
+
+  /// Commande 0x04 : change les seuils (mode adapté par exemple).
+  Future<void> reglerSeuils(int seuilHaut, int seuilBas);
+
   /// Flux des mesures reçues (environ 50 par seconde pendant une séance).
   Stream<MesureEmg> get mesures;
 

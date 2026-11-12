@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'codec_gatt.dart';
 import 'gatt_athletix.dart';
 import 'mesure_emg.dart';
 import 'source_brassard.dart';
@@ -40,6 +41,8 @@ class BrassardSimule implements SourceBrassard {
   double _intensiteLissee = 0;
   bool _alerte = false;
   int _refMvcMv = GattAthletix.refMvcDefautMv;
+  int _seuilHaut = GattAthletix.seuilHautDefaut;
+  int _seuilBas = GattAthletix.seuilBasDefaut;
   bool _calibration = false;
 
   /// Durée de la calibration (commande 0x03), comme le vrai brassard.
@@ -59,6 +62,19 @@ class BrassardSimule implements SourceBrassard {
 
   @override
   int get refMvcMv => _refMvcMv;
+
+  @override
+  int get seuilHaut => _seuilHaut;
+
+  @override
+  int get seuilBas => _seuilBas;
+
+  @override
+  Future<void> reglerSeuils(int seuilHaut, int seuilBas) async {
+    CommandeBrassard.reglerSeuil(seuilHaut, seuilBas); // mêmes contrôles que le vrai brassard
+    _seuilHaut = seuilHaut;
+    _seuilBas = seuilBas;
+  }
 
   /// Un brassard simulé n'a pas de batterie.
   @override
@@ -116,8 +132,8 @@ class BrassardSimule implements SourceBrassard {
     final intensite = max(0, (_intensiteLissee + bruit).round());
 
     // Alerte avec hystérésis : s'allume au seuil haut, s'éteint sous le seuil bas
-    if (!_alerte && intensite >= GattAthletix.seuilHautDefaut) _alerte = true;
-    if (_alerte && intensite < GattAthletix.seuilBasDefaut) _alerte = false;
+    if (!_alerte && intensite >= _seuilHaut) _alerte = true;
+    if (_alerte && intensite < _seuilBas) _alerte = false;
 
     final rms = (intensite * refMvcMv / 100).round();
     final paquet = MesureEmg(

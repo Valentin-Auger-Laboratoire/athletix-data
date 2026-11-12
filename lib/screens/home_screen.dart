@@ -10,6 +10,8 @@ import 'classement_screen.dart';
 import 'ia_result_screen.dart';
 import 'brassard_screen.dart';
 import 'historique_screen.dart';
+import 'evolution_screen.dart';
+import 'reglages_screen.dart';
 import 'consentement.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
@@ -198,6 +200,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   _ouvrirHistorique();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.insights, color: Colors.green, size: 22),
+                ),
+                title: const Text("Mon évolution", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const EvolutionScreen()));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.accessibility_new, color: Colors.purple, size: 22),
+                ),
+                title: const Text("Réglages et accessibilité", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ReglagesScreen()));
                 },
               ),
               ListTile(

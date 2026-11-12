@@ -6,6 +6,7 @@ import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_ble.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
+import 'package:athletix_data/services/telephone/cardio.dart';
 import 'calibration_screen.dart';
 
 /// Choix du brassard : recherche Bluetooth du vrai brassard, ou brassard simulé (démo).
@@ -112,6 +113,10 @@ class _BrassardScreenState extends State<BrassardScreen> {
               "de la simulation Simulink. Les séances simulées ne comptent pas dans le classement.",
               style: TextStyle(color: Colors.white38, fontSize: 11),
             ),
+            if (_bluetoothDisponible == true) ...[
+              const SizedBox(height: 28),
+              const _SectionCardio(),
+            ],
           ],
         ),
       ),
@@ -232,6 +237,132 @@ class _BrassardScreenState extends State<BrassardScreen> {
                 style: TextStyle(color: Colors.white38, fontSize: 12)),
           ),
       ],
+    );
+  }
+}
+
+/// Ceinture cardio Bluetooth standard (service 0x180D), facultative :
+/// le brassard EMG mesure les muscles, pas le cœur.
+class _SectionCardio extends StatefulWidget {
+  const _SectionCardio();
+
+  @override
+  State<_SectionCardio> createState() => _SectionCardioState();
+}
+
+class _SectionCardioState extends State<_SectionCardio> {
+  bool _recherche = false;
+  bool _connexion = false;
+  String? _erreur;
+  List<ScanResult> _resultats = [];
+  StreamSubscription<List<ScanResult>>? _abonnement;
+
+  @override
+  void dispose() {
+    _abonnement?.cancel();
+    if (_recherche) FlutterBluePlus.stopScan();
+    super.dispose();
+  }
+
+  Future<void> _rechercher() async {
+    setState(() {
+      _recherche = true;
+      _erreur = null;
+      _resultats = [];
+    });
+    try {
+      await _abonnement?.cancel();
+      _abonnement = CeintureCardio.rechercher().listen((r) {
+        if (mounted) setState(() => _resultats = r);
+      });
+      await Future.delayed(const Duration(seconds: 8));
+    } catch (e) {
+      if (mounted) setState(() => _erreur = 'Recherche impossible : $e');
+    }
+    if (mounted) setState(() => _recherche = false);
+  }
+
+  Future<void> _connecter(ScanResult r) async {
+    await FlutterBluePlus.stopScan();
+    setState(() {
+      _connexion = true;
+      _erreur = null;
+    });
+    try {
+      CeintureCardio.active.value?.fermer();
+      CeintureCardio.active.value = await CeintureCardio.connecter(r.device);
+    } catch (e) {
+      _erreur = '$e';
+    }
+    if (mounted) setState(() => _connexion = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<CeintureCardio?>(
+      valueListenable: CeintureCardio.active,
+      builder: (context, ceinture, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('CEINTURE CARDIO (FACULTATIF)', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
+          const SizedBox(height: 6),
+          const Text(
+            "Le brassard mesure l'effort des muscles, pas le cœur. Une ceinture cardio Bluetooth standard "
+            "(Polar, Garmin, Decathlon…) ajoute la fréquence cardiaque aux séances.",
+            style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+          const SizedBox(height: 10),
+          if (ceinture != null)
+            Card(
+              color: Colors.grey[900],
+              child: ListTile(
+                leading: const Icon(Icons.favorite, color: Colors.redAccent),
+                title: Text(ceinture.nom, style: const TextStyle(color: Colors.white)),
+                subtitle: StreamBuilder<int>(
+                  stream: ceinture.bpm,
+                  builder: (context, s) => Text(s.hasData ? '${s.data} bpm' : 'en attente de mesure…',
+                      style: const TextStyle(color: Colors.white54)),
+                ),
+                trailing: IconButton(
+                  tooltip: 'Déconnecter',
+                  icon: const Icon(Icons.link_off, color: Colors.white54),
+                  onPressed: () async {
+                    ceinture.fermer();
+                    CeintureCardio.active.value = null;
+                  },
+                ),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.redAccent),
+                minimumSize: const Size(double.infinity, 48),
+              ),
+              onPressed: (_recherche || _connexion) ? null : _rechercher,
+              icon: const Icon(Icons.favorite_border, color: Colors.redAccent),
+              label: Text(_recherche ? 'Recherche…' : 'Rechercher une ceinture cardio',
+                  style: const TextStyle(color: Colors.redAccent)),
+            ),
+          if (ceinture == null)
+            for (final r in _resultats)
+              Card(
+                color: Colors.grey[900],
+                child: ListTile(
+                  leading: const Icon(Icons.favorite, color: Colors.redAccent),
+                  title: Text(r.device.platformName.isNotEmpty ? r.device.platformName : r.device.remoteId.str,
+                      style: const TextStyle(color: Colors.white)),
+                  subtitle: Text('Signal : ${r.rssi} dBm', style: const TextStyle(color: Colors.white54)),
+                  onTap: _connexion ? null : () => _connecter(r),
+                ),
+              ),
+          if (_erreur != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_erreur!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+            ),
+        ],
+      ),
     );
   }
 }

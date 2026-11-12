@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:athletix_data/services/analyse/export_soignants.dart';
 import 'package:athletix_data/services/api.dart';
+import 'evolution_screen.dart';
+import 'seance_detail_screen.dart';
 
 /// Historique des séances enregistrées et de leur résumé EMG (backend/get_seances.php).
 class HistoriqueScreen extends StatefulWidget {
   const HistoriqueScreen({super.key});
+
+  static String duree(int secondes) {
+    final h = secondes ~/ 3600, m = (secondes % 3600) ~/ 60, s = secondes % 60;
+    if (h > 0) return '$h h ${m.toString().padLeft(2, '0')}';
+    return '$m min ${s.toString().padLeft(2, '0')} s';
+  }
+
+  /// « 2026-11-10 18:05:00 » → « 10/11/2026 à 18:05 »
+  static String date(String? brute) {
+    if (brute == null || brute.length < 16) return '—';
+    return '${brute.substring(8, 10)}/${brute.substring(5, 7)}/${brute.substring(0, 4)} à ${brute.substring(11, 16)}';
+  }
 
   @override
   State<HistoriqueScreen> createState() => _HistoriqueScreenState();
@@ -21,7 +36,7 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
   }
 
   Future<void> _charger() async {
-    final data = await Api.current.getSeances();
+    final data = await Api.current.getSeances(limite: 500);
     if (!mounted) return;
     setState(() {
       _chargement = false;
@@ -34,23 +49,36 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
     });
   }
 
-  static String duree(int secondes) {
-    final h = secondes ~/ 3600, m = (secondes % 3600) ~/ 60, s = secondes % 60;
-    if (h > 0) return '$h h ${m.toString().padLeft(2, '0')}';
-    return '$m min ${s.toString().padLeft(2, '0')} s';
-  }
-
-  /// « 2026-11-10 18:05:00 » → « 10/11/2026 à 18:05 »
-  static String date(String? brute) {
-    if (brute == null || brute.length < 16) return '—';
-    return '${brute.substring(8, 10)}/${brute.substring(5, 7)}/${brute.substring(0, 4)} à ${brute.substring(11, 16)}';
+  Future<void> _exporter() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ExportSoignants.partager(_seances);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text("Export impossible : $e"), backgroundColor: Colors.red));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(title: const Text('MES SÉANCES'), backgroundColor: Colors.blueGrey[900], centerTitle: true),
+      appBar: AppBar(
+        title: const Text('MES SÉANCES'),
+        backgroundColor: Colors.blueGrey[900],
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Mon évolution',
+            icon: const Icon(Icons.insights),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EvolutionScreen())),
+          ),
+          IconButton(
+            tooltip: 'Exporter pour un soignant (CSV)',
+            icon: const Icon(Icons.ios_share),
+            onPressed: _seances.isEmpty ? null : _exporter,
+          ),
+        ],
+      ),
       body: _chargement
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : _erreur != null
@@ -88,7 +116,10 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
       color: Colors.grey[900],
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SeanceDetailScreen(seance: s))),
+        child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,17 +137,18 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
                 ),
             ]),
             const SizedBox(height: 2),
-            Text('${date(s['debut']?.toString())} · ${duree((s['duree_s'] as num?)?.toInt() ?? 0)}',
+            Text('${HistoriqueScreen.date(s['debut']?.toString())} · ${HistoriqueScreen.duree((s['duree_s'] as num?)?.toInt() ?? 0)}',
                 style: const TextStyle(color: Colors.white54, fontSize: 12)),
             const SizedBox(height: 12),
             Row(children: [
               chiffre('moyenne', '${s['intensite_moyenne_pct']} %'),
               chiffre('maximum', '${s['intensite_max_pct']} %'),
-              chiffre('effort intense', duree((s['temps_effort_intense_s'] as num?)?.toInt() ?? 0)),
+              chiffre('effort intense', HistoriqueScreen.duree((s['temps_effort_intense_s'] as num?)?.toInt() ?? 0)),
               chiffre('alertes', '${s['nb_alertes']}'),
             ]),
           ],
         ),
+      ),
       ),
     );
   }

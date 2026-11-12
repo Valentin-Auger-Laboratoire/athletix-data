@@ -42,7 +42,7 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 
 Le matériel, demandé en juin 2026, vient d'être commandé par l'école : livraison attendue **dans un mois au plus tôt**. En attendant, tout ce qui ne dépend pas des pièces est préparé.
 
-- ✅ **Fait** : application et démo en ligne, API PHP / MySQL testée sur une vraie base, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé vérifié sur les fiches SparkFun, boîtier modélisé sous Fusion 360 (fichiers à ajouter). Et depuis le 12 novembre : connexion Bluetooth réelle, écrans Brassard, Calibration, Mes séances et consentement, classement calculé à partir des mesures, projet Android, firmware final, protocole de test.
+- ✅ **Fait** : application et démo en ligne, API PHP / MySQL testée sur une vraie base, format Bluetooth et modèles de données, brassard simulé, simulation Simulink, câblage présumé vérifié sur les fiches SparkFun, boîtier modélisé sous Fusion 360 (fichiers à ajouter). Et depuis le 12 novembre : connexion Bluetooth réelle, écrans Brassard, Calibration, Mes séances et consentement, classement calculé à partir des mesures, projet Android, firmware final, protocole de test. Puis le **téléphone en plus du brassard** : graphiques (en direct, après la séance, évolution), GPS, pas, météo, ceinture cardio, ressenti après chaque séance, semaines moins bonnes expliquées, indice de fatigue expérimental, accessibilité, mode adapté et export pour les soignants.
 - 🔜 **Encore sans le matériel** : tester le faux brassard sur un ESP32, valider la règle de score, préparer le câble jack (câble audio recyclé, sans rien commander), ajouter le boîtier, Gantt et rapport du jalon 1.
 - ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation, autonomie, boîtier.
 
@@ -104,16 +104,24 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 - Conseils calculés à partir de tout le profil : rythme selon le niveau et la fréquence déclarée, objectif, taille et poids (IMC, protéines), blessures, stress, sommeil, antécédents.
 - **Brassard** : recherche et connexion Bluetooth au vrai brassard (application Android, ou Chrome / Edge en HTTPS), batterie, numéro de série ; ou brassard simulé.
 - **Calibration** : contraction maximale de 3 s qui devient la référence 100 %, enregistrée dans l'historique des calibrations.
-- Séance en direct : intensité en % de la contraction maximale, alerte d'effort intense avec hystérésis, résumé enregistré à la fin.
-- **Mes séances** : historique des séances et de leur résumé (durée, intensité moyenne et maximale, temps d'effort intense, alertes).
+- Séance en direct : intensité en % de la contraction maximale, **courbe des 30 dernières secondes** avec le seuil, alerte d'effort intense avec hystérésis (vibration du téléphone, et voix si activée), mesure propre à chaque famille de sports calculée sur la séance en cours.
+- **Le téléphone en plus du brassard** : GPS pour les sports d'endurance (distance, vitesse, allure, dénivelé, points imprécis et sauts ignorés), **nombre de pas** par l'accéléromètre (course, trail), **météo** au départ (Open-Meteo, position arrondie à ~1 km), **ceinture cardio** Bluetooth standard facultative (service `0x180D`) pour la fréquence cardiaque, que le brassard ne mesure pas.
+- **Ressenti après chaque séance** (facultatif) : fatigue et douleur de 0 à 10, sommeil de la nuit, commentaire.
+- **Détail d'une séance** : courbe complète (une valeur toutes les 5 s), temps passé dans chaque zone d'intensité, contractions, GPS, cœur, météo, ressenti, et un **indice de fatigue expérimental** (évolution de l'intensité entre le début et la fin, expliquée à l'écran avec ses limites).
+- **Mes séances** : historique, chaque séance ouvre son détail ; **export CSV** (lisible dans Excel) à donner au médecin ou au kinésithérapeute.
+- **Mon évolution** : points et volume par semaine, intensité et fatigue ressentie, **records personnels**, et **semaines moins bonnes** repérées (rendement en baisse d'au moins 15 %) avec leurs causes possibles tirées du ressenti (fatigue, sommeil, douleur, chaleur, trop de séances).
+- **Réglages et accessibilité** : grands caractères, alertes par vibration et à voix haute, **mode adapté** (alerte à 60 % au lieu de 75 %, pause conseillée toutes les 10 minutes, avertissement chaleur au-delà de 25 °C), issus de la rencontre avec la patiente atteinte de sclérose en plaques.
 - Classement des 30 derniers jours, calculé à partir des séances mesurées (10 points par séance + minutes × intensité moyenne ÷ 50 ; les séances simulées ne comptent pas).
 - **Consentement** au premier lancement (données de santé, RGPD).
-- **Mode démo** utilisable sans backend.
+- **Mode démo** utilisable sans backend, avec six semaines de séances fictives (dont une semaine volontairement moins bonne) pour voir les graphiques.
 
 ## Ce qui est simulé (à lire avant d'évaluer le projet)
 
 - **Intensité musculaire** : tant que le vrai brassard n'est pas relié, l'écran affiche le % de la contraction maximale (MVC) venant d'un **brassard simulé** (profil repos / 40 % / 95 % / 50 %). Les paquets suivent le vrai format Bluetooth, mais aucun muscle n'est mesuré, et l'écran l'indique. La séance est enregistrée comme « données simulées ». La connexion au vrai brassard est écrite mais **pas encore testée avec une carte**.
-- **Mesure propre à chaque discipline** (activité musculaire moyenne, pic de contraction, efforts intenses, relâchement, en % de la contraction maximale), affichée sous l'intensité : valeurs d'exemple fixes, marquées « valeur d'exemple ».
+- **Mode démo** : parcours GPS **inventé** (boucle à ~10 km/h, signalée « parcours simulé ») et séances fictives ; la météo, elle, est la vraie météo de Paris au moment de la séance.
+- **Indice de fatigue** : repère expérimental tiré de l'intensité (pour un même effort, un muscle fatigué recrute plus de fibres). La vraie mesure (baisse de la fréquence médiane) demandera le signal brut du capteur, lu bien plus vite, donc un changement du firmware.
+- **GPS, pas, ceinture cardio, vibration et voix** : écrits pour Android, testés seulement dans le navigateur (le GPS et les capteurs y sont simulés) ; à essayer sur un téléphone.
+- **Mesure dans l'eau** (natation) : les mesures devraient être gardées dans le brassard et envoyées après la séance, ce qui n'est **pas encore programmé** dans le firmware.
 - **« IA »** : les conseils sont produits par des **règles `if/else`**, pas par un modèle entraîné (mention « Conseils générés par règles »). Ils ne remplacent pas un avis médical.
 - **Mode démo** : compte et données **fictifs**, gardés en mémoire et perdus au rechargement de la page.
 - **Simulation Simulink de la chaîne EMG** : c'est une expérimentation. Le signal du muscle est généré, la référence des 100 % (1,85 V) est supposée, et rien n'a encore été mesuré sur le vrai brassard.
@@ -127,7 +135,7 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 ### 1. Base de données
 Démarre MySQL dans XAMPP, puis importe `database.sql` (phpMyAdmin → Importer, ou `mysql -u root < database.sql`).
 Cela crée la base `athletix-pro` et un compte de démo fictif : `demo@exemple.com` / `demo1234`.
-Importe ensuite `migrations/001_brassard_emg.sql` (tables du brassard, des calibrations et des résultats de séance), puis `migrations/002_score_et_nettoyage.sql` (suppression des anciennes tables `performances` et `hardware_status`).
+Importe ensuite `migrations/001_brassard_emg.sql` (tables du brassard, des calibrations et des résultats de séance), puis `migrations/002_score_et_nettoyage.sql` (suppression des anciennes tables `performances` et `hardware_status`), puis `migrations/003_contexte_telephone.sql` (GPS, pas, cardio, météo, ressenti, zones d'intensité, courbe de la séance).
 
 ### 2. Backend PHP
 1. Copie (ou clone) le dépôt dans `htdocs/athletix-data` pour que l'API réponde sur `http://localhost/athletix-data/backend/`.
@@ -147,7 +155,7 @@ flutter run -d chrome --web-port 5000 --dart-define=API_BASE_URL=https://mon-ser
 ```
 
 ### 4. Application Android (pour le vrai brassard)
-Le Bluetooth du brassard s'utilise depuis l'application Android (le dossier `android/` est déjà prêt, avec les autorisations Bluetooth).
+Le Bluetooth du brassard s'utilise depuis l'application Android (le dossier `android/` est déjà prêt, avec les autorisations Bluetooth, localisation pour le GPS et vibration).
 1. Ouvrir le dossier du projet dans **Android Studio** (avec le plugin Flutter), brancher un téléphone Android en mode développeur.
 2. Sur le téléphone, `localhost` désigne le téléphone lui-même : il faut donner l'adresse du PC qui fait tourner XAMPP, sur le même Wi-Fi.
 ```bash
@@ -158,8 +166,8 @@ L'APK se trouve ensuite dans `build/app/outputs/flutter-apk/app-release.apk`. Re
 
 ### 5. Tests
 ```bash
-flutter test                                   # application : format Bluetooth, résumé de séance, calibration, démo
-ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 41 vérifications
+flutter test                                   # application (47 tests) : Bluetooth, séance, calibration, GPS, pas, cardio, météo, évolution, export, démo
+ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 49 vérifications
 g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg   # calculs du firmware
 ```
 
@@ -178,7 +186,8 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 
 - Code du projet : © 2026 équipe Athletix-Data (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (dossier `PHPMailer/`, version 7.0.2) est distribué sous **licence LGPL 2.1** ; voir `PHPMailer/LICENSE`.
-- Flutter et ses packages : licences BSD respectives.
+- Flutter et ses packages : [shared_preferences](https://pub.dev/packages/shared_preferences), [sensors_plus](https://pub.dev/packages/sensors_plus), [share_plus](https://pub.dev/packages/share_plus) (BSD-3) ; [fl_chart](https://pub.dev/packages/fl_chart) (graphiques), [geolocator](https://pub.dev/packages/geolocator) (GPS), [flutter_tts](https://pub.dev/packages/flutter_tts) (voix) (MIT).
+- Météo : [Open-Meteo](https://open-meteo.com/), données sous licence **CC BY 4.0**, service gratuit pour un usage non commercial.
 - [flutter_blue_plus](https://pub.dev/packages/flutter_blue_plus) (Bluetooth) : licence FlutterBluePlus, gratuite pour un usage personnel ou éducatif comme ce projet étudiant (`License.nonprofit` dans le code). Un usage commercial demanderait une licence payante. Le package peut envoyer une statistique anonyme au moment de la compilation (nom de l'application, version).
 
 ---
@@ -228,23 +237,31 @@ The Bluetooth format, data models and network integration are described (in Fren
 - Advice computed from the whole profile: pace from level and declared frequency, goal, height and weight (BMI, protein), injuries, stress, sleep, history.
 - **Armband**: Bluetooth search and connection to the real armband (Android app, or Chrome / Edge over HTTPS), battery, serial number; or a simulated armband.
 - **Calibration**: a 3 s maximum contraction becomes the 100 % reference, stored in the calibration history.
-- Live workout: intensity in % of maximum contraction, high-effort alert with hysteresis, summary saved at the end.
-- **My sessions**: history of sessions and their summary.
+- Live workout: intensity in % of maximum contraction, **last-30-seconds curve** with the threshold, high-effort alert with hysteresis (phone vibration, and voice if enabled), discipline-specific reading computed on the current session.
+- **The phone on top of the armband**: GPS for endurance sports (distance, speed, pace, elevation gain), **step count** from the accelerometer, **weather** at the start (Open-Meteo, position rounded to ~1 km), optional standard Bluetooth **heart-rate strap** (`0x180D` service), since the armband does not measure the heart.
+- **How it felt** after each session (optional): fatigue and pain 0–10, last night's sleep, comment.
+- **Session detail**: full curve, time in each intensity zone, contractions, GPS, heart rate, weather, feeling, and an **experimental fatigue index** explained on screen with its limits.
+- **My sessions**: history, each session opens its detail; **CSV export** for a doctor or physiotherapist.
+- **My progress**: points and volume per week, intensity and perceived fatigue, **personal records**, and **weaker weeks** detected (efficiency down by 15 % or more) with possible causes taken from the feelings entered.
+- **Settings and accessibility**: large text, vibration and spoken alerts, **adapted mode** (alert at 60 % instead of 75 %, break reminder every 10 minutes, heat warning above 25 °C), from the meeting with a patient with multiple sclerosis.
 - 30-day leaderboard computed from measured sessions (10 points per session + minutes × average intensity ÷ 50; simulated sessions do not count).
 - **Consent** screen on first launch (health data, GDPR).
-- **Demo mode** that works without any backend.
+- **Demo mode** that works without any backend, with six weeks of fictional sessions (including one deliberately weaker week).
 
 ## What is simulated
 
 - **Muscle intensity**: until the real armband is connected, the % of maximum contraction comes from a **simulated armband** that follows the real Bluetooth packet format. No muscle is measured, the screen says so, and the session is saved as simulated data. The real Bluetooth connection is written but **not yet tested with a board**.
-- **Discipline-specific reading** (average muscle activity, peak contraction, intense efforts, relaxation, in % of maximum contraction), shown below the intensity: fixed example values, labelled as such.
+- **Demo mode**: **made-up** GPS route (loop at ~10 km/h, labelled as simulated) and fictional sessions; the weather is the real weather in Paris.
+- **Fatigue index**: an experimental cue from intensity; the real measure (median-frequency drop) needs the raw sensor signal and a firmware change.
+- **GPS, steps, heart-rate strap, vibration and voice**: written for Android, only tested in the browser so far.
+- **In-water recording** (swimming): storing measurements in the armband and sending them afterwards is **not programmed yet**.
 - **“AI”**: the advice comes from **if/else rules**, not a trained model. It is not medical advice.
 - **Demo mode**: **fictional** account and data, kept in memory and lost when the page reloads.
 - **Simulink model of the EMG chain**: an experiment. The muscle signal is generated, the 100 % reference (1.85 V) is assumed, and nothing has been measured on the real armband yet.
 
 ## Installation
 
-1. **Database**: start MySQL (XAMPP) and import `database.sql`, then `migrations/001_brassard_emg.sql` and `migrations/002_score_et_nettoyage.sql`. This creates a fictional demo account: `demo@exemple.com` / `demo1234`.
+1. **Database**: start MySQL (XAMPP) and import `database.sql`, then `migrations/001_brassard_emg.sql` `migrations/002_score_et_nettoyage.sql` and `migrations/003_contexte_telephone.sql`. This creates a fictional demo account: `demo@exemple.com` / `demo1234`.
 2. **PHP backend**: place the repository in `htdocs/athletix-data`. Copy `backend/config.example.php` to `backend/config.local.php` (git-ignored), then fill in the MySQL credentials, the SMTP settings (Gmail address and **app password**) and `allowed_origin`.
 3. **Flutter app**: run `flutter pub get`, then `flutter run -d chrome --web-port 5000`. The API URL lives in `lib/config.dart`, or can be passed with `--dart-define=API_BASE_URL=...`.
 4. **Android app** (real armband): open the project in Android Studio and build with `--dart-define=API_BASE_URL=http://<PC IP>/athletix-data/backend`.
@@ -260,3 +277,4 @@ The questionnaire collects **health data**, which is sensitive data under the GD
 - Project code: © 2026 Athletix-Data team (Valentin Auger, Maxence Olivier, Othmen Al Bydeoi).
 - [PHPMailer](https://github.com/PHPMailer/PHPMailer) (`PHPMailer/` folder, v7.0.2) is distributed under the **LGPL 2.1** licence; see `PHPMailer/LICENSE`.
 - [flutter_blue_plus](https://pub.dev/packages/flutter_blue_plus) (Bluetooth): FlutterBluePlus licence, free for personal or educational use such as this student project (`License.nonprofit`); commercial use would require a paid licence.
+- Packages: shared_preferences, sensors_plus, share_plus (BSD-3); fl_chart, geolocator, flutter_tts (MIT). Weather: [Open-Meteo](https://open-meteo.com/), data under **CC BY 4.0**.

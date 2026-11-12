@@ -38,6 +38,18 @@ Enregistre une séance terminée et son résumé EMG, dans une transaction (soit
 | `simule` | non | `1` si les données viennent du brassard simulé |
 | `numero_serie`, `firmware` | non | si présents : le brassard est créé ou mis à jour et lié à l'utilisateur |
 | `ref_mvc_mv` | non | 100 à 3300 |
+| `temps_zone_repos_s`, `temps_zone_moderee_s`, `temps_zone_soutenue_s` | non | 0 à 21 600 (zones < 20 %, 20–50 %, 50–75 % ; la zone ≥ 75 % est `temps_effort_intense_s`) |
+| `nb_contractions` | non | 0 à 65 535 (hystérésis 30 / 20 %) |
+| `indice_fatigue_pct` | non | −100 à 1000 (expérimental, voir `lib/services/analyse/analyse_seance.dart`) |
+| `courbe` | non | liste JSON d'au plus 2 000 entiers de 0 à 255, une valeur toutes les 5 s |
+| `distance_m`, `denivele_m`, `vitesse_moy_kmh`, `nb_pas` | non | GPS et accéléromètre du téléphone ; la vitesse accepte la virgule |
+| `fc_moy`, `fc_max` | non | 30 à 230 / 240, moyenne ≤ max (ceinture cardio) |
+| `temperature_c`, `humidite_pct`, `meteo_code` | non | météo Open-Meteo au départ (code WMO 0 à 99) |
+| `ressenti_fatigue`, `douleur` | non | 0 à 10 |
+| `sommeil`, `commentaire` | non | 20 et 500 caractères au plus |
+| `mode_adapte` | non | `1` si la séance a été faite en mode adapté |
+
+Les champs facultatifs demandent la migration `003_contexte_telephone.sql`.
 
 Réponse : `{"status":"success","session_id":12}` ou `{"status":"error","message":"…"}` avec un message précis.
 
@@ -85,7 +97,7 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 
 ### Ajouts à l'API
 
-- `get_seances.php` (POST + jeton) : les 50 dernières séances de l'utilisateur avec leur résumé EMG.
+- `get_seances.php` (POST + jeton) : les dernières séances de l'utilisateur (paramètre `limite`, 1 à 500, 100 par défaut) avec leur résumé EMG et, depuis la migration `003`, les mesures du téléphone, le ressenti et la courbe.
 - `save_seance.php` et `save_calibration.php` acceptent un champ facultatif `batterie` (0 à 100 %), enregistré dans `brassards.batterie_niveau`.
 - `get_hardware.php` lit maintenant le dernier brassard de l'utilisateur dans `brassards` (batterie, dernière synchronisation, numéro de série). `update_hardware.php` et `save_performance.php` sont supprimés (migration `002`).
-- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (41 vérifications).
+- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (49 vérifications).

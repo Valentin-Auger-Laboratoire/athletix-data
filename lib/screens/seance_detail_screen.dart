@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+import 'package:athletix_data/services/telephone/meteo.dart';
+import 'package:athletix_data/widgets/graphiques.dart';
+import 'historique_screen.dart';
+
+/// Détail d'une séance : courbe d'intensité, zones, mesures du téléphone, cardio, météo, contexte.
+/// [seance] a le format de get_seances.php.
+class SeanceDetailScreen extends StatelessWidget {
+  const SeanceDetailScreen({super.key, required this.seance});
+
+  final Map<String, dynamic> seance;
+
+  int? _entier(String c) => (seance[c] as num?)?.toInt();
+  double? _decimal(String c) => (seance[c] as num?)?.toDouble();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = seance;
+    final simule = s['donnees_simulees'] == true;
+    final courbe = (s['courbe'] as List?)?.map((v) => (v as num).toDouble()).toList() ?? [];
+    final duree = _entier('duree_s') ?? 0;
+    final zones = [
+      _entier('temps_zone_repos_s'),
+      _entier('temps_zone_moderee_s'),
+      _entier('temps_zone_soutenue_s'),
+      _entier('temps_effort_intense_s'),
+    ];
+    final fatigue = _entier('indice_fatigue_pct');
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(title: Text('${s['discipline']}'.toUpperCase()), backgroundColor: Colors.blueGrey[900], centerTitle: true),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text('${HistoriqueScreen.date(s['debut']?.toString())} · ${HistoriqueScreen.duree(duree)}'
+              '${simule ? ' · brassard simulé' : ''}${s['mode_adapte'] == true ? ' · mode adapté' : ''}',
+              style: const TextStyle(color: Colors.white54)),
+          const SizedBox(height: 16),
+          _section('Intensité musculaire', [
+            Row(children: [
+              _chiffre('moyenne', '${s['intensite_moyenne_pct']} %'),
+              _chiffre('maximum', '${s['intensite_max_pct']} %'),
+              _chiffre('alertes', '${s['nb_alertes']}'),
+              if (_entier('nb_contractions') != null) _chiffre('contractions', '${_entier('nb_contractions')}'),
+            ]),
+            const SizedBox(height: 12),
+            if (courbe.length >= 2) CourbeIntensite(valeurs: courbe, seuil: s['mode_adapte'] == true ? 60 : 75, pasS: 5),
+            if (courbe.length >= 2) const SizedBox(height: 6),
+            if (courbe.length >= 2)
+              const Text('Une valeur toutes les 5 s · ligne rouge : seuil d\'alerte',
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+            if (zones.every((z) => z != null)) ...[
+              const SizedBox(height: 14),
+              BarreZones(secondes: zones.map((z) => z!).toList()),
+            ],
+          ]),
+          if (fatigue != null)
+            _section('Indice de fatigue (expérimental)', [
+              Text(
+                fatigue > 10
+                    ? "+$fatigue % : l'intensité a monté entre le début et la fin de la séance. Pour un même effort, "
+                        "un muscle qui fatigue doit recruter plus de fibres : c'est un signe possible de fatigue."
+                    : fatigue < -10
+                        ? "$fatigue % : l'intensité a baissé en fin de séance (effort moins fort, ou exercice différent)."
+                        : "$fatigue % : intensité stable entre le début et la fin de la séance.",
+                style: const TextStyle(color: Colors.white70, height: 1.4),
+              ),
+              const SizedBox(height: 6),
+              const Text("Repère seulement : il dépend aussi de l'exercice choisi. La vraie mesure de la fatigue "
+                  "(baisse de la fréquence médiane) demandera le signal brut du capteur.",
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+            ]),
+          if (_entier('distance_m') != null || _entier('nb_pas') != null)
+            _section('Téléphone', [
+              Row(children: [
+                if (_entier('distance_m') != null) _chiffre('distance', '${decimalFr(_entier('distance_m')! / 1000, 2)} km'),
+                if (_decimal('vitesse_moy_kmh') != null) _chiffre('vitesse', '${decimalFr(_decimal('vitesse_moy_kmh')!, 1)} km/h'),
+                if (_decimal('vitesse_moy_kmh') != null && _decimal('vitesse_moy_kmh')! >= 3)
+                  _chiffre('allure', _allure(_decimal('vitesse_moy_kmh')!)),
+                if (_entier('denivele_m') != null) _chiffre('dénivelé +', '${_entier('denivele_m')} m'),
+                if (_entier('nb_pas') != null) _chiffre('pas', '${_entier('nb_pas')}'),
+              ]),
+            ]),
+          if (_entier('fc_moy') != null)
+            _section('Cœur (ceinture cardio)', [
+              Row(children: [
+                _chiffre('moyenne', '${_entier('fc_moy')} bpm'),
+                if (_entier('fc_max') != null) _chiffre('maximum', '${_entier('fc_max')} bpm'),
+              ]),
+            ]),
+          if (_decimal('temperature_c') != null)
+            _section('Météo', [
+              Text(
+                '${decimalFr(_decimal('temperature_c')!, 1)} °C, ${_entier('humidite_pct') ?? '—'} % d\'humidité, '
+                '${Meteo.libelle(_entier('meteo_code') ?? 0)}',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              if (_decimal('temperature_c')! >= Meteo.seuilChaleurC)
+                const Padding(
+                  padding: EdgeInsets.only(top: 6),
+                  child: Text('Chaleur : effort plus coûteux, et symptômes possibles en cas de sclérose en plaques.',
+                      style: TextStyle(color: Colors.orangeAccent, fontSize: 12)),
+                ),
+            ]),
+          if (_entier('ressenti_fatigue') != null || s['sommeil'] != null || s['commentaire'] != null)
+            _section('Ressenti', [
+              Wrap(spacing: 18, runSpacing: 6, children: [
+                if (_entier('ressenti_fatigue') != null) _texte('Fatigue', '${_entier('ressenti_fatigue')}/10'),
+                if (_entier('douleur') != null) _texte('Douleur', '${_entier('douleur')}/10'),
+                if (s['sommeil'] != null) _texte('Sommeil', '${s['sommeil']}'),
+              ]),
+              if (s['commentaire'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text('« ${s['commentaire']} »', style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)),
+                ),
+            ]),
+          const SizedBox(height: 12),
+          const Text("Athletix-Data est un projet étudiant : ce n'est pas un dispositif médical.",
+              textAlign: TextAlign.center, style: TextStyle(color: Colors.white24, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  static String _allure(double kmh) {
+    final minParKm = 60 / kmh;
+    final m = minParKm.floor(), sec = ((minParKm - m) * 60).round();
+    return "$m'${sec.toString().padLeft(2, '0')}\"/km";
+  }
+
+  Widget _section(String titre, List<Widget> enfants) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(14)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(titre.toUpperCase(), style: const TextStyle(color: Colors.orange, fontSize: 12, letterSpacing: 1, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          ...enfants,
+        ]),
+      );
+
+  Widget _chiffre(String libelle, String valeur) => Expanded(
+        child: Column(children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(valeur, maxLines: 1, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+          const SizedBox(height: 2),
+          Text(libelle, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+        ]),
+      );
+
+  Widget _texte(String libelle, String valeur) => RichText(
+        text: TextSpan(children: [
+          TextSpan(text: '$libelle : ', style: const TextStyle(color: Colors.white54)),
+          TextSpan(text: valeur, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        ]),
+      );
+}
