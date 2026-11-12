@@ -21,7 +21,7 @@
 | Câblage | ✅ schéma présumé vérifié sur les fiches SparkFun ([`hardware/`](hardware/README.md)), ⏳ non testé |
 | Protocole de test | ✅ ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) |
 | Projet Android | ✅ prêt (Bluetooth, GPS, vibration), ⏳ APK à compiler dans Android Studio |
-| Règle de score du classement | ✅ proposée et codée, ⏳ à valider en équipe |
+| Règle de score du classement | ✅ validée (12 novembre 2026) et codée |
 | Boîtier (Fusion 360) | ✅ modélisé (Valentin), ⏳ fichiers à ajouter au dépôt, ⏳ pas étanche |
 | Brassard réel câblé, mesuré, calibré | ❌ attend le matériel |
 
@@ -53,7 +53,7 @@
 
 ## 1. Reste à faire sans le matériel
 
-- [ ] **Valider la règle de score du classement** en équipe : 10 points par séance mesurée + minutes × intensité moyenne ÷ 50, sur 30 jours, séances simulées exclues ([`MCD_MLD.md`](architecture/MCD_MLD.md) §5).
+- [x] **Règle de score du classement validée** (12 novembre 2026) : 10 points par séance mesurée + minutes × intensité moyenne ÷ 50, sur 30 jours, séances simulées exclues ([`MCD_MLD.md`](architecture/MCD_MLD.md) §5).
 - [ ] **Essayer l'application sur un téléphone Android** (Android Studio, voir le README) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
 - [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
 - [ ] **Boîtier** : exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.
@@ -111,4 +111,4 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 | **Valentin** | rapport du jalon 1, boîtier, essai de l'application sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
 | **Othmen** | test du faux brassard avec nRF Connect | connexion Bluetooth réelle avec l'application |
 | **Maxence** | Gantt | mesures, comparaison avec sa simulation |
-| **Équipe** | valider la règle de score | séance complète, vidéo de démonstration |
+| **Équipe** | | séance complète, vidéo de démonstration |

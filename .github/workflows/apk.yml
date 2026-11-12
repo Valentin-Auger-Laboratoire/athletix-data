@@ -1,0 +1,53 @@
+# Compile l'application Android (APK) à chaque envoi sur main et la publie
+# dans la page « Releases » du dépôt : https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk
+# Plus besoin d'Android Studio pour l'essayer : télécharger athletix-data.apk sur le téléphone et l'installer.
+name: APK Android
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'screenshots/**', 'hardware/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # publier l'APK dans la release « apk »
+
+concurrency:
+  group: apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Compiler et publier l'APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+      - run: flutter pub get
+      # Adresse de l'API : variable du dépôt API_BASE_URL (Settings → Secrets and variables → Actions → Variables).
+      # Sans elle, l'application marche en mode démo ; la connexion à un compte demande un serveur joignable.
+      - name: Compiler
+        run: flutter build apk --release --dart-define=API_BASE_URL="${API_BASE_URL:-http://localhost/athletix-data/backend}"
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+      - name: Publier dans la release « apk »
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk athletix-data.apk
+          NOTES="Dernière version de l'application, compilée automatiquement (commit ${GITHUB_SHA::7}).
+          Installation : télécharger athletix-data.apk sur le téléphone Android, l'ouvrir et accepter l'installation depuis cette source.
+          Le mode démo marche sans serveur. Signée avec une clé de développement : projet étudiant, pas une application du Play Store."
+          if gh release view apk >/dev/null 2>&1; then
+            gh release edit apk --notes "$NOTES"
+          else
+            gh release create apk --prerelease --title "Application Android (dernière version)" --notes "$NOTES"
+          fi
+          gh release upload apk athletix-data.apk --clobber

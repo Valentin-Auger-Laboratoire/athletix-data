@@ -3,7 +3,7 @@ require __DIR__ . '/bootstrap.php';
 
 // Classement des 50 meilleurs athlètes vérifiés sur les 30 derniers jours.
 //
-// Règle de score (proposition, voir architecture/MCD_MLD.md §5) : chaque séance mesurée rapporte
+// Règle de score (validée le 12 novembre 2026, voir architecture/MCD_MLD.md §5) : chaque séance mesurée rapporte
 //   10 points (régularité : venir s'entraîner compte)
 // + minutes de séance × intensité moyenne / 50 (travail musculaire réellement fourni).
 // Exemple : 30 min à 40 % MVC → 10 + 30 × 40 / 50 = 34 points.

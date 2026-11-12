@@ -8,7 +8,7 @@ Le matériel n'est pas encore reçu. Ce schéma montre comment les composants co
 
 | Liaison | Détail |
 |---|---|
-| Électrodes → MyoWare 2.0 | 3 électrodes SEN-12969 à boutons-pression : 2 sur le biceps, la référence sur une zone osseuse (coude) |
+| Électrodes → MyoWare 2.0 | le capteur se pose **directement sur le biceps** : les électrodes MID (milieu du muscle) et END (à côté, dans l'axe des fibres) se clipsent **sous la carte** ; la référence (REF) se clipse sur la pastille prévue de la carte, ou va sur le coude avec un câble de référence. Électrodes à pression SEN-12969 ou ECG standard ([guide SparkFun du MyoWare 2.0](https://learn.sparkfun.com/tutorials/getting-started-with-the-myoware-20-muscle-sensor-ecosystem/hardware-hookup)) |
 | MyoWare 2.0 → Link Shield | le Link Shield s'empile sur le capteur et sort le signal par une prise jack 3,5 mm ; son **interrupteur doit être sur ENV** (enveloppe) et son alimentation sur ON |
 | Câble jack → ESP32-S3 | pointe = signal sur **A0 = GPIO10** (entrée analogique 12 bits), bague = **+3,3 V**, corps = **GND** |
 | Batterie → carte | LiPo 3,7 V 1 500 mAh sur la prise batterie JST, avec l'interrupteur DS12LR sur le fil rouge. ⚠️ Vérifier la polarité avant de brancher |

@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" width="1400" height="760" font-family="DejaVu Sans, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800" font-family="DejaVu Sans, Arial, sans-serif">
   <!-- Câblage PRÉSUMÉ du brassard EMG Athletix-Data, établi d'après la liste des composants commandés.
        Matériel pas encore reçu : schéma d'intention, non testé. -->
-  <rect width="1400" height="760" fill="#ffffff"/>
+  <rect width="1400" height="800" fill="#ffffff"/>
   <text x="40" y="52" font-size="28" font-weight="bold" fill="#1d1d1f">Câblage présumé du brassard EMG</text>
   <text x="40" y="84" font-size="17" fill="#555">Établi d'après les composants commandés et les fiches SparkFun. Matériel pas encore reçu : non testé.</text>
 
@@ -9,23 +9,27 @@
   <g>
     <path d="M60 300 C 90 230, 250 220, 330 250 L 330 420 C 250 450, 90 440, 60 380 Z" fill="#f3e3d3" stroke="#c9a88a" stroke-width="2"/>
     <text x="80" y="470" font-size="15" fill="#555">Biceps (bras)</text>
-    <!-- électrodes -->
+    <!-- emplacement du capteur : MID et END clipsées sous la carte -->
+    <rect x="112" y="282" width="156" height="76" rx="10" fill="#fde7e9" fill-opacity="0.55" stroke="#c8102e" stroke-width="2" stroke-dasharray="6 4"/>
     <circle cx="150" cy="320" r="20" fill="#e8e8e8" stroke="#888" stroke-width="2"/><circle cx="150" cy="320" r="6" fill="#999"/>
     <circle cx="230" cy="320" r="20" fill="#e8e8e8" stroke="#888" stroke-width="2"/><circle cx="230" cy="320" r="6" fill="#999"/>
     <circle cx="290" cy="400" r="20" fill="#e8e8e8" stroke="#888" stroke-width="2"/><circle cx="290" cy="400" r="6" fill="#999"/>
-    <text x="126" y="290" font-size="14" fill="#333">Mid</text>
-    <text x="210" y="290" font-size="14" fill="#333">End</text>
-    <text x="250" y="440" font-size="14" fill="#333">Référence</text>
-    <text x="60" y="510" font-size="14" fill="#555">3 électrodes de surface SEN-12969 :</text>
-    <text x="60" y="530" font-size="14" fill="#555">2 sur le muscle, la référence sur une</text>
-    <text x="60" y="550" font-size="14" fill="#555">zone osseuse (coude)</text>
+    <text x="134" y="352" font-size="13" fill="#333">MID</text>
+    <text x="214" y="352" font-size="13" fill="#333">END</text>
+    <text x="236" y="440" font-size="13" fill="#333">REF (coude)</text>
+    <text x="60" y="505" font-size="13" fill="#555">Le capteur se pose sur le muscle : les électrodes MID</text>
+    <text x="60" y="523" font-size="13" fill="#555">(milieu du biceps) et END (à côté, dans l'axe) se</text>
+    <text x="60" y="541" font-size="13" fill="#555">clipsent sous la carte. Électrodes à pression SEN-12969</text>
+    <text x="60" y="559" font-size="13" fill="#555">ou ECG standard (pharmacie, salle de TP).</text>
   </g>
 
-  <!-- liaison électrodes → capteur (pressions) -->
-  <path d="M150 300 L 150 200 L 420 200" fill="none" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/>
-  <path d="M230 300 L 230 215 L 420 215" fill="none" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/>
-  <path d="M310 400 L 360 400 L 360 230 L 420 230" fill="none" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/>
-  <text x="250" y="188" font-size="13" fill="#777">boutons-pression</text>
+  <!-- le capteur posé sur le muscle -->
+  <path d="M190 282 L 190 215 L 420 215" fill="none" stroke="#c8102e" stroke-width="2.5" stroke-dasharray="6 4"/>
+  <polygon points="420,215 408,209 408,221" fill="#c8102e"/>
+  <text x="200" y="205" font-size="13" fill="#c8102e">posé ici, électrodes dessous</text>
+  <!-- référence : pastille de la carte ou câble de référence -->
+  <path d="M310 400 L 360 400 L 360 240 L 420 240" fill="none" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/>
+  <text x="366" y="262" font-size="12" fill="#777">REF</text>
 
   <!-- ===== MyoWare 2.0 + Link Shield ===== -->
   <rect x="420" y="150" width="250" height="210" rx="14" fill="#fde7e9" stroke="#c8102e" stroke-width="3"/>
@@ -42,8 +46,9 @@
   <path d="M650 280 L 800 280 L 800 265 L 900 265" fill="none" stroke="#e0a100" stroke-width="5"/>
   <path d="M650 310 L 820 310 L 820 305 L 900 305" fill="none" stroke="#d62d2d" stroke-width="5"/>
   <path d="M650 340 L 840 340 L 840 345 L 900 345" fill="none" stroke="#222" stroke-width="5"/>
-  <text x="690" y="236" font-size="14" font-weight="bold" fill="#333">câble audio jack 3,5 mm</text>
-  <text x="690" y="254" font-size="13" fill="#555">(coupé, fils soudés à la carte)</text>
+  <text x="640" y="112" font-size="14" font-weight="bold" fill="#333">câble audio jack 3,5 mm recyclé (pointe / bague / corps, voir ci-dessous)</text>
+  <text x="640" y="130" font-size="12" fill="#555">vieux câble « aux » stéréo, 3 contacts (2 anneaux noirs sur la fiche)</text>
+  <text x="640" y="146" font-size="12" fill="#555">coupé, fils soudés à la carte : pas d'embase à acheter</text>
   <text x="680" y="273" font-size="13" fill="#9a6f00">pointe : signal</text>
   <text x="680" y="303" font-size="13" fill="#b01e1e">bague : +3,3 V</text>
   <text x="680" y="333" font-size="13" fill="#222">corps : GND</text>
@@ -81,6 +86,8 @@
   <text x="440" y="595" font-size="18" font-weight="bold" fill="#4659a8">Batterie LiPo</text>
   <text x="440" y="620" font-size="15" fill="#333">3,7 V · 1 500 mAh</text>
   <text x="440" y="645" font-size="13" fill="#555">(rechargée par l'USB-C)</text>
+  <text x="420" y="692" font-size="13" font-weight="bold" fill="#c8102e">⚠ Avant de brancher : le fil rouge doit arriver sur le + de la prise JST</text>
+  <text x="420" y="710" font-size="13" fill="#c8102e">(le sens du connecteur varie selon le fabricant ; une inversion peut détruire la carte)</text>
   <!-- fil + avec interrupteur -->
   <path d="M650 590 L 780 590" stroke="#d62d2d" stroke-width="5" fill="none"/>
   <circle cx="790" cy="590" r="7" fill="#fff" stroke="#333" stroke-width="3"/>
@@ -98,10 +105,11 @@
   <line x1="56" y1="612" x2="96" y2="612" stroke="#e0a100" stroke-width="5"/><text x="106" y="617" font-size="13" fill="#333">signal analogique (enveloppe)</text>
   <line x1="56" y1="632" x2="96" y2="632" stroke="#d62d2d" stroke-width="5"/><text x="106" y="637" font-size="13" fill="#333">+3,3 V capteur / + batterie</text>
   <line x1="56" y1="652" x2="96" y2="652" stroke="#222" stroke-width="5"/><text x="106" y="657" font-size="13" fill="#333">masse (GND)</text>
-  <line x1="220" y1="652" x2="260" y2="652" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/><text x="268" y="657" font-size="13" fill="#333">électrodes</text>
+  <line x1="220" y1="652" x2="260" y2="652" stroke="#888" stroke-width="3" stroke-dasharray="7 5"/><text x="268" y="657" font-size="13" fill="#333">référence</text>
   <path d="M56 676 Q 76 664 96 676" fill="none" stroke="#2f6fd6" stroke-width="3"/><text x="106" y="678" font-size="13" fill="#333">Bluetooth LE (sans fil)</text>
 
   <!-- ===== Notes ===== -->
-  <text x="40" y="712" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Jauge de batterie MAX17048 intégrée à la carte (I2C, GPIO8 / GPIO9).</text>
-  <text x="40" y="734" font-size="14" fill="#555">Non représentés : inverseurs GR33 / GA55 et résistances 150 Ω (usage à définir). Le câble Qwiic du devis est une liaison I2C : il ne transporte pas ce signal analogique.</text>
+  <text x="40" y="742" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Jauge de batterie MAX17048 intégrée à la carte (I2C, GPIO8 / GPIO9).</text>
+  <text x="40" y="764" font-size="14" fill="#555">Non représentés : inverseurs GR33 / GA55 et résistances 150 Ω (usage à définir). Le câble Qwiic du devis est une liaison I2C : il ne transporte pas ce signal analogique.</text>
+  <text x="40" y="786" font-size="14" fill="#555">Le montage n'est pas étanche : pour la natation, il faudra un boîtier étanche (en attendant, essais hors de l'eau).</text>
 </svg>
