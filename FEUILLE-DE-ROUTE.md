@@ -78,6 +78,37 @@ Dans cet ordre, en notant chaque résultat :
 - [ ] Jalons suivants et soutenance : objectif du semestre impair (S3), un **prototype** qui fonctionne. Le projet est terminé quand le brassard réel marche avec l'application.
 - [ ] Ensuite, si le temps le permet : pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques (fatigue musculaire, température, vibration), voir le [README](README.md#rencontre-avec-une-patiente-atteinte-de-sclérose-en-plaques).
 
+## 4. Compléter l'application : le téléphone en plus du brassard
+
+L'application n'est pas qu'un écran pour le brassard : le **téléphone** apporte ses propres mesures, et les deux ensemble doivent donner un suivi complet. Ces idées viennent des jalons de 1re année (« dashboard performances : historique, graphiques de progression, records personnels », « score de fatigue », « GPS ou accéléromètre », « interface médecin / kinésithérapeute ») et de la rencontre avec la patiente atteinte de sclérose en plaques. **Tout ceci peut se faire sans le matériel.**
+
+### Ce que le téléphone peut mesurer
+- [ ] **GPS** pour la course, le vélo, le ski : distance, vitesse, allure, dénivelé, tracé du parcours.
+- [ ] **Accéléromètre** : cadence et nombre de pas en course, nombre de répétitions en musculation.
+- [ ] **Météo** à l'heure de la séance (température, humidité), récupérée en ligne avec la position : elle aide à expliquer une baisse de forme, et la chaleur compte beaucoup pour la sclérose en plaques.
+- [ ] **Fréquence cardiaque** : le brassard EMG sur le biceps **ne mesure pas** le rythme cardiaque. Solution simple : relier en Bluetooth une ceinture ou une montre cardio du commerce (service Bluetooth standard « Heart Rate », `0x180D`, que l'application peut lire avec le même package).
+
+### Graphiques
+- [ ] **Pendant la séance** : courbe de l'intensité musculaire en direct, avec le seuil d'alerte.
+- [ ] **Après la séance** : courbe complète, temps passé par zone d'intensité, et, avec le GPS, vitesse et intensité musculaire superposées.
+- [ ] **Évolution** semaine par semaine : nombre de séances, durée, intensité moyenne, temps d'effort intense, records personnels.
+- [ ] **Fatigue** : repérer les séances ou les semaines « moins bonnes » (intensité qui baisse pour un même effort, record pas atteint) et les relier au contexte.
+
+### Contexte de chaque séance (pour comprendre les baisses)
+- [ ] Après chaque séance : ressenti de fatigue (0 à 10), douleur ou blessure, sommeil de la nuit, avec la météo ajoutée automatiquement.
+- [ ] Graphique qui superpose la performance et ce contexte (« cette semaine-là : mauvais sommeil, chaleur, moins bon rendement »).
+
+### Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
+| Piste (README) | Où on en est |
+|---|---|
+| Force qui change d'un jour à l'autre : recalibrer à chaque séance | ✅ fait (écran de calibration, historique des calibrations) |
+| Données de santé protégées, consentement | ✅ fait (consentement au premier lancement, seul un résumé est stocké) |
+| **Fatigue** : la suivre et proposer une pause avant l'épuisement | ⏳ à faire : indicateur dans l'application à partir des séances ; la vraie mesure (baisse de la fréquence médiane) demande le signal **RAW** du MyoWare, lu à 1 kHz ou plus, donc un changement du firmware |
+| **Chaleur** : symptômes aggravés quand le corps chauffe | ⏳ à faire : météo par le téléphone (sans matériel) ; un capteur de température de la peau devrait être ajouté à la commande |
+| Raideurs et spasmes, asymétrie gauche / droite | ⏳ plus tard : activité au repos détectable avec un capteur ; la comparaison gauche / droite demande un **deuxième** brassard |
+| Gestes fins et vue parfois difficiles | ⏳ à faire : mode « grands boutons et texte agrandi », alertes par vibration du téléphone et par la voix |
+| Suivi avec les soignants | ⏳ à faire : export des séances et du carnet (PDF ou CSV) à donner au neurologue ou au kinésithérapeute |
+
 ## Proposition de répartition
 
 | Qui | Sans le matériel | À la réception |
