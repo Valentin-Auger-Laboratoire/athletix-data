@@ -18,7 +18,7 @@
 | Écran de calibration dans l'application | ❌ à faire |
 | Historique des séances dans l'application | ❌ à faire |
 | Règle de score du classement à partir des mesures EMG | ❌ à décider puis coder |
-| Boîtier (Fusion 360) | ⏳ en cours (Valentin) |
+| Boîtier (Fusion 360) | ✅ modélisé (Valentin), ⏳ fichiers pas encore ajoutés au dépôt |
 | Brassard réel câblé, mesuré, calibré | ❌ attend le matériel |
 
 ## 1. À faire maintenant, sans le matériel
@@ -45,7 +45,7 @@ L'objectif : quand les pièces arrivent, il ne reste plus qu'à souder, flasher 
 - [ ] **Firmware final** : partir du faux brassard, `SOURCE_SIMULEE 0`, broche du MyoWare, et ajouter le niveau de batterie dans le service Bluetooth (remplace `hardware_status`).
 - [ ] **Vérifier les fiches techniques** (SparkFun Thing Plus ESP32-S3, MyoWare 2.0, Link Shield) et corriger le [câblage présumé](hardware/README.md) si besoin : broche analogique exacte, alimentation, sortie du Link Shield.
 - [ ] **Compléter la commande si possible** : le Link Shield sort le signal par un jack 3,5 mm (câble jack et petite embase à prévoir), les électrodes sont à usage unique (prévoir un paquet de rechange). Le câble Qwiic ne sert pas pour le signal.
-- [ ] **Boîtier** : finir le modèle Fusion 360 (Valentin), exporter en STEP et STL. Prévoir de reprendre les cotes une fois les pièces en main.
+- [ ] **Boîtier** : le modèle Fusion 360 est fait (Valentin). Reste à l'exporter en STEP et STL, avec quelques captures, et à l'ajouter au dépôt. Prévoir de vérifier les cotes une fois les pièces en main.
 - [ ] **Protocole de test écrit** (voir §2) avec les résultats attendus, pour comparer la mesure réelle à la simulation.
 
 ### Projet
@@ -79,6 +79,6 @@ Dans cet ordre, en notant chaque résultat :
 
 | Qui | Sans le matériel | À la réception |
 |---|---|---|
-| **Valentin** | API testée sur XAMPP, écrans calibration et historique, firmware final, boîtier | soudure, câblage, firmware, intégration dans le boîtier |
+| **Valentin** | API testée sur XAMPP, écrans calibration et historique, firmware final, export du boîtier | soudure, câblage, firmware, intégration dans le boîtier |
 | **Othmen** | `BrassardBle`, test du faux brassard avec nRF Connect | connexion Bluetooth réelle avec l'application |
 | **Maxence** | Gantt, protocole de test et résultats attendus (d'après sa simulation) | mesures, comparaison avec la simulation |
