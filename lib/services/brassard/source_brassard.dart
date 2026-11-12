@@ -21,6 +21,9 @@ abstract class SourceBrassard {
   /// Référence 100 % MVC actuelle, en mV (caractéristique Configuration).
   int get refMvcMv;
 
+  /// Niveau de batterie en % (caractéristique standard 0x2A19), ou null si inconnu.
+  int? get batteriePct;
+
   /// Flux des mesures reçues (environ 50 par seconde pendant une séance).
   Stream<MesureEmg> get mesures;
 
@@ -30,6 +33,20 @@ abstract class SourceBrassard {
   /// Commande 0x02 : arrête l'envoi des mesures.
   Future<void> arreter();
 
+  /// Commande 0x03 : calibration de 3 s pendant laquelle l'utilisateur serre le muscle
+  /// au maximum. Renvoie la nouvelle référence 100 % MVC, en mV.
+  /// Lève une [ErreurBrassard] si le brassard refuse (signal trop faible…).
+  Future<int> calibrer();
+
   /// Libère les ressources (connexion, minuteurs).
   void fermer();
+}
+
+/// Erreur signalée par le brassard (caractéristique État, GATT.md §7) ou par la liaison.
+class ErreurBrassard implements Exception {
+  ErreurBrassard(this.message);
+  final String message;
+
+  @override
+  String toString() => message;
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:athletix_data/services/api.dart';
+import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/mesure_emg.dart';
@@ -14,9 +15,9 @@ class WorkoutDetailScreen extends StatefulWidget {
   /// Mesure EMG affichée pendant la séance (voir [_buildMesure]).
   final String mesure;
 
-  /// Source des mesures. Par défaut : le brassard simulé.
-  /// Plus tard : un `BrassardBle` (voir architecture/INTEGRATION.md §3).
-  /// L'écran ferme la source quand il se ferme.
+  /// Source des mesures. Par défaut : le brassard choisi dans l'écran « Brassard »
+  /// (BrassardActif), sinon un brassard simulé créé pour la séance.
+  /// L'écran ne ferme que le brassard simulé qu'il a créé lui-même.
   final SourceBrassard? source;
 
   const WorkoutDetailScreen({
@@ -32,7 +33,10 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
-  late final SourceBrassard _brassard = widget.source ?? BrassardSimule();
+  late final SourceBrassard? _fourni = widget.source ?? BrassardActif.source;
+  late final SourceBrassard _brassard = _fourni ?? BrassardSimule();
+  bool get _creeIci => _fourni == null;
+  String? _erreurLiaison;
   late final ResumeSeance _resume = ResumeSeance(refMvcMv: _brassard.refMvcMv);
   StreamSubscription<MesureEmg>? _abonnement;
   MesureEmg? _derniere;
@@ -42,8 +46,12 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _abonnement = _brassard.mesures.listen(_recevoir);
-    _brassard.demarrer();
+    _abonnement = _brassard.mesures.listen(_recevoir, onError: (Object e) {
+      if (mounted) setState(() => _erreurLiaison = e.toString());
+    });
+    _brassard.demarrer().catchError((Object e) {
+      if (mounted) setState(() => _erreurLiaison = e.toString());
+    });
   }
 
   void _recevoir(MesureEmg mesure) {
@@ -54,7 +62,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   @override
   void dispose() {
     _abonnement?.cancel();
-    _brassard.fermer();
+    if (_creeIci) {
+      _brassard.fermer();
+    } else {
+      _brassard.arreter().catchError((_) {}); // la connexion Bluetooth reste ouverte
+    }
     super.dispose();
   }
 
@@ -63,7 +75,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
-    await _brassard.arreter();
+    try {
+      await _brassard.arreter();
+    } catch (_) {/* liaison perdue : on enregistre quand même ce qui a été reçu */}
     if (_resume.nbEchantillons < 2) {
       navigator.pop(); // séance trop courte : rien à enregistrer
       return;
@@ -76,6 +90,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       simule: _brassard.simule,
       numeroSerie: _brassard.numeroSerie,
       firmware: _brassard.firmware,
+      batteriePct: _brassard.batteriePct,
     ));
     if (!mounted) return;
 
@@ -110,12 +125,24 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         centerTitle: true,
       ),
       body: mesure == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: _erreurLiaison != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text('Brassard : $_erreurLiaison',
+                          textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent)),
+                    )
+                  : const CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Column(
                 children: [
                   _bandeauSource(),
+                  if (_erreurLiaison != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(_erreurLiaison!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                    ),
                   const SizedBox(height: 24),
                   const Text("INTENSITÉ MUSCULAIRE",
                       style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1.2)),

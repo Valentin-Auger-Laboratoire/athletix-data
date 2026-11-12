@@ -8,6 +8,11 @@ import 'selection_screen.dart';
 import 'questionnaire_screen.dart';
 import 'classement_screen.dart';
 import 'ia_result_screen.dart';
+import 'brassard_screen.dart';
+import 'historique_screen.dart';
+import 'consentement.dart';
+import 'package:athletix_data/services/brassard/brassard_actif.dart';
+import 'package:athletix_data/services/brassard/source_brassard.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +34,28 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _fetchHardwareStatus();
     _loadProfilIA(); // ✅ charge le profil au démarrage
+    WidgetsBinding.instance.addPostFrameCallback((_) => _verifierConsentement());
   }
+
+  // Données de santé : accord demandé une fois, au premier lancement (RGPD)
+  Future<void> _verifierConsentement() async {
+    final accord = await Consentement.demanderSiBesoin(context, demo: Api.isDemo);
+    if (accord || !mounted) return;
+    final wasDemo = Api.isDemo;
+    await Api.logout();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => wasDemo ? const LandingScreen() : const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  void _ouvrirBrassard() =>
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const BrassardScreen()));
+
+  void _ouvrirHistorique() =>
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoriqueScreen()));
 
   // ✅ Lecture seule : l'ouverture de l'accueil ne modifie plus l'état du brassard
   Future<void> _fetchHardwareStatus() async {
@@ -105,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// - « Se déconnecter » / « Quitter la démo » : retour à la page d'accueil de l'appli.
   Future<void> _closeSession(Widget destination) async {
     Navigator.pop(context); // ferme le menu
+    BrassardActif.liberer(); // le brassard appartient à la session : on le déconnecte
     await Api.logout();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
@@ -162,6 +189,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.history, color: Colors.orange, size: 22),
+                ),
+                title: const Text("Mes séances", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _ouvrirHistorique();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -203,6 +245,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('ATHLETIX-DATA', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.orange[800],
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Mes séances',
+            icon: const Icon(Icons.history),
+            onPressed: _ouvrirHistorique,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -246,7 +295,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                Container(
+                ValueListenableBuilder<SourceBrassard?>(
+                  valueListenable: BrassardActif.courant,
+                  builder: (context, source, _) {
+                    final niveau = source?.batteriePct ?? batteryLevel;
+                    return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
@@ -255,39 +308,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(_batteryIcon(batteryLevel),
+                      Icon(_batteryIcon(niveau),
                         color: Colors.white70, size: 18),
                       const SizedBox(width: 6),
-                      Text(batteryLevel == null ? "—" : "$batteryLevel%",
+                      Text(niveau == null ? "—" : "$niveau%",
                         style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
+                );
+                  },
                 ),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: isConnected ? Colors.green : Colors.red, width: 1.5),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-                    color: isConnected ? Colors.green : Colors.red, size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    isConnected ? "BRASSARD SYNCHRONISÉ" : "BRASSARD NON RELIÉ",
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            child: ValueListenableBuilder<SourceBrassard?>(
+              valueListenable: BrassardActif.courant,
+              builder: (context, source, _) {
+                final relie = source != null || isConnected;
+                final texte = source == null
+                    ? (isConnected ? "BRASSARD SYNCHRONISÉ" : "BRASSARD NON RELIÉ · TOUCHER POUR LE CHOISIR")
+                    : source.simule
+                        ? "BRASSARD SIMULÉ ACTIF"
+                        : "${source.nom.toUpperCase()} RELIÉ";
+                final couleur = source?.simule == true ? Colors.amber : (relie ? Colors.green : Colors.red);
+                return InkWell(
+                  onTap: _ouvrirBrassard,
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(
+                    width: double.infinity,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: couleur, width: 1.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(relie ? Icons.bluetooth_connected : Icons.bluetooth_disabled, color: couleur, size: 20),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(texte,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
           Padding(

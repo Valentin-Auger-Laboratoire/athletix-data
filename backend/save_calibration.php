@@ -14,7 +14,7 @@ if ($serie === '') {
 }
 $firmware = isset($_POST['firmware']) ? trim($_POST['firmware']) : null;
 
-$brassard_id = brassard_pour_utilisateur($conn, $user_id, $serie, $firmware);
+$brassard_id = brassard_pour_utilisateur($conn, $user_id, $serie, $firmware, batterie_post());
 
 $stmt = $conn->prepare("INSERT INTO calibrations (brassard_id, user_id, ref_mvc_mv) VALUES (?, ?, ?)");
 $stmt->bind_param("iii", $brassard_id, $user_id, $ref_mvc);

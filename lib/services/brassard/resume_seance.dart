@@ -63,6 +63,7 @@ class ResumeSeance {
     required bool simule,
     String? numeroSerie,
     String? firmware,
+    int? batteriePct,
   }) {
     final duree = dureeS < 1 ? 1 : dureeS; // le serveur exige au moins 1 s
     return {
@@ -77,6 +78,7 @@ class ResumeSeance {
       if (numeroSerie != null) 'numero_serie': numeroSerie,
       if (firmware != null) 'firmware': firmware,
       if (refMvcMv != null) 'ref_mvc_mv': '$refMvcMv',
+      if (batteriePct != null) 'batterie': '$batteriePct',
     };
   }
 }

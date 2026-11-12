@@ -33,6 +33,12 @@ abstract class AthletixApi {
 
   /// Enregistre une séance terminée et son résumé EMG (backend/save_seance.php).
   Future<Map<String, dynamic>> saveSeance(Map<String, String> seance);
+
+  /// Historique des séances de l'utilisateur (backend/get_seances.php) : clé `seances`.
+  Future<Map<String, dynamic>> getSeances();
+
+  /// Enregistre une calibration (backend/save_calibration.php).
+  Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration);
 }
 
 /// Point d'accès unique : backend PHP réel ou données de démo en mémoire.
@@ -118,6 +124,13 @@ class HttpApi implements AthletixApi {
   @override
   Future<Map<String, dynamic>> saveSeance(Map<String, String> seance) =>
       _post("save_seance.php", seance, auth: true);
+
+  @override
+  Future<Map<String, dynamic>> getSeances() => _post("get_seances.php", {}, auth: true);
+
+  @override
+  Future<Map<String, dynamic>> saveCalibration(Map<String, String> calibration) =>
+      _post("save_calibration.php", calibration, auth: true);
 
   @override
   Future<List<dynamic>> getClassement() async {

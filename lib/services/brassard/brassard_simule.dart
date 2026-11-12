@@ -39,6 +39,11 @@ class BrassardSimule implements SourceBrassard {
   Timer? _minuteur;
   double _intensiteLissee = 0;
   bool _alerte = false;
+  int _refMvcMv = GattAthletix.refMvcDefautMv;
+  bool _calibration = false;
+
+  /// Durée de la calibration (commande 0x03), comme le vrai brassard.
+  static const Duration dureeCalibration = Duration(seconds: 3);
 
   @override
   String get nom => 'Brassard simulé';
@@ -53,7 +58,11 @@ class BrassardSimule implements SourceBrassard {
   String? get firmware => null;
 
   @override
-  int get refMvcMv => GattAthletix.refMvcDefautMv;
+  int get refMvcMv => _refMvcMv;
+
+  /// Un brassard simulé n'a pas de batterie.
+  @override
+  int? get batteriePct => null;
 
   @override
   Stream<MesureEmg> get mesures => _flux.stream;
@@ -81,6 +90,17 @@ class BrassardSimule implements SourceBrassard {
     _chrono.stop();
   }
 
+  /// Simule une contraction maximale de 3 s : la nouvelle référence varie de ± 5 %
+  /// autour de 1 850 mV (valeur supposée dans la simulation Simulink).
+  @override
+  Future<int> calibrer({Duration? duree}) async {
+    _calibration = true;
+    await Future.delayed(duree ?? dureeCalibration);
+    _calibration = false;
+    _refMvcMv = (GattAthletix.refMvcDefautMv * (0.95 + _hasard.nextDouble() * 0.10)).round();
+    return _refMvcMv;
+  }
+
   @override
   void fermer() {
     arreter();
@@ -106,6 +126,7 @@ class BrassardSimule implements SourceBrassard {
       intensitePct: intensite,
       alerte: _alerte,
       saturation: rms >= 3300,
+      calibrationEnCours: _calibration,
     ).versOctets();
 
     // Même chemin que le Bluetooth : octets → décodeur

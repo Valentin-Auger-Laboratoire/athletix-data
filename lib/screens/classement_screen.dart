@@ -56,8 +56,19 @@ class _ClassementScreenState extends State<ClassementScreen> {
               color: Colors.orange,
               child: ListView.builder(
                 padding: const EdgeInsets.all(15),
-                itemCount: athletes.length,
-                itemBuilder: (context, index) {
+                itemCount: athletes.length + 1,
+                itemBuilder: (context, i) {
+                  if (i == 0) {
+                    return const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        "30 derniers jours. Chaque séance mesurée rapporte 10 points, plus "
+                        "minutes × intensité moyenne ÷ 50. Les séances simulées ne comptent pas.",
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    );
+                  }
+                  final index = i - 1;
                   final user = athletes[index];
                   return Card(
                     color: Colors.grey[900],
@@ -84,7 +95,7 @@ class _ClassementScreenState extends State<ClassementScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        user['sport'] ?? 'Sportif', 
+                        "${user['sport'] ?? 'Sportif'} · ${user['nb_seances'] ?? 0} séance(s)",
                         style: const TextStyle(color: Colors.white70),
                       ),
                       trailing: Text(

@@ -40,7 +40,7 @@ try {
     $serie = trim($_POST['numero_serie'] ?? '');
     if ($serie !== '') {
         $firmware = isset($_POST['firmware']) ? trim($_POST['firmware']) : null;
-        $brassard_id = brassard_pour_utilisateur($conn, $user_id, $serie, $firmware);
+        $brassard_id = brassard_pour_utilisateur($conn, $user_id, $serie, $firmware, batterie_post());
     }
 
     // Début et fin fixés par le serveur : l'horloge du téléphone peut être fausse (règle R6)

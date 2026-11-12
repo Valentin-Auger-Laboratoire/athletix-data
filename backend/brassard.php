@@ -24,7 +24,7 @@ function entier_post(string $champ, int $min, int $max, ?int $defaut = null): in
 
 // Crée le brassard s'il est inconnu, sinon le met à jour, et le lie à l'utilisateur.
 // Renvoie son id. Un brassard qui change de main est simplement réattribué (prototype).
-function brassard_pour_utilisateur(mysqli $conn, int $user_id, string $numero_serie, ?string $firmware): int
+function brassard_pour_utilisateur(mysqli $conn, int $user_id, string $numero_serie, ?string $firmware, ?int $batterie = null): int
 {
     if (!preg_match('/^[A-Za-z0-9-]{4,32}$/', $numero_serie)) {
         json_out(["status" => "error", "message" => "Numéro de série du brassard invalide"], 400);
@@ -35,16 +35,27 @@ function brassard_pour_utilisateur(mysqli $conn, int $user_id, string $numero_se
 
     // id = LAST_INSERT_ID(id) : insert_id renvoie aussi l'id quand la ligne existait déjà
     $stmt = $conn->prepare(
-        "INSERT INTO brassards (user_id, numero_serie, firmware, derniere_synchro)
-         VALUES (?, ?, ?, NOW())
+        "INSERT INTO brassards (user_id, numero_serie, firmware, batterie_niveau, derniere_synchro)
+         VALUES (?, ?, ?, ?, NOW())
          ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), user_id = VALUES(user_id),
-             firmware = COALESCE(VALUES(firmware), firmware), derniere_synchro = NOW()"
+             firmware = COALESCE(VALUES(firmware), firmware),
+             batterie_niveau = COALESCE(VALUES(batterie_niveau), batterie_niveau),
+             derniere_synchro = NOW()"
     );
-    $stmt->bind_param("iss", $user_id, $numero_serie, $firmware);
+    $stmt->bind_param("issi", $user_id, $numero_serie, $firmware, $batterie);
     if (!$stmt->execute()) {
         json_out(["status" => "error", "message" => "Erreur lors de l'enregistrement du brassard"], 500);
     }
     $id = (int) $stmt->insert_id;
     $stmt->close();
     return $id;
+}
+
+// Niveau de batterie facultatif (caractéristique GATT 0x2A19), en %.
+function batterie_post(): ?int
+{
+    if (($_POST['batterie'] ?? '') === '') {
+        return null;
+    }
+    return entier_post('batterie', 0, 100);
 }

@@ -31,7 +31,7 @@ $conn->set_charset('utf8mb4');
 function json_out(array $data, int $code = 200): void
 {
     http_response_code($code);
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit();
 }
 
