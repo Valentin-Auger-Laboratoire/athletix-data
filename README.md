@@ -24,6 +24,14 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 
 La chaîne de mesure a été modélisée sous Simulink avant le câblage, à titre d'**expérimentation** : voir [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). Dans ce modèle d'essai, l'intensité calculée suit l'effort demandé, et l'alerte d'effort intense (75 %, avec hystérésis) ne clignote pas. Le modèle final est fourni : [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b ou plus récent).
 
+**Le modèle Simulink** (signal du muscle, capteur MyoWare 2.0, puis conversion et calcul sur l'ESP32-S3) :
+
+![Schéma du modèle Simulink de la chaîne EMG](hardware/simulation-emg/schema-modele.png)
+
+**Le résultat** : en haut, l'alerte d'effort intense ; en bas, l'intensité en % de la contraction maximale, avec le seuil de 75 % :
+
+![Résultat de la simulation : alerte d'effort intense et intensité en % MVC](hardware/simulation-emg/resultat-simulation-corrigee.png)
+
 ## Rencontre avec une patiente atteinte de sclérose en plaques
 
 > [!NOTE]
@@ -142,6 +150,10 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 **Team:** Valentin Auger (hardware and app: armband wiring, ESP32 firmware, acquisition and RMS, Flutter prototype UI), Maxence Olivier (project lead and QA), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models).
 
 **Final armband:** MyoWare 2.0 muscle sensor + Link Shield, SparkFun Thing Plus ESP32-S3 (12-bit ADC at 500 Hz, 200 ms RMS, Bluetooth Low Energy), 3.7 V 1500 mAh LiPo battery. The measurement chain was first modelled in Simulink as an **experiment**: see [`hardware/simulation-emg/`](hardware/simulation-emg/README.md). The final model is included: [`AthletixData_EMG_Simulation.slx`](hardware/simulation-emg/AthletixData_EMG_Simulation.slx) (MATLAB/Simulink R2026b or later).
+
+![Simulink model of the EMG chain](hardware/simulation-emg/schema-modele.png)
+
+![Simulation result: high-effort alert (top) and intensity in % MVC with the 75 % threshold (bottom)](hardware/simulation-emg/resultat-simulation-corrigee.png)
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
