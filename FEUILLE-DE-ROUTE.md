@@ -49,6 +49,7 @@
 ### Préparation des essais et gestion de projet
 - **Comparaison automatique avec la simulation** ([`mesures/`](mesures/README.md)) : le firmware écrit ses mesures sur le port USB, un script les enregistre, puis un autre les compare au modèle de la simulation (figure et rapport avec les critères du protocole). Testé sur des données simulées.
 - **Analyse des risques** ([`gestion-projet/analyse-des-risques.md`](gestion-projet/analyse-des-risques.md)) : gravité × apparition × détection, et actions prioritaires (pas d'essai dans l'eau sans boîtier étanche, PC portable débranché du secteur pendant une capture USB, polarité de la batterie).
+- **Mode d'emploi** de 2 pages ([`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)) : pose des électrodes, calibration, séance, natation, carnet pour les soignants, problèmes fréquents. À imprimer pour les essais.
 - **Diagramme de Gantt** mis à jour et **vidéo de démonstration** de l'application ([`media/`](media/demo-application.mp4)).
 
 ### Brassard
