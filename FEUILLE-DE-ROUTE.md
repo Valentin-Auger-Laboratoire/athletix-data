@@ -108,6 +108,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 - [x] **Vraie mesure de la fatigue** (13 novembre) : fréquence médiane du signal brut, firmware 1.2 + application + serveur. ⏳ À valider avec le vrai MyoWare (étape 8 du protocole).
 - [ ] **Capteur de température de la peau** (chaleur et sclérose en plaques), à ajouter à une future commande.
 - ~~Deux brassards pour comparer le côté gauche et le côté droit~~ : non retenu (13 novembre 2026), le matériel commandé ne suffit pas pour un second brassard.
+- [ ] **Bracelet MSGM115 : cœur et bouton musique** (noté le 13 novembre, pour plus tard). Les pas marchent déjà. Le cœur et la musique passent par un format du fabricant (services FD00 / FFE0) que le bracelet n'envoie pas sans son appli d'origine. Marche à suivre : retrouver le nom de l'appli d'origine (boîte ou notice, sans doute « YOHO Sports »), activer le **journal HCI Bluetooth** d'Android (options pour développeurs), utiliser l'appli d'origine (mesure du cœur, musique), récupérer le journal et le décoder, puis l'ajouter à `montre_podometre.dart`.
 - [x] Fond de carte sous le tracé du parcours (13 novembre, OpenStreetMap, désactivé par défaut).
 - [x] Appairage Bluetooth sécurisé (13 novembre, `APPAIRAGE_SECURISE`). ⏳ À essayer avec un téléphone (étape 9 du protocole). API en HTTPS : fournie par l'adresse ngrok.
 - [x] Limite du nombre d'essais de mot de passe côté serveur (13 novembre, migration `006`).
