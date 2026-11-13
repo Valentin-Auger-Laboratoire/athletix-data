@@ -30,6 +30,7 @@ class _BrassardScreenState extends State<BrassardScreen> {
   @override
   void initState() {
     super.initState();
+    BrassardBle.demanderCode = _demanderCode;
     BrassardBle.disponible().then((ok) {
       if (mounted) setState(() => _bluetoothDisponible = ok);
     });
@@ -37,9 +38,45 @@ class _BrassardScreenState extends State<BrassardScreen> {
 
   @override
   void dispose() {
+    if (BrassardBle.demanderCode == _demanderCode) BrassardBle.demanderCode = null;
     _abonnement?.cancel();
     if (_recherche) BrassardBle.arreterRecherche();
     super.dispose();
+  }
+
+  /// Code d'appairage du brassard (écrit sur l'étiquette du boîtier), demandé une seule fois :
+  /// ensuite, le téléphone et le brassard se reconnaissent.
+  Future<String?> _demanderCode() {
+    final saisie = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => StatefulBuilder(
+        builder: (c, maj) => AlertDialog(
+          title: const Text('Code du brassard'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text("Entre le code à 6 chiffres écrit sur l'étiquette du boîtier. La liaison sera chiffrée, "
+                "et personne d'autre ne pourra se connecter à ton brassard."),
+            const SizedBox(height: 12),
+            TextField(
+              controller: saisie,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              onChanged: (_) => maj(() {}),
+              decoration: const InputDecoration(hintText: '123456', border: OutlineInputBorder()),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Annuler')),
+            ElevatedButton(
+              onPressed: BrassardBle.codeValide(saisie.text) ? () => Navigator.pop(c, saisie.text.trim()) : null,
+              child: const Text('Appairer'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _rechercher() async {
@@ -170,6 +207,7 @@ class _BrassardScreenState extends State<BrassardScreen> {
           ligne('Firmware', source.firmware ?? '—'),
           ligne('Batterie', source.batteriePct == null ? '—' : '${source.batteriePct} %'),
           ligne('Référence 100 %', '${source.refMvcMv} mV'),
+          if (source is BrassardBle) ligne('Liaison', source.appaire ? 'chiffrée (appairé avec le code)' : 'ouverte'),
           if (source.mesureFatigue) _choixSignal(source),
           const SizedBox(height: 12),
           Row(children: [
@@ -190,6 +228,15 @@ class _BrassardScreenState extends State<BrassardScreen> {
               child: const Text('Déconnecter', style: TextStyle(color: Colors.redAccent)),
             ),
           ]),
+          if (source is BrassardBle && source.appaire)
+            TextButton(
+              onPressed: () async {
+                await source.oublierAppairage();
+                if (mounted) setState(BrassardActif.liberer);
+              },
+              child: const Text("Oublier l'appairage (brassard prêté, nouveau code)",
+                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+            ),
         ],
       ),
     );

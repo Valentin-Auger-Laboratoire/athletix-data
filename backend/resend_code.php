@@ -1,12 +1,18 @@
 <?php
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/mail_sender.php';
+require __DIR__ . '/limites.php';
 require_post();
 
 $email = trim($_POST['email'] ?? '');
 if ($email === '') {
     json_out(["status" => "error", "message" => "Champs manquants"]);
 }
+
+// Même limite que le compte existe ou non : la réponse ne révèle pas les adresses inscrites
+$cle = cle_essai($email);
+verifier_essais($conn, 'renvoi_code', $cle);
+noter_essai($conn, 'renvoi_code', $cle);
 
 $stmt = $conn->prepare("SELECT id, verified FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);

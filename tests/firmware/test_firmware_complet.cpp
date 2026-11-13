@@ -246,6 +246,51 @@ int main() {
   VERIFIER(resume[1] == EnregistrementHorsLigne::TERMINE && duree >= 59 && duree <= 61, "natation : 1 min gardée dans le brassard");
   VERIFIER(resume[8] >= 52 && resume[8] <= 56, "natation : intensité moyenne ≈ 54 %");
 
+  // ---------------------------------------------------------------- appairage sécurisé
+  auto derniereLigne = [](const char *debut) {
+    std::string r;
+    for (auto &l : banc::lignesSerie) if (l.rfind(debut, 0) == 0) r = l;
+    return r;
+  };
+#if APPAIRAGE_SECURISE
+  VERIFIER(codeAppairageValide(codeAppairage), "code d'appairage à 6 chiffres tiré au démarrage");
+  VERIFIER(banc::memoireNvs["athletix/code"] == codeAppairage, "code gardé en mémoire non volatile");
+  auto &cle = banc::parametresSecurite[ESP_BLE_SM_SET_STATIC_PASSKEY];
+  VERIFIER(cle.size() == 4 && (uint32_t)(cle[0] | cle[1] << 8 | cle[2] << 16 | (uint32_t)cle[3] << 24) == codeAppairage,
+           "code transmis à la pile Bluetooth (passkey statique)");
+  VERIFIER(banc::parametresSecurite[ESP_BLE_SM_AUTHEN_REQ_MODE][0] == ESP_LE_AUTH_REQ_SC_MITM_BOND,
+           "LE Secure Connections, protection homme du milieu, mémorisation");
+  VERIFIER(banc::parametresSecurite[ESP_BLE_SM_ONLY_ACCEPT_SPECIFIED_SEC_AUTH][0] == 1, "appairage sans code refusé");
+  bool tousProteges = true;
+  for (const char *u : {U_MESURE, U_CONTROLE, U_CONFIG, U_ETAT, U_HORS_LIGNE, U_FREQUENCE}) {
+    tousProteges &= (car(u)->permissions & (ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM)) ==
+                    (ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM);
+    for (auto *d : car(u)->descripteurs) tousProteges &= d->permissions == (ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM);
+  }
+  VERIFIER(tousProteges, "les 6 caractéristiques du service et leurs descripteurs exigent l'appairage");
+  VERIFIER(version->permissions == 0, "numéro de série et version restent lisibles sans appairage");
+  uint32_t ancien = codeAppairage;
+  banc::entreeSerie = "code\n";
+  avancer(0.01);
+  char attendu[48];
+  snprintf(attendu, sizeof attendu, "Code d'appairage : %06lu", (unsigned long)ancien);
+  VERIFIER(derniereLigne("Code d'appairage") == attendu, "CODE réaffiche le code dans le moniteur série");
+  banc::entreeSerie = "OUBLIER\n";
+  avancer(0.01);
+  VERIFIER(banc::appairages == 0 && codeAppairage == ancien, "OUBLIER efface les téléphones appairés, pas le code");
+  banc::appairages = 1;
+  banc::entreeSerie = "NOUVEAU\n";
+  avancer(0.01);
+  VERIFIER(codeAppairageValide(codeAppairage) && codeAppairage != ancien && banc::appairages == 0 &&
+               banc::memoireNvs["athletix/code"] == codeAppairage,
+           "NOUVEAU tire un autre code, le garde et oublie les téléphones");
+#else
+  banc::entreeSerie = "CODE\n";
+  avancer(0.01);
+  VERIFIER(derniereLigne("Appairage sécurisé désactivé").size() > 0, "sans APPAIRAGE_SECURISE : le moniteur le dit");
+  VERIFIER(car(U_MESURE)->permissions == 0 && codeAppairage == 0, "sans APPAIRAGE_SECURISE : liaison ouverte (premiers essais)");
+#endif
+
   printf("%d vérifications OK, %d échec(s)\n", ok, ko);
   fflush(stdout);
   _exit(ko == 0 ? 0 : 1);  // la tâche d'analyse tourne en boucle : on sort sans l'attendre

@@ -24,6 +24,20 @@
 
 #include "calcul_emg.h"
 #include "calcul_fatigue.h"
+#include "securite.h"
+
+// ---- Appairage sécurisé (SECURITE.md) ----
+// 1 : liaison CHIFFRÉE, appairage avec un code à 6 chiffres (écrit sur l'étiquette du boîtier),
+//     caractéristiques du service Athletix inaccessibles sans appairage.
+// 0 (par défaut) : liaison ouverte, comme le faux brassard. On garde 0 pour les premiers essais de
+//     la carte (étapes 1 à 8 du protocole), puis on passe à 1 (étape 9).
+#ifndef APPAIRAGE_SECURISE
+#define APPAIRAGE_SECURISE 0
+#endif
+#if APPAIRAGE_SECURISE
+#include <Preferences.h>
+#include <esp_gap_ble_api.h>
+#endif
 
 using namespace athletix;
 
@@ -51,7 +65,8 @@ const bool JOURNAL_SERIE = true;
 #define UUID_HORS_LIGNE     "abad0005-b097-4a54-8315-c2971fc04ce6"
 #define UUID_FREQUENCE      "abad0006-b097-4a54-8315-c2971fc04ce6"
 
-const char *VERSION_FIRMWARE = "1.2.0";  // 1.1 : natation ; 1.2 : source RAW et fatigue (fréquence médiane)
+const char *VERSION_FIRMWARE = "1.2.0";
+uint32_t codeAppairage = 0;  // 0 tant que l'appairage sécurisé est désactivé  // 1.1 : natation ; 1.2 : source RAW et fatigue (fréquence médiane)
 
 enum : uint8_t { CMD_DEMARRER = 0x01, CMD_ARRETER = 0x02, CMD_CALIBRER = 0x03, CMD_SEUIL = 0x04,
                  CMD_DEMARRER_HORS_LIGNE = 0x05, CMD_EFFACER_HORS_LIGNE = 0x06, CMD_SOURCE = 0x07 };
@@ -290,6 +305,91 @@ void executerCommande(int commande) {
   }
 }
 
+// ---- Appairage sécurisé ----
+#if APPAIRAGE_SECURISE
+Preferences memoire;
+
+// Code tiré au hasard au premier démarrage, puis gardé en mémoire (survit aux coupures)
+uint32_t chargerCodeAppairage(bool nouveau) {
+  memoire.begin("athletix", false);
+  uint32_t code = nouveau ? 0 : memoire.getUInt("code", 0);
+  if (!codeAppairageValide(code)) {
+    code = genererCodeAppairage([] { return (uint32_t)esp_random(); });
+    memoire.putUInt("code", code);
+  }
+  memoire.end();
+  return code;
+}
+
+// Passkey statique : le téléphone demande le code, le brassard le « connaît » (étiquette).
+// LE Secure Connections + protection contre l'homme du milieu + mémorisation (bonding).
+void configurerSecurite(uint32_t code) {
+  esp_ble_auth_req_t mode = ESP_LE_AUTH_REQ_SC_MITM_BOND;
+  esp_ble_io_cap_t capacites = ESP_IO_CAP_OUT;  // « affiche » un code (ici : l'étiquette du boîtier)
+  uint8_t tailleCle = 16;
+  uint8_t cles = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
+  uint8_t seulementCeMode = ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_ENABLE;  // refuse un appairage sans code
+  esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &code, sizeof(code));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &mode, sizeof(mode));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &capacites, sizeof(capacites));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &tailleCle, sizeof(tailleCle));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_ONLY_ACCEPT_SPECIFIED_SEC_AUTH, &seulementCeMode, sizeof(seulementCeMode));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &cles, sizeof(cles));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &cles, sizeof(cles));
+}
+
+// Lecture et écriture seulement sur une liaison chiffrée et authentifiée (appairée avec le code)
+void proteger(BLECharacteristic *c, bool avecDescripteur) {
+  c->setAccessPermissions(ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM);
+  if (avecDescripteur) {
+    BLEDescriptor *d = new BLE2902();
+    d->setAccessPermissions(ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM);
+    c->addDescriptor(d);
+  }
+}
+
+void oublierAppairages() {
+  int n = esp_ble_get_bond_device_num();
+  if (n <= 0) return;
+  esp_ble_bond_dev_t *liste = (esp_ble_bond_dev_t *)malloc(sizeof(esp_ble_bond_dev_t) * n);
+  if (liste == nullptr) return;
+  esp_ble_get_bond_device_list(&n, liste);
+  for (int i = 0; i < n; i++) esp_ble_remove_bond_device(liste[i].bd_addr);
+  free(liste);
+  Serial.printf("%d téléphone(s) oublié(s) : il faudra appairer de nouveau\n", n);
+}
+#endif
+
+// Commandes tapées dans le moniteur série (USB) : CODE, OUBLIER, NOUVEAU (securite.h)
+void lireMoniteurSerie() {
+  static char ligne[32];
+  static size_t n = 0;
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+    if (c != '\n' && n < sizeof(ligne) - 1) {
+      ligne[n++] = c;
+      continue;
+    }
+    ligne[n] = 0;
+    n = 0;
+    CommandeSerie commande = lireCommandeSerie(ligne);
+    if (commande == SERIE_AUCUNE) continue;
+#if APPAIRAGE_SECURISE
+    if (commande == SERIE_NOUVEAU) {
+      codeAppairage = chargerCodeAppairage(true);
+      configurerSecurite(codeAppairage);
+      oublierAppairages();
+    } else if (commande == SERIE_OUBLIER) {
+      oublierAppairages();
+    }
+    if (commande == SERIE_CODE || commande == SERIE_NOUVEAU) Serial.printf("Code d'appairage : %06lu\n", (unsigned long)codeAppairage);
+    if (commande == SERIE_INCONNUE) Serial.println("Commandes : CODE, OUBLIER, NOUVEAU");
+#else
+    Serial.println("Appairage sécurisé désactivé (APPAIRAGE_SECURISE = 0 dans le firmware)");
+#endif
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   analogReadResolution(12);
@@ -306,6 +406,11 @@ void setup() {
   snprintf(nom, sizeof(nom), "Athletix-%s", numeroSerie + strlen(numeroSerie) - 4);
 
   BLEDevice::init(nom);
+#if APPAIRAGE_SECURISE
+  codeAppairage = chargerCodeAppairage(false);
+  configurerSecurite(codeAppairage);
+  Serial.printf("Appairage sécurisé : code %06lu (à écrire sur l'étiquette du boîtier)\n", (unsigned long)codeAppairage);
+#endif
   BLEServer *serveur = BLEDevice::createServer();
   serveur->setCallbacks(new ServeurCallbacks());
 
@@ -326,7 +431,6 @@ void setup() {
 
   BLEService *service = serveur->createService(UUID_SERVICE);
   carMesure = service->createCharacteristic(UUID_MESURE, BLECharacteristic::PROPERTY_NOTIFY);
-  carMesure->addDescriptor(new BLE2902());
   BLECharacteristic *carControle = service->createCharacteristic(UUID_CONTROLE, BLECharacteristic::PROPERTY_WRITE);
   carControle->setCallbacks(new ControleCallbacks());
   carConfiguration = service->createCharacteristic(
@@ -334,12 +438,24 @@ void setup() {
   carConfiguration->setCallbacks(new ConfigurationCallbacks());
   publierConfiguration();
   carEtat = service->createCharacteristic(UUID_ETAT, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-  carEtat->addDescriptor(new BLE2902());
   publierEtat();
   carHorsLigne = service->createCharacteristic(UUID_HORS_LIGNE, BLECharacteristic::PROPERTY_READ);
   carHorsLigne->setCallbacks(new HorsLigneCallbacks());
   carFrequence = service->createCharacteristic(UUID_FREQUENCE, BLECharacteristic::PROPERTY_NOTIFY);
+  // Descripteurs des notifications, et protection de tout le service Athletix si l'appairage est actif
+  // (numéro de série, version et batterie restent lisibles : ils ne disent rien de la santé)
+#if APPAIRAGE_SECURISE
+  proteger(carMesure, true);
+  proteger(carControle, false);
+  proteger(carConfiguration, false);
+  proteger(carEtat, true);
+  proteger(carHorsLigne, false);
+  proteger(carFrequence, true);
+#else
+  carMesure->addDescriptor(new BLE2902());
+  carEtat->addDescriptor(new BLE2902());
   carFrequence->addDescriptor(new BLE2902());
+#endif
   service->start();
 
   // Analyse de fréquence (fatigue) : tâche de faible priorité sur le cœur 0 (loop() tourne sur le cœur 1)
@@ -361,7 +477,8 @@ void loop() {
   static uint32_t dernierEnvoiMs = 0;
   static uint32_t derniereBatterieMs = 0;
 
-  // 0. Commande reçue en Bluetooth (traitée ici, pas dans la tâche Bluetooth)
+  // 0. Moniteur série (code d'appairage) et commande reçue en Bluetooth (traitée ici, pas dans la tâche Bluetooth)
+  lireMoniteurSerie();
   int commande = commandeEnAttente;
   if (commande >= 0) {
     commandeEnAttente = -1;

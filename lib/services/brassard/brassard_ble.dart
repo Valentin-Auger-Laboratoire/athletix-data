@@ -81,6 +81,50 @@ class BrassardBle implements SourceBrassard {
 
   static Future<void> arreterRecherche() => FlutterBluePlus.stopScan();
 
+  /// Demande à l'utilisateur le code d'appairage à 6 chiffres (étiquette du boîtier), ou null s'il annule.
+  /// Fourni par l'écran « Brassard ». Utilisé seulement si le firmware exige l'appairage (SECURITE.md).
+  static Future<String?> Function()? demanderCode;
+
+  /// Code d'appairage valide : exactement 6 chiffres, de 100000 à 999999 (comme securite.h).
+  static bool codeValide(String code) => RegExp(r'^[1-9][0-9]{5}$').hasMatch(code.trim());
+
+  bool _appaire = false;
+
+  /// Vrai si la liaison est appairée et chiffrée (Android seulement ; ailleurs, le système s'en charge).
+  bool get appaire => _appaire;
+
+  /// Oublie l'appairage sur le téléphone (Android). Le brassard, lui, s'oublie avec « OUBLIER »
+  /// dans le moniteur série.
+  Future<void> oublierAppairage() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    await _appareil.removeBond();
+    _appaire = false;
+  }
+
+  /// Firmware avec APPAIRAGE_SECURISE : le service Athletix refuse toute lecture tant que le téléphone
+  /// n'est pas appairé avec le code. Sur Android, on demande le code dans l'application et on le
+  /// transmet au système (qui peut aussi afficher sa propre fenêtre de saisie).
+  Future<void> _appairerSiBesoin() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      _appaire = await _appareil.bondState.first == BluetoothBondState.bonded;
+    } catch (_) {}
+    if (_appaire) return;
+    try {
+      await _carConfiguration.read(); // brassard sans appairage obligatoire : la lecture passe
+      return;
+    } catch (_) {/* lecture refusée : appairage nécessaire */}
+    final code = await demanderCode?.call();
+    if (code == null) throw ErreurBrassard('Appairage annulé : le brassard demande son code à 6 chiffres');
+    if (!codeValide(code)) throw ErreurBrassard('Le code d\'appairage a 6 chiffres (étiquette du boîtier)');
+    try {
+      await _appareil.createBond(pin: Uint8List.fromList(utf8.encode(code.trim())));
+      _appaire = true;
+    } catch (e) {
+      throw ErreurBrassard('Appairage refusé (code faux ?). Réessaie ; si besoin, « OUBLIER » sur le brassard. ($e)');
+    }
+  }
+
   /// Se connecte au brassard, lit ses informations et s'abonne aux mesures.
   static Future<BrassardBle> connecter(BluetoothDevice appareil) async {
     final brassard = BrassardBle._(appareil);
@@ -136,6 +180,9 @@ class BrassardBle implements SourceBrassard {
     _carHorsLigne = trouver(GattAthletix.service, GattAthletix.horsLigne); // firmware 1.1 et plus
     _carFrequence = trouver(GattAthletix.service, GattAthletix.frequence); // firmware 1.2 et plus
     _carBatterie = trouver(GattAthletix.serviceBatterie, GattAthletix.niveauBatterie);
+
+    // Appairage avec le code si le firmware l'exige (APPAIRAGE_SECURISE, SECURITE.md)
+    await _appairerSiBesoin();
 
     // Informations de l'appareil (facultatives : un firmware de test peut ne pas les avoir)
     _numeroSerie = await _lireTexte(trouver(GattAthletix.serviceInfosAppareil, GattAthletix.numeroSerie));

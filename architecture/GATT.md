@@ -150,7 +150,7 @@ Application                                  Brassard
 
 ## 9. Sécurité et vie privée
 
-- Ce sont des **données de santé** (RGPD). Pour un prototype pédagogique, la connexion n'est pas chiffrée. Pour un vrai produit, il faudrait un appairage sécurisé (LE Secure Connections) et des caractéristiques accessibles seulement après appairage.
+- Ce sont des **données de santé** (RGPD). Le firmware final sait **chiffrer la liaison** : avec `APPAIRAGE_SECURISE = 1`, appairage LE Secure Connections avec un code à 6 chiffres (tiré au hasard, écrit sur l'étiquette du boîtier), et les 6 caractéristiques du service Athletix ne sont accessibles qu'après appairage. Désactivé par défaut pour les premiers essais de la carte, activé à l'étape 9 du protocole. Détails : [`hardware/firmware-brassard/SECURITE.md`](../hardware/firmware-brassard/SECURITE.md). Le faux brassard de test reste ouvert.
 - Le brassard n'envoie **rien** sur Internet. Seule l'application parle au serveur, avec le jeton de session de l'utilisateur.
 
 ## 10. Ce qui est implémenté

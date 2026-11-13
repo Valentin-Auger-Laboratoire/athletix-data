@@ -78,6 +78,12 @@ jobs:
         run: |
           g++ -std=c++17 -pthread -Wall -Wextra -Werror -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet
           ./test_complet
+      - name: Firmware complet avec l'appairage sécurisé activé
+        run: |
+          g++ -std=c++17 -pthread -Wall -Wextra -Werror -DAPPAIRAGE_SECURISE=1 -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet_securise
+          ./test_complet_securise
+      - name: Appairage (code, commandes du moniteur série)
+        run: g++ -std=c++17 -Wall -Wextra -Werror -I hardware/firmware-brassard tests/firmware/test_securite.cpp -o test_securite && ./test_securite
       - name: Même test sous ThreadSanitizer (échanges entre les deux cœurs)
         run: |
           g++ -std=c++17 -pthread -g -fsanitize=thread -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet_tsan

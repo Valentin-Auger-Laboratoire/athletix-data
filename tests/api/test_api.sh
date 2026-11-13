@@ -11,6 +11,7 @@
 #   mysql -u root < migrations/003_contexte_telephone.sql
 #   mysql -u root < migrations/004_trace_series_hors_ligne.sql
 #   mysql -u root < migrations/005_fatigue_frequence.sql
+#   mysql -u root < migrations/006_limite_essais.sql
 #   cp backend/config.example.php backend/config.local.php     # puis l'adapter
 #   php -S 127.0.0.1:8080 -t backend &                          # ou XAMPP
 #   ATHLETIX_TEST=1 B=http://127.0.0.1:8080 bash tests/api/test_api.sh
@@ -26,7 +27,7 @@ post() { curl -s -X POST "$B/$1" "${@:2}"; }
 check() { # nom, attendu (regex), réponse
   if echo "$3" | grep -qE "$2"; then ok=$((ok+1)); echo "OK   $1"; else ko=$((ko+1)); echo "FAIL $1 -> $3"; fi
 }
-mysql -uroot "$DB" -e "SET FOREIGN_KEY_CHECKS=0; DELETE FROM resultats_emg; DELETE FROM calibrations; DELETE FROM brassards; DELETE FROM sessions_entrainement; DELETE FROM profil_ia; DELETE FROM auth_tokens; DELETE FROM users; SET FOREIGN_KEY_CHECKS=1;"
+mysql -uroot "$DB" -e "SET FOREIGN_KEY_CHECKS=0; DELETE FROM resultats_emg; DELETE FROM calibrations; DELETE FROM brassards; DELETE FROM sessions_entrainement; DELETE FROM profil_ia; DELETE FROM auth_tokens; DELETE FROM tentatives; DELETE FROM users; SET FOREIGN_KEY_CHECKS=1;"
 
 check "GET refusé" '"status":"error"' "$(curl -s "$B/login.php")"
 check "inscription : champs manquants" 'Champs manquants' "$(post register.php -d email=a@b.fr)"
@@ -123,6 +124,26 @@ check "courbe de fréquence invalide refusée" 'courbe_mdf' "$(post save_seance.
 check "courbe de fréquence non numérique refusée" 'courbe_mdf' "$(post save_seance.php $S -d 'courbe_mdf=["a"]')"
 check "baisse hors plage refusée" 'baisse_mdf_pct' "$(post save_seance.php $S -d baisse_mdf_pct=250)"
 check "export RGPD : fatigue incluse" '"baisse_mdf_pct":"?19.2' "$(post export_donnees.php -d token=$T)"
+# Limite du nombre d'essais (migration 006), sur un compte à part
+post register.php -d pseudo=Limite -d email=limite@exemple.fr -d password=limite1234 -d sport=Yoga > /dev/null
+CODE3=$(mysql -uroot -N "$DB" -e "SELECT verification_code FROM users WHERE email='limite@exemple.fr'")
+post verify_code.php -d email=limite@exemple.fr -d code="$CODE3" > /dev/null
+for i in 1 2 3 4 5; do post login.php -d email=limite@exemple.fr -d password=faux > /dev/null; done
+check "connexion : bloquée après 5 mots de passe faux, même avec le bon" "Trop d'essais : réessaie dans 1[0-5] min" "$(post login.php -d email=Limite@Exemple.fr -d password=limite1234)"
+check "connexion : un autre compte n'est pas bloqué" '"status":"success"' "$(post login.php -d email=test@exemple.fr -d password=secret123)"
+check "tentatives : aucun e-mail ni adresse IP en clair" '^0$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM tentatives WHERE cle NOT REGEXP '^[0-9a-f]{64}$'")"
+mysql -uroot "$DB" -e "UPDATE tentatives SET quand = quand - INTERVAL 16 MINUTE WHERE action='connexion'"
+R=$(post login.php -d email=limite@exemple.fr -d password=limite1234)
+check "connexion : de nouveau possible après 15 min" '"status":"success"' "$R"
+T3=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
+check "connexion réussie : compteur de cet e-mail remis à zéro" '^0$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM tentatives WHERE action='connexion' AND quand > NOW() - INTERVAL 15 MINUTE")"
+for i in 1 2 3; do post resend_code.php -d email=quelquun@exemple.fr > /dev/null; done
+check "renvoi du code : 3 demandes au plus en 15 min" "Trop d'essais" "$(post resend_code.php -d email=quelquun@exemple.fr)"
+for i in 1 2 3 4 5; do post supprimer_compte.php -d token=$T3 -d password=faux > /dev/null; done
+check "suppression : bloquée après 5 mots de passe faux" "Trop d'essais" "$(post supprimer_compte.php -d token=$T3 -d password=limite1234)"
+check "suppression : le compte existe toujours" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM users WHERE email='limite@exemple.fr'")"
+mysql -uroot "$DB" -e "DELETE FROM tentatives"
+check "suppression du compte de test des limites" '"status":"success"' "$(post supprimer_compte.php -d token=$T3 -d password=limite1234)"
 # Un deuxième utilisateur ne voit ni ne touche les données du premier
 post register.php -d pseudo=Autre -d email=autre@exemple.fr -d password=autre1234 -d sport=Yoga > /dev/null
 CODE2=$(mysql -uroot -N "$DB" -e "SELECT verification_code FROM users WHERE email='autre@exemple.fr'")

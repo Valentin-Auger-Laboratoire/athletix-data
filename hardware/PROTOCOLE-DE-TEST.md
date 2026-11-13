@@ -109,6 +109,21 @@ Détails : [`firmware-brassard/FATIGUE.md`](firmware-brassard/FATIGUE.md). À fa
 | 8.7 | Terminer la séance | détail de la séance : courbe de la fréquence médiane et baisse en % | | |
 | 8.8 | Retour en « Enveloppe », interrupteur sur ENV, recalibrer | séance normale, plus de valeurs de fréquence | | |
 
+## Étape 9 — Appairage sécurisé (liaison chiffrée)
+
+Détails : [`firmware-brassard/SECURITE.md`](firmware-brassard/SECURITE.md). Seulement quand les étapes 1 à 8 marchent.
+
+| # | Vérification | Attendu | Mesuré | OK ? |
+|---|---|---|---|---|
+| 9.1 | Mettre `APPAIRAGE_SECURISE` à 1 dans le firmware, téléverser | moniteur série : `Appairage sécurisé : code ……` ; noter le code sur l'étiquette du boîtier | | |
+| 9.2 | Redémarrer le brassard | même code qu'en 9.1 (gardé en mémoire) | | |
+| 9.3 | nRF Connect (téléphone non appairé) : lire `abad0003` | lecture refusée, ou demande d'appairage du système | | |
+| 9.4 | Application → Brassard → connexion, taper un code FAUX | appairage refusé, message « code faux ? » | | |
+| 9.5 | Se reconnecter avec le bon code | « Liaison : chiffrée (appairé avec le code) », séance normale | | |
+| 9.6 | Déconnecter puis reconnecter | pas de code redemandé | | |
+| 9.7 | Moniteur série : `OUBLIER`, puis se reconnecter | le code est redemandé (sur Android, « Oublier l'appairage » dans l'appli aussi) | | |
+| 9.8 | Moniteur série : `NOUVEAU` | nouveau code affiché ; mettre l'étiquette à jour | | |
+
 ## Comparer à la simulation
 
 ⚠️ Électrodes sur la peau et brassard relié en USB : **PC portable débranché du secteur** (ou isolateur USB).

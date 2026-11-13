@@ -28,6 +28,7 @@ inline std::function<double(double)> signalMv = [](double) { return 0.0; };  // 
 inline std::vector<std::string> lignesSerie;
 inline std::mutex verrou;
 inline uint8_t batterieJauge = 87;
+inline std::string entreeSerie;  // ce qui est « tapé » dans le moniteur série
 inline bool jaugePresente = true;
 }  // namespace banc
 
@@ -47,6 +48,13 @@ inline uint32_t analogReadMilliVolts(int) {
 
 struct ImitationSerie {
   void begin(unsigned long) {}
+  int available() { return (int)banc::entreeSerie.size(); }
+  int read() {
+    if (banc::entreeSerie.empty()) return -1;
+    char c = banc::entreeSerie[0];
+    banc::entreeSerie.erase(0, 1);
+    return (unsigned char)c;
+  }
   void println(const char *t) { garder(std::string(t)); }
   int printf(const char *format, ...) __attribute__((format(printf, 2, 3))) {
     char tampon[256];
@@ -192,9 +200,17 @@ class BLECharacteristicCallbacks {
   virtual void onRead(BLECharacteristic *) {}
 };
 
+// Permissions GATT (pile Bluedroid)
+typedef uint16_t esp_gatt_perm_t;
+const esp_gatt_perm_t ESP_GATT_PERM_READ = 1 << 0, ESP_GATT_PERM_READ_ENCRYPTED = 1 << 1,
+                      ESP_GATT_PERM_READ_ENC_MITM = 1 << 2, ESP_GATT_PERM_WRITE = 1 << 4,
+                      ESP_GATT_PERM_WRITE_ENCRYPTED = 1 << 5, ESP_GATT_PERM_WRITE_ENC_MITM = 1 << 6;
+
 class BLEDescriptor {
  public:
   virtual ~BLEDescriptor() {}
+  void setAccessPermissions(esp_gatt_perm_t p) { permissions = p; }
+  esp_gatt_perm_t permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
 };
 class BLE2902 : public BLEDescriptor {};
 
@@ -307,3 +323,51 @@ class BLEDevice {
     return n;
   }
 };
+
+// ---------------------------------------------------------------- sécurité (esp_gap_ble_api.h)
+typedef uint8_t esp_ble_auth_req_t;
+typedef uint8_t esp_ble_io_cap_t;
+enum esp_ble_sm_param_t {
+  ESP_BLE_SM_PASSKEY, ESP_BLE_SM_AUTHEN_REQ_MODE, ESP_BLE_SM_IOCAP_MODE, ESP_BLE_SM_SET_INIT_KEY,
+  ESP_BLE_SM_SET_RSP_KEY, ESP_BLE_SM_MAX_KEY_SIZE, ESP_BLE_SM_SET_STATIC_PASSKEY, ESP_BLE_SM_ONLY_ACCEPT_SPECIFIED_SEC_AUTH,
+};
+const esp_ble_auth_req_t ESP_LE_AUTH_REQ_SC_MITM_BOND = 0x0D;
+const esp_ble_io_cap_t ESP_IO_CAP_OUT = 0;
+const uint8_t ESP_BLE_ENC_KEY_MASK = 1 << 0, ESP_BLE_ID_KEY_MASK = 1 << 1;
+const uint8_t ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_ENABLE = 1;
+struct esp_ble_bond_dev_t {
+  esp_bd_addr_t bd_addr;
+};
+namespace banc {
+inline std::map<int, std::vector<uint8_t>> parametresSecurite;
+inline int appairages = 2;  // téléphones déjà appairés (pour tester OUBLIER)
+inline uint32_t hasardMateriel = 7;
+}  // namespace banc
+inline int esp_ble_gap_set_security_param(esp_ble_sm_param_t p, void *valeur, uint8_t taille) {
+  const uint8_t *o = (const uint8_t *)valeur;
+  banc::parametresSecurite[p] = std::vector<uint8_t>(o, o + taille);
+  return 0;
+}
+inline int esp_ble_get_bond_device_num() { return banc::appairages; }
+inline int esp_ble_get_bond_device_list(int *n, esp_ble_bond_dev_t *) { *n = banc::appairages; return 0; }
+inline int esp_ble_remove_bond_device(esp_bd_addr_t) { banc::appairages--; return 0; }
+inline uint32_t esp_random() { return banc::hasardMateriel = banc::hasardMateriel * 1664525u + 1013904223u; }
+
+// Mémoire non volatile (Preferences.h) : gardée dans le banc, survit à un « redémarrage »
+namespace banc {
+inline std::map<std::string, uint32_t> memoireNvs;
+}
+class Preferences {
+ public:
+  bool begin(const char *espace, bool) { espace_ = espace; return true; }
+  void end() {}
+  uint32_t getUInt(const char *cle, uint32_t defaut) {
+    auto i = banc::memoireNvs.find(espace_ + "/" + cle);
+    return i == banc::memoireNvs.end() ? defaut : i->second;
+  }
+  size_t putUInt(const char *cle, uint32_t v) { banc::memoireNvs[espace_ + "/" + cle] = v; return 4; }
+
+ private:
+  std::string espace_;
+};
+

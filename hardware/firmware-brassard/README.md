@@ -6,6 +6,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 |---|---|
 | `firmware-brassard.ino` | Bluetooth, lecture du MyoWare, jauge de batterie, commandes |
 | `calcul_emg.h` | tous les calculs : RMS glissante 200 ms, % MVC, alerte avec hystérésis, calibration, paquets de 8 octets, résumé hors ligne (natation). Aucune dépendance au matériel |
+| `securite.h` | appairage sécurisé : code à 6 chiffres, commandes du moniteur série (voir [`SECURITE.md`](SECURITE.md)) |
 | `calcul_fatigue.h` | fatigue : suppression de la composante continue, FFT, **fréquence médiane** du signal brut (version 1.2, voir [`FATIGUE.md`](FATIGUE.md)) |
 
 ## Ce qu'il fait de plus que le faux brassard
@@ -17,6 +18,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 - **Natation (version 1.1)** : commande `0x05`, le brassard continue de mesurer même si la liaison se coupe et garde le résumé de la séance (caractéristique `abad0005`, [`GATT.md`](../../architecture/GATT.md) §11). Arrêt automatique après 5 min sous 10 %, à la dernière activité. Le résumé n'est effacé que sur la commande `0x06`, envoyée par l'application une fois la séance enregistrée.
 - **Journal USB** (`JOURNAL_SERIE`) : pendant une mesure, chaque valeur est aussi écrite sur le port USB (`M,ms,mV,RMS,intensité,alerte`), pour la [comparaison automatique avec la simulation](../../mesures/README.md). Électrodes sur la peau : PC portable débranché du secteur.
 - **Fatigue (version 1.2)** : commande `0x07` pour lire le **signal brut** (interrupteur du Link Shield sur **RAW**) à 2 000 Hz. Le brassard calcule alors la fréquence médiane 2 fois par seconde (caractéristique `abad0006`) dans une tâche à part sur le second cœur. Explications et vérifications : [`FATIGUE.md`](FATIGUE.md).
+- **Appairage sécurisé** (réglage `APPAIRAGE_SECURISE`, 0 par défaut) : liaison chiffrée, code à 6 chiffres tiré au hasard et écrit sur l'étiquette du boîtier, service Athletix inaccessible sans appairage. Voir [`SECURITE.md`](SECURITE.md).
 - **Commandes traitées dans `loop()`**, pas dans la tâche Bluetooth : évite les accès simultanés aux variables.
 
 ## Vérifications faites sans la carte

@@ -103,14 +103,15 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 - `supprimer_compte.php` (POST + jeton + `password`) : RGPD, supprime le compte et toutes ses données ; les brassards restent mais ne sont plus liés à personne.
 - `save_seance.php` et `save_calibration.php` acceptent un champ facultatif `batterie` (0 à 100 %), enregistré dans `brassards.batterie_niveau`.
 - `get_hardware.php` lit maintenant le dernier brassard de l'utilisateur dans `brassards` (batterie, dernière synchronisation, numéro de série). `update_hardware.php` et `save_performance.php` sont supprimés (migration `002`).
-- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (77 vérifications), relancé par GitHub à chaque envoi.
+- Toute l'API est testée sur une vraie base MariaDB : `tests/api/test_api.sh` (93 vérifications), relancé par GitHub à chaque envoi.
+- `save_seance.php` accepte aussi (migration `005`) la fatigue mesurée par la fréquence médiane : `mdf_debut_hz`, `mdf_fin_hz`, `baisse_mdf_pct`, `courbe_mdf` (JSON, 200 valeurs au plus) ; `get_seances.php` et `export_donnees.php` les renvoient.
 
 ### Sécurité : relecture du 12 novembre 2026
 
 Vérifié (et testé dans `tests/api/test_api.sh`) : toutes les requêtes SQL sont préparées ; chaque route protégée vérifie le jeton (seul son hash SHA-256 est en base, avec une date d'expiration) ; chaque lecture est filtrée par l'utilisateur du jeton (un autre compte ne voit ni l'historique, ni le détail par `id`, ni l'export) ; renvoyer l'identifiant `client_uuid` d'un autre compte crée une séance à soi, sans toucher à celle de l'autre ; cinq envois simultanés de la même séance n'en enregistrent qu'une (index unique, et l'erreur de doublon est rattrapée) ; la suppression du compte redemande le mot de passe et ne touche que ce compte ; l'export CSV neutralise les textes qui commencent par `=`, `+`, `-` ou `@` (sinon Excel les exécuterait comme des formules).
 
 Limites connues du prototype, à traiter avant un vrai déploiement :
-- **Pas de limite du nombre d'essais** (connexion, suppression du compte) : un serveur réel devrait ralentir ou bloquer après plusieurs échecs.
+- ~~Pas de limite du nombre d'essais~~ : **corrigé le 13 novembre 2026** (migration `006`, `backend/limites.php`) : 5 mots de passe faux pour un même e-mail en 15 min (30 pour une même adresse IP), 3 renvois du code de vérification, 5 essais pour supprimer le compte, puis HTTP 429 « Trop d'essais : réessaie dans N min ». Les clés sont des empreintes SHA-256 (ni e-mail ni IP en clair), effacées au bout d'un jour. Testé dans `tests/api/test_api.sh`.
 - **HTTP autorisé** pour joindre XAMPP sur le réseau local : le jeton circule en clair. En production : HTTPS obligatoire, et retirer `usesCleartextTraffic` du manifeste Android.
 - **Données déclarées par le téléphone** : le serveur ne peut pas prouver qu'une séance vient vraiment du brassard (`simule=0`). Pour un classement sans triche, il faudrait que le brassard signe ses résumés.
-- **Bluetooth sans appairage sécurisé** (voir `GATT.md` §9).
+- **Bluetooth** : l'appairage sécurisé avec code est écrit dans le firmware (`APPAIRAGE_SECURISE`, voir `hardware/firmware-brassard/SECURITE.md`) mais désactivé par défaut et pas encore essayé avec un téléphone (étape 9 du protocole de test).
