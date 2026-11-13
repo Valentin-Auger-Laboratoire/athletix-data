@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'montre_yoho.dart';
+import 'protocole_yoho.dart';
+
 /// Bracelet ou montre qui compte les pas au format « podomètre WeChat » (service 0xFEE7,
 /// caractéristique 0xFEA1). Beaucoup de bracelets d'entrée de gamme l'ont, même sans le service
 /// cardio standard : c'est le cas du bracelet MSGM115 (« YOHO ») de Valentin, vérifié avec nRF Connect
@@ -12,6 +15,9 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 ///   octet 0 : drapeaux (bit 0 = pas, bit 1 = distance, bit 2 = calories) ;
 ///   puis, pour chaque drapeau présent et dans cet ordre, 3 octets little-endian :
 ///   pas, distance (m), calories (kcal).
+///
+/// Si le bracelet a aussi le service propre aux bracelets YOHO (0xCC00), [yoho] donne accès au cœur,
+/// à la tension estimée, à l'historique (sommeil), à la vibration et aux réglages (voir montre_yoho.dart).
 class MontrePodometre {
   MontrePodometre._(this._appareil);
 
@@ -23,6 +29,9 @@ class MontrePodometre {
   final List<StreamSubscription> _abonnements = [];
   final ValueNotifier<MesurePodometre?> derniere = ValueNotifier<MesurePodometre?>(null);
   BluetoothCharacteristic? _carPas;
+
+  /// Service propre aux bracelets YOHO (MSGM115), null si le bracelet ne l'a pas.
+  LiaisonYoho? yoho;
 
   /// Montre choisie dans l'écran « Brassard », partagée par l'application.
   static final ValueNotifier<MontrePodometre?> active = ValueNotifier<MontrePodometre?>(null);
@@ -59,7 +68,7 @@ class MontrePodometre {
   }
 
   static Stream<List<ScanResult>> rechercher({Duration duree = const Duration(seconds: 8)}) {
-    FlutterBluePlus.startScan(withServices: [Guid(uuidService)], timeout: duree);
+    FlutterBluePlus.startScan(withServices: [Guid(uuidService), Guid(ProtocoleYoho.uuidService)], timeout: duree);
     return FlutterBluePlus.scanResults;
   }
 
@@ -73,22 +82,37 @@ class MontrePodometre {
         if (ch.uuid == Guid(uuidPas)) m._carPas = ch;
       }
     }
-    final car = m._carPas;
-    if (car == null) {
-      await appareil.disconnect();
-      throw Exception('Cet appareil ne compte pas les pas au format attendu (service FEE7 / FEA1)');
-    }
-    m._abonnements.add(car.onValueReceived.listen(m._recevoir));
     try {
-      await car.setNotifyValue(true); // le bracelet prévient à chaque changement (indication)
-    } catch (_) {/* certains n'acceptent que la lecture : on relit pendant la séance */}
+      m.yoho = await LiaisonYoho.ouvrir(services);
+    } catch (_) {/* service CC00 présent mais refusé : on garde au moins les pas */}
+    final car = m._carPas;
+    if (car == null && m.yoho == null) {
+      await appareil.disconnect();
+      throw Exception('Cet appareil ne compte pas les pas au format attendu (service FEE7 / FEA1 ou CC00)');
+    }
+    if (car != null) {
+      m._abonnements.add(car.onValueReceived.listen(m._recevoir));
+      try {
+        await car.setNotifyValue(true); // le bracelet prévient à chaque changement (indication)
+      } catch (_) {/* certains n'acceptent que la lecture : on relit pendant la séance */}
+    }
+    // Les pas arrivent aussi par le service YOHO (compteur depuis minuit, comme FEA1)
+    final yoho = m.yoho;
+    if (yoho != null && car == null) {
+      m._abonnements.add(yoho.messages.listen((msg) {
+        if (msg is PasYoho) m._recevoirMesure(MesurePodometre(pas: msg.pas));
+      }));
+    }
     await m.relire();
     return m;
   }
 
   void _recevoir(List<int> octets) {
     final v = lire(octets);
-    if (v == null) return;
+    if (v != null) _recevoirMesure(v);
+  }
+
+  void _recevoirMesure(MesurePodometre v) {
     derniere.value = v;
     if (!_flux.isClosed) _flux.add(v);
   }
@@ -103,6 +127,7 @@ class MontrePodometre {
   }
 
   void fermer() {
+    yoho?.fermer();
     for (final a in _abonnements) {
       a.cancel();
     }

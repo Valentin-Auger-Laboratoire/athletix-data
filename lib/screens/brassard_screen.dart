@@ -9,6 +9,9 @@ import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
 import 'package:athletix_data/services/telephone/montre_podometre.dart';
+import 'package:athletix_data/services/telephone/montre_yoho.dart';
+import 'package:athletix_data/services/telephone/protocole_yoho.dart';
+import 'package:athletix_data/services/api.dart';
 import 'calibration_screen.dart';
 
 /// Choix du brassard : recherche Bluetooth du vrai brassard, ou brassard simulé (démo).
@@ -585,7 +588,8 @@ class _SectionPodometreState extends State<_SectionPodometre> {
           const Text(
             "Pour les bracelets qui ne diffusent pas le cœur en Bluetooth standard mais comptent les pas "
             "(format « WeChat », service FEE7) : leurs pas remplacent ceux du téléphone pendant la séance. "
-            "Testé avec un bracelet MSGM115.",
+            "Testé avec un bracelet MSGM115. Sur les bracelets YOHO (MSGM115), l'appli lit aussi le cœur, "
+            "la tension estimée et le sommeil.",
             style: TextStyle(color: Colors.white38, fontSize: 11),
           ),
           const SizedBox(height: 10),
@@ -610,8 +614,9 @@ class _SectionPodometreState extends State<_SectionPodometre> {
                   },
                 ),
               ),
-            )
-          else
+            ),
+          if (montre != null && montre.yoho != null) _PanneauYoho(montre.yoho!),
+          if (montre == null)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.lightGreenAccent),
@@ -643,4 +648,213 @@ class _SectionPodometreState extends State<_SectionPodometre> {
       ),
     );
   }
+}
+
+
+/// Fonctions des bracelets YOHO (service CC00) : format retrouvé dans l'appli d'origine du bracelet.
+class _PanneauYoho extends StatefulWidget {
+  const _PanneauYoho(this.yoho);
+  final LiaisonYoho yoho;
+
+  @override
+  State<_PanneauYoho> createState() => _PanneauYohoState();
+}
+
+class _PanneauYohoState extends State<_PanneauYoho> {
+  String? _enCours;
+  String? _message;
+  bool _inactivite = false;
+  int _minutesInactivite = 60;
+
+  Future<void> _faire(String quoi, Future<String> Function() action) async {
+    setState(() {
+      _enCours = quoi;
+      _message = null;
+    });
+    try {
+      final m = await action();
+      if (mounted) setState(() => _message = m);
+    } on TimeoutException {
+      if (mounted) setState(() => _message = "$quoi : pas de réponse du bracelet. Garde-le bien serré au poignet et réessaie.");
+    } catch (e) {
+      if (mounted) setState(() => _message = '$quoi impossible : $e');
+    }
+    if (mounted) setState(() => _enCours = null);
+  }
+
+  String _duree(Duration d) => '${d.inHours} h ${(d.inMinutes % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _profil() async {
+    var taille = 170, poids = 60;
+    try {
+      final p = (await Api.current.getProfil())['profil'] as Map?;
+      taille = int.tryParse('${p?['taille']}'.split('.').first) ?? taille;
+      poids = int.tryParse('${p?['poids']}'.split('.').first) ?? poids;
+    } catch (_) {}
+    if (!mounted) return;
+    var age = 20;
+    var homme = true;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, maj) => AlertDialog(
+          title: const Text('Profil envoyé au bracelet'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text('Taille $taille cm et poids $poids kg (questionnaire). Le bracelet s\'en sert pour la distance et les calories.'),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Text('Âge'),
+              Expanded(
+                child: Slider(min: 10, max: 90, divisions: 80, value: age.toDouble(), label: '$age ans', onChanged: (v) => maj(() => age = v.round())),
+              ),
+              Text('$age ans'),
+            ]),
+            SegmentedButton<bool>(
+              segments: const [ButtonSegment(value: true, label: Text('Homme')), ButtonSegment(value: false, label: Text('Femme'))],
+              selected: {homme},
+              onSelectionChanged: (v) => maj(() => homme = v.first),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annuler')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Envoyer')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    await _faire('Profil', () async {
+      await widget.yoho.envoyerProfil(homme: homme, age: age, tailleCm: taille, poidsKg: poids);
+      return 'Profil envoyé au bracelet.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final y = widget.yoho;
+    final occupe = _enCours != null;
+    Widget bouton(IconData icone, String texte, VoidCallback action) => OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white24)),
+          onPressed: occupe ? null : action,
+          icon: Icon(icone, size: 18, color: Colors.lightGreenAccent),
+          label: Text(texte, style: const TextStyle(color: Colors.white70)),
+        );
+    return Card(
+      color: Colors.grey[900],
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ValueListenableBuilder<int?>(
+            valueListenable: y.batterie,
+            builder: (context, b, _) => Text(
+              'Bracelet YOHO${y.firmware != null ? ' · firmware ${y.firmware}' : ''}${b != null ? ' · batterie $b %' : ''}',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            ValueListenableBuilder<int?>(
+              valueListenable: y.coeur,
+              builder: (context, bpm, _) => _Valeur(Icons.favorite, 'Cœur', bpm == null ? '—' : '$bpm bpm', Colors.redAccent),
+            ),
+            ValueListenableBuilder<TensionYoho?>(
+              valueListenable: y.tension,
+              builder: (context, t, _) => _Valeur(Icons.speed, 'Tension (estimée)', t == null ? '—' : '${t.systolique}/${t.diastolique}', Colors.orangeAccent),
+            ),
+            ValueListenableBuilder<NuitYoho?>(
+              valueListenable: y.nuit,
+              builder: (context, n, _) => _Valeur(Icons.bedtime, 'Dernière nuit', n == null ? 'synchroniser' : _duree(n.total), Colors.lightBlueAccent),
+            ),
+          ]),
+          ValueListenableBuilder<NuitYoho?>(
+            valueListenable: y.nuit,
+            builder: (context, n, _) => n == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text('Profond ${_duree(n.profond)} · léger ${_duree(n.leger)} · ${n.reveils} réveil(s)',
+                        style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            bouton(Icons.favorite_border, 'Mesurer le cœur', () => _faire('Mesure du cœur', () async => 'Cœur : ${await y.mesurerCoeur()} bpm')),
+            bouton(Icons.speed, 'Estimer la tension', () => _faire('Estimation de la tension', () async {
+                  final t = await y.mesurerTension();
+                  return 'Tension estimée : ${t.systolique}/${t.diastolique} mmHg (estimation du bracelet, pas une mesure médicale)';
+                })),
+            bouton(Icons.vibration, 'Faire vibrer', () => _faire('Vibration', () async {
+                  await y.faireVibrer();
+                  return 'Le bracelet doit vibrer.';
+                })),
+            bouton(Icons.sync, 'Synchroniser (sommeil)', () => _faire('Synchronisation', () async {
+                  final s = await y.synchroniser();
+                  return '${s.periodes.length} périodes d\'activité et ${s.mesures.length} mesures récupérées.';
+                })),
+            bouton(Icons.person, 'Envoyer mon profil', _profil),
+          ]),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text("Rappel d'inactivité", style: TextStyle(color: Colors.white)),
+            subtitle: Text('Le bracelet vibre après $_minutesInactivite min sans bouger', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            value: _inactivite,
+            onChanged: occupe
+                ? null
+                : (v) => _faire("Rappel d'inactivité", () async {
+                      await y.reglerInactivite(v, _minutesInactivite);
+                      if (mounted) setState(() => _inactivite = v);
+                      return v ? 'Rappel activé ($_minutesInactivite min).' : 'Rappel désactivé.';
+                    }),
+          ),
+          if (_inactivite)
+            Slider(
+              min: 15,
+              max: 180,
+              divisions: 11,
+              value: _minutesInactivite.toDouble(),
+              label: '$_minutesInactivite min',
+              onChanged: (v) => setState(() => _minutesInactivite = v.round()),
+              onChangeEnd: (_) => _faire("Rappel d'inactivité", () async {
+                await y.reglerInactivite(true, _minutesInactivite);
+                return 'Rappel réglé sur $_minutesInactivite min.';
+              }),
+            ),
+          if (_enCours != null)
+            Row(children: [
+              const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+              const SizedBox(width: 8),
+              Text('$_enCours…', style: const TextStyle(color: Colors.white54)),
+            ]),
+          if (_message != null) Text(_message!, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text(
+            'La musique se commande depuis le bracelet (appui long sur son écran musique) si le bracelet est aussi '
+            'appairé dans les réglages Bluetooth du téléphone. Le bracelet n\'est pas un dispositif médical.',
+            style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _Valeur extends StatelessWidget {
+  const _Valeur(this.icone, this.titre, this.valeur, this.couleur);
+  final IconData icone;
+  final String titre, valeur;
+  final Color couleur;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icone, color: couleur, size: 18),
+          const SizedBox(width: 6),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(titre, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+            Text(valeur, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ]),
+        ]),
+      );
 }

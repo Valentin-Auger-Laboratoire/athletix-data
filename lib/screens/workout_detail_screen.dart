@@ -19,6 +19,7 @@ import 'package:athletix_data/services/telephone/meteo.dart';
 import 'package:athletix_data/services/telephone/montre_podometre.dart';
 import 'package:athletix_data/services/telephone/suivi_telephone.dart';
 import 'package:athletix_data/widgets/graphiques.dart';
+import 'package:athletix_data/services/telephone/protocole_yoho.dart';
 import 'contexte_seance.dart';
 import 'seance_detail_screen.dart';
 
@@ -90,6 +91,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   final PasSeance _pasMontre = PasSeance();
   StreamSubscription<MesurePodometre>? _abonnementMontre;
   Timer? _relectureMontre;
+  // Cœur mesuré par un bracelet YOHO (service CC00) quand aucune ceinture n'est reliée
+  StreamSubscription<MessageYoho>? _abonnementCoeurMontre;
+  Timer? _mesureCoeurMontre;
   int? _fcActuelle;
 
   // Alertes vibration / voix et mode adapté
@@ -146,6 +150,18 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       // Au cas où le bracelet ne prévient pas de lui-même : relecture toutes les 10 s
       _relectureMontre = Timer.periodic(const Duration(seconds: 10), (_) => montre.relire());
       montre.relire();
+      final yoho = montre.yoho;
+      if (ceinture == null && yoho != null && yoho.fonctions.coeur) {
+        _abonnementCoeurMontre = yoho.messages.listen((m) {
+          if (m is! CoeurYoho || m.bpm <= 0) return;
+          _cardio.ajouter(m.bpm);
+          if (mounted) setState(() => _fcActuelle = m.bpm);
+        });
+        // Le bracelet mesure puis s'arrête : on relance la mesure toutes les minutes
+        void relancer() => yoho.envoyer(ProtocoleYoho.mesureCoeur(true)).catchError((_) {});
+        relancer();
+        _mesureCoeurMontre = Timer.periodic(const Duration(seconds: 60), (_) => relancer());
+      }
     }
     if (_modeAdapte) {
       _minuteurPause = Timer.periodic(const Duration(seconds: 15), (_) => _verifierPause());
@@ -215,6 +231,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     _abonnementEtats?.cancel();
     _abonnementMontre?.cancel();
     _relectureMontre?.cancel();
+    _abonnementCoeurMontre?.cancel();
+    if (_mesureCoeurMontre != null) {
+      _mesureCoeurMontre!.cancel();
+      _montre?.yoho?.envoyer(ProtocoleYoho.mesureCoeur(false)).catchError((_) {});
+    }
     _brassard.reconnexion.removeListener(_majReconnexion);
     _abonnementCardio?.cancel();
     _minuteurPause?.cancel();
