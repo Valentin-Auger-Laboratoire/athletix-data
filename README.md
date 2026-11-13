@@ -30,7 +30,7 @@ Réalisé par **Valentin Auger**. Poser le brassard et les électrodes, calibrer
 
 ### ✅ Fiche de test à imprimer
 
-Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception (3 pages) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
+Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception (4 pages, dont la mesure de la fatigue) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
 
 <img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
 

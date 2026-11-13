@@ -111,6 +111,12 @@ class DemoApi implements AthletixApi {
         courbe = brute.substring(1, brute.length - 1).split(',').map((v) => int.parse(v.trim())).toList();
       }
     } catch (_) {}
+    List<double>? courbeMdf;
+    try {
+      if (seance['courbe_mdf'] != null) {
+        courbeMdf = (jsonDecode(seance['courbe_mdf']!) as List).map((v) => (v as num).toDouble()).toList();
+      }
+    } catch (_) {}
     _seances.add({
       'id': id,
       'discipline': seance['discipline'] ?? '',
@@ -131,6 +137,10 @@ class DemoApi implements AthletixApi {
         c: entier(c),
       'vitesse_moy_kmh': decimal('vitesse_moy_kmh'),
       'temperature_c': decimal('temperature_c'),
+      'mdf_debut_hz': decimal('mdf_debut_hz'),
+      'mdf_fin_hz': decimal('mdf_fin_hz'),
+      'baisse_mdf_pct': decimal('baisse_mdf_pct'),
+      'courbe_mdf': courbeMdf,
       'sommeil': texte('sommeil'),
       'commentaire': texte('commentaire'),
       'mode_adapte': seance['mode_adapte'] == '1',

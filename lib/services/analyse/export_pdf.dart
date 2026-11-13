@@ -69,7 +69,8 @@ class ExportPdf {
           texteSur("Intensité musculaire en % de la contraction maximale volontaire (% MVC), mesurée par un brassard "
               "EMG (MyoWare 2.0) et recalibrée à chaque séance. Effort intense : au-dessus du seuil d'alerte "
               "(75 %, ou 60 % en mode adapté). Fatigue et douleur : ressenti noté par la personne, de 0 à 10. "
-              "Indice de fatigue : évolution de l'intensité entre le début et la fin de la séance (expérimental)."),
+              "Fatigue mesurée : « MDF -x % » = baisse de la fréquence médiane du signal brut (brassard en signal brut) ; "
+              "sinon, évolution de l'intensité entre le début et la fin de la séance (indice expérimental)."),
           style: petit,
         ),
         pw.SizedBox(height: 12),
@@ -110,7 +111,7 @@ class ExportPdf {
           cellStyle: petit,
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           columnWidths: {11: const pw.FlexColumnWidth(3)},
-          headers: ['Date', 'Activité', 'Durée', 'Moy.', 'Max', 'Effort intense', 'Indice fatigue', 'FC moy/max',
+          headers: ['Date', 'Activité', 'Durée', 'Moy.', 'Max', 'Effort intense', 'Fatigue mesurée', 'FC moy/max',
             'Fatigue', 'Douleur', 'Sommeil', 'Commentaire'].map(texteSur).toList(),
           data: [
             for (final s in seances)
@@ -122,7 +123,13 @@ class ExportPdf {
                 _val(s['intensite_moyenne_pct'], ' %'),
                 _val(s['intensite_max_pct'], ' %'),
                 _duree(s['temps_effort_intense_s'] as num?),
-                s['indice_fatigue_pct'] == null ? '' : '${(s['indice_fatigue_pct'] as num) > 0 ? '+' : ''}${s['indice_fatigue_pct']} %',
+                // Fréquence médiane (signal brut) si elle existe, sinon l'indice expérimental
+                s['baisse_mdf_pct'] != null
+                    ? texteSur('MDF ${(s['baisse_mdf_pct'] as num) >= 0 ? '-' : '+'}'
+                        '${(s['baisse_mdf_pct'] as num).abs().toStringAsFixed(1).replaceAll('.', ',')} %')
+                    : s['indice_fatigue_pct'] == null
+                        ? ''
+                        : '${(s['indice_fatigue_pct'] as num) > 0 ? '+' : ''}${s['indice_fatigue_pct']} %',
                 s['fc_moy'] == null ? '' : '${s['fc_moy']}/${s['fc_max'] ?? ''}',
                 _val(s['ressenti_fatigue'], '/10'),
                 _val(s['douleur'], '/10'),

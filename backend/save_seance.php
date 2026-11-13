@@ -48,6 +48,11 @@ $zone_soutenue = entier_post_facultatif('temps_zone_soutenue_s', 0, 21600);
 $contractions = entier_post_facultatif('nb_contractions', 0, 65535);
 $fatigue      = entier_post_facultatif('indice_fatigue_pct', -100, 1000);
 $courbe       = courbe_post();
+// Fatigue par la fréquence médiane (migration 005, source RAW seulement)
+$mdf_debut    = decimal_post_facultatif('mdf_debut_hz', 0, 1000);
+$mdf_fin      = decimal_post_facultatif('mdf_fin_hz', 0, 1000);
+$baisse_mdf   = decimal_post_facultatif('baisse_mdf_pct', -100, 100);
+$courbe_mdf   = courbe_mdf_post();
 $series       = entier_post_facultatif('nb_series', 0, 65535);
 $trace        = trace_post();
 $client_uuid  = uuid_post();
@@ -109,11 +114,13 @@ try {
     $stmt = $conn->prepare(
         "INSERT INTO resultats_emg (session_id, duree_s, nb_echantillons, intensite_moyenne_pct,
              intensite_max_pct, temps_effort_intense_s, nb_alertes, temps_zone_repos_s, temps_zone_moderee_s,
-             temps_zone_soutenue_s, nb_contractions, nb_series, indice_fatigue_pct, courbe, ref_mvc_mv)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+             temps_zone_soutenue_s, nb_contractions, nb_series, indice_fatigue_pct, courbe, ref_mvc_mv,
+             mdf_debut_hz, mdf_fin_hz, baisse_mdf_pct, courbe_mdf)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("iiiiiiiiiiiiisi", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
-        $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $series, $fatigue, $courbe, $ref_mvc);
+    $stmt->bind_param("iiiiiiiiiiiiisiddds", $session_id, $duree, $nb_ech, $moyenne, $max, $intense, $nb_alertes,
+        $zone_repos, $zone_moderee, $zone_soutenue, $contractions, $series, $fatigue, $courbe, $ref_mvc,
+        $mdf_debut, $mdf_fin, $baisse_mdf, $courbe_mdf);
     if (!$stmt->execute()) {
         throw new RuntimeException($stmt->error, $stmt->errno);
     }

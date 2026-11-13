@@ -20,6 +20,7 @@ $stmt = $conn->prepare(
             r.temps_effort_intense_s, r.nb_alertes, r.ref_mvc_mv,
             r.temps_zone_repos_s, r.temps_zone_moderee_s, r.temps_zone_soutenue_s,
             r.nb_contractions, r.nb_series, r.indice_fatigue_pct, r.courbe,
+            r.mdf_debut_hz, r.mdf_fin_hz, r.baisse_mdf_pct, r.courbe_mdf,
             IF(? > 0, s.trace_gps, NULL) AS trace_gps
      FROM sessions_entrainement s
      JOIN resultats_emg r ON r.session_id = s.id
@@ -42,10 +43,11 @@ while ($row = $res->fetch_assoc()) {
               'nb_contractions', 'nb_series', 'indice_fatigue_pct'] as $c) {
         $row[$c] = $row[$c] === null ? null : (int) $row[$c];
     }
-    foreach (['vitesse_moy_kmh', 'temperature_c'] as $c) {
+    foreach (['vitesse_moy_kmh', 'temperature_c', 'mdf_debut_hz', 'mdf_fin_hz', 'baisse_mdf_pct'] as $c) {
         $row[$c] = $row[$c] === null ? null : (float) $row[$c];
     }
     $row['courbe'] = $row['courbe'] === null ? null : json_decode($row['courbe'], true);
+    $row['courbe_mdf'] = $row['courbe_mdf'] === null ? null : json_decode($row['courbe_mdf'], true);
     $row['trace'] = $row['trace_gps'] === null ? null : json_decode($row['trace_gps'], true);
     unset($row['trace_gps']);
     $row['donnees_simulees'] = (int) $row['donnees_simulees'] === 1;

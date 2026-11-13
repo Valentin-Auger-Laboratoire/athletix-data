@@ -7,6 +7,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'codec_gatt.dart';
 import 'gatt_athletix.dart';
 import 'mesure_emg.dart';
+import 'mesure_frequence.dart';
 import 'source_brassard.dart';
 
 /// Le vrai brassard, relié en Bluetooth Low Energy (architecture/GATT.md).
@@ -29,6 +30,7 @@ class BrassardBle implements SourceBrassard {
   final BluetoothDevice _appareil;
   final StreamController<MesureEmg> _flux = StreamController<MesureEmg>.broadcast();
   final StreamController<EtatLu> _etats = StreamController<EtatLu>.broadcast();
+  final StreamController<MesureFrequence> _frequences = StreamController<MesureFrequence>.broadcast();
   final List<StreamSubscription> _abonnements = [];
 
   late BluetoothCharacteristic _carMesure;
@@ -36,6 +38,7 @@ class BrassardBle implements SourceBrassard {
   late BluetoothCharacteristic _carConfiguration;
   BluetoothCharacteristic? _carEtat;
   BluetoothCharacteristic? _carHorsLigne;
+  BluetoothCharacteristic? _carFrequence;
   BluetoothCharacteristic? _carBatterie;
 
   String? _numeroSerie;
@@ -131,6 +134,7 @@ class BrassardBle implements SourceBrassard {
     _carConfiguration = configuration;
     _carEtat = trouver(GattAthletix.service, GattAthletix.etat);
     _carHorsLigne = trouver(GattAthletix.service, GattAthletix.horsLigne); // firmware 1.1 et plus
+    _carFrequence = trouver(GattAthletix.service, GattAthletix.frequence); // firmware 1.2 et plus
     _carBatterie = trouver(GattAthletix.serviceBatterie, GattAthletix.niveauBatterie);
 
     // Informations de l'appareil (facultatives : un firmware de test peut ne pas les avoir)
@@ -173,6 +177,19 @@ class BrassardBle implements SourceBrassard {
       }
     }));
     await _carMesure.setNotifyValue(true);
+
+    // Fréquence médiane (fatigue) : seulement envoyée en source RAW, mais on s'abonne toujours
+    final frequence = _carFrequence;
+    if (frequence != null) {
+      _abonnements.add(frequence.onValueReceived.listen((octets) {
+        try {
+          if (!_frequences.isClosed) _frequences.add(MesureFrequence.depuisOctets(octets));
+        } on FormatException catch (e) {
+          debugPrint('Paquet Fréquence ignoré : $e');
+        }
+      }));
+      await frequence.setNotifyValue(true);
+    }
   }
 
   Future<String?> _lireTexte(BluetoothCharacteristic? c) async {
@@ -224,6 +241,26 @@ class BrassardBle implements SourceBrassard {
 
   @override
   Stream<MesureEmg> get mesures => _flux.stream;
+
+  @override
+  int get source => _config.source;
+
+  @override
+  bool get mesureFatigue => _carFrequence != null;
+
+  @override
+  Stream<MesureFrequence> get frequences => _frequences.stream;
+
+  @override
+  Future<void> choisirSource(int source) async {
+    if (!mesureFatigue && source == GattAthletix.sourceRaw) {
+      throw ErreurBrassard('Ce brassard ne sait pas lire le signal brut (firmware 1.2 nécessaire)');
+    }
+    await _envoyer(CommandeBrassard.choisirSource(source));
+    await Future.delayed(const Duration(milliseconds: 200)); // le temps que loop() traite la commande
+    await _lireConfiguration();
+    if (_config.source != source) throw ErreurBrassard('Le brassard a refusé le changement de signal (séance en cours ?)');
+  }
 
   @override
   Future<void> demarrer() => _envoyer(CommandeBrassard.demarrer());
@@ -292,6 +329,7 @@ class BrassardBle implements SourceBrassard {
     _abonnements.clear();
     if (!_flux.isClosed) _flux.close();
     if (!_etats.isClosed) _etats.close();
+    if (!_frequences.isClosed) _frequences.close();
     connecte.value = false;
     _appareil.disconnect().catchError((_) {});
   }

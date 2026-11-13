@@ -66,7 +66,7 @@ Si 4.4 reste bloqué vers 3,3 V : électrodes trop proches ou gain du MyoWare tr
 | # | Vérification | Attendu | Mesuré | OK ? |
 |---|---|---|---|---|
 | 5.1 | Téléverser [`firmware-brassard/`](firmware-brassard/README.md) | `Jauge de batterie : trouvée`, `Brassard prêt` | | |
-| 5.2 | Appli → Brassard | firmware `1.1.0`, batterie en % (proche de la jauge) | | |
+| 5.2 | Appli → Brassard | firmware `1.2.0`, batterie en % (proche de la jauge) | | |
 | 5.3 | Calibrer en serrant au maximum 3 s | référence entre ~500 et ~3 000 mV ; si « signal trop faible », revoir les électrodes | | |
 | 5.4 | Repos, bras posé | intensité de quelques % (simulation : ≈ 3 %) | | |
 | 5.5 | Effort moyen (porter une bouteille d'eau) | ≈ 40 à 50 % | | |
@@ -93,6 +93,21 @@ Le prototype n'est **pas étanche** : ce test se fait à sec, en éloignant le t
 | 7.2 | Téléphone dans une autre pièce (ou Bluetooth coupé) 5 à 10 min, en contractant le biceps de temps en temps | le brassard continue (moniteur série) | | |
 | 7.3 | Retour, Récupérer la séance | durée et intensité moyenne cohérentes avec ce qui a été fait, séance visible dans « Mes séances » | | |
 | 7.4 | Nouvel essai, puis repos de plus de 5 min avant de revenir | moniteur série : `Enregistrement sans connexion terminé (5 min de repos)` ; la durée récupérée n'inclut pas ces 5 min | | |
+
+## Étape 8 — Fatigue : signal brut et fréquence médiane
+
+Détails : [`firmware-brassard/FATIGUE.md`](firmware-brassard/FATIGUE.md). À faire après l'étape 5.
+
+| # | Vérification | Attendu | Mesuré | OK ? |
+|---|---|---|---|---|
+| 8.1 | Appli → Brassard → « Brut + fatigue », SANS toucher l'interrupteur (resté sur ENV) | au bout de quelques secondes, avertissement « l'interrupteur OUTPUT du Link Shield semble sur ENV » (code 5) | | |
+| 8.2 | Interrupteur OUTPUT du Link Shield sur **RAW** | l'avertissement disparaît ; multimètre sur la pointe du jack au repos : environ 1,65 V | | |
+| 8.3 | Calibration (serrer fort 3 s) | nouvelle référence, plus basse qu'en ENV (signal brut sans sa composante continue) | | |
+| 8.4 | Moniteur série pendant une mesure | aucune ligne « échantillons/s au lieu de 2000 » ; lignes `F,ms,MDF,MNF` 2 fois par seconde | | |
+| 8.5 | Repos, puis contraction moyenne | au repos : `F,…,0.0,0.0` (pas de valeur) ; en contraction : MDF entre ~50 et ~200 Hz | | |
+| 8.6 | Tenir une charge (bouteille d'eau, bras à 90°) jusqu'à la fatigue, 1 à 2 min | dans l'appli, l'écart de la fréquence médiane devient négatif (fatigue) ; noter la baisse finale | | |
+| 8.7 | Terminer la séance | détail de la séance : courbe de la fréquence médiane et baisse en % | | |
+| 8.8 | Retour en « Enveloppe », interrupteur sur ENV, recalibrer | séance normale, plus de valeurs de fréquence | | |
 
 ## Comparer à la simulation
 

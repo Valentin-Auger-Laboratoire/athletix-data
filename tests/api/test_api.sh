@@ -10,6 +10,7 @@
 #   mysql -u root < migrations/002_score_et_nettoyage.sql
 #   mysql -u root < migrations/003_contexte_telephone.sql
 #   mysql -u root < migrations/004_trace_series_hors_ligne.sql
+#   mysql -u root < migrations/005_fatigue_frequence.sql
 #   cp backend/config.example.php backend/config.local.php     # puis l'adapter
 #   php -S 127.0.0.1:8080 -t backend &                          # ou XAMPP
 #   ATHLETIX_TEST=1 B=http://127.0.0.1:8080 bash tests/api/test_api.sh
@@ -112,6 +113,16 @@ for i in 1 2 3 4 5; do post save_seance.php $S -d client_uuid=$U2 > /tmp/athleti
 check "envois simultanés : une seule séance" '^1$' "$(mysql -uroot -N "$DB" -e "SELECT COUNT(*) FROM sessions_entrainement WHERE client_uuid='$U2'")"
 check "envois simultanés : tous en succès" '^5$' "$(cat /tmp/athletix_course_*.json | grep -o '"status":"success"' | wc -l | tr -d ' ')"
 rm -f /tmp/athletix_course_*.json
+# Fatigue mesurée par la fréquence médiane (migration 005, brassard en source RAW)
+R=$(post save_seance.php $S -d mdf_debut_hz=121.5 -d mdf_fin_hz=98.2 -d baisse_mdf_pct=19.2 -d "courbe_mdf=[121.4,0,110.25,98]")
+check "séance avec fatigue (fréquence médiane)" '"session_id":[0-9]+' "$R"
+SIDF=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("session_id",""))')
+check "fatigue relue : début, fin, baisse, courbe arrondie au dixième" '"mdf_debut_hz":121.5,"mdf_fin_hz":98.2,"baisse_mdf_pct":19.2,"courbe_mdf":\[121.4,0(\.0)?,110.3,98(\.0)?\]' "$(post get_seances.php -d token=$T -d id=$SIDF)"
+check "fatigue absente : champs nuls (source ENV)" '"mdf_debut_hz":null,"mdf_fin_hz":null,"baisse_mdf_pct":null,"courbe_mdf":null' "$(post get_seances.php -d token=$T -d id=$SID)"
+check "courbe de fréquence invalide refusée" 'courbe_mdf' "$(post save_seance.php $S -d 'courbe_mdf=[100,2000]')"
+check "courbe de fréquence non numérique refusée" 'courbe_mdf' "$(post save_seance.php $S -d 'courbe_mdf=["a"]')"
+check "baisse hors plage refusée" 'baisse_mdf_pct' "$(post save_seance.php $S -d baisse_mdf_pct=250)"
+check "export RGPD : fatigue incluse" '"baisse_mdf_pct":"?19.2' "$(post export_donnees.php -d token=$T)"
 # Un deuxième utilisateur ne voit ni ne touche les données du premier
 post register.php -d pseudo=Autre -d email=autre@exemple.fr -d password=autre1234 -d sport=Yoga > /dev/null
 CODE2=$(mysql -uroot -N "$DB" -e "SELECT verification_code FROM users WHERE email='autre@exemple.fr'")

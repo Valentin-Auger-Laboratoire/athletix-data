@@ -5,6 +5,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_ble.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
+import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
 import 'calibration_screen.dart';
@@ -169,6 +170,7 @@ class _BrassardScreenState extends State<BrassardScreen> {
           ligne('Firmware', source.firmware ?? '—'),
           ligne('Batterie', source.batteriePct == null ? '—' : '${source.batteriePct} %'),
           ligne('Référence 100 %', '${source.refMvcMv} mV'),
+          if (source.mesureFatigue) _choixSignal(source),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(
@@ -191,6 +193,68 @@ class _BrassardScreenState extends State<BrassardScreen> {
         ],
       ),
     );
+  }
+
+  /// Signal lu par le brassard : enveloppe (intensité) ou signal brut (intensité + fatigue).
+  /// Il faut AUSSI déplacer l'interrupteur OUTPUT du Link Shield, puis recalibrer.
+  Widget _choixSignal(SourceBrassard source) {
+    final brut = source.source == GattAthletix.sourceRaw;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Signal lu', style: TextStyle(color: Colors.white54)),
+        const SizedBox(height: 6),
+        SegmentedButton<int>(
+          segments: const [
+            ButtonSegment(value: GattAthletix.sourceEnv, label: Text('Enveloppe'), icon: Icon(Icons.show_chart)),
+            ButtonSegment(value: GattAthletix.sourceRaw, label: Text('Brut + fatigue'), icon: Icon(Icons.graphic_eq)),
+          ],
+          selected: {source.source},
+          onSelectionChanged: (choix) => _changerSignal(source, choix.first),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          brut
+              ? "Signal brut : l'interrupteur OUTPUT du Link Shield doit être sur RAW. Le brassard calcule en plus "
+                  "la fréquence médiane, qui baisse quand le muscle fatigue."
+              : "Enveloppe : l'interrupteur OUTPUT du Link Shield doit être sur ENV. Intensité seulement, "
+                  "comme dans la simulation Simulink.",
+          style: const TextStyle(color: Colors.white38, fontSize: 12),
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _changerSignal(SourceBrassard source, int choix) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      await source.choisirSource(choix);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('$e'), backgroundColor: Colors.red));
+      return;
+    }
+    if (!mounted) return;
+    setState(() {});
+    final brut = choix == GattAthletix.sourceRaw;
+    final calibrer = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Avant la prochaine séance'),
+        content: Text(
+          "1. Mets l'interrupteur OUTPUT du Link Shield sur ${brut ? 'RAW' : 'ENV'}.\n"
+          "2. Refais la calibration : la référence 100 % n'a pas la même échelle avec ce signal.",
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Plus tard')),
+          ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Calibrer maintenant')),
+        ],
+      ),
+    );
+    if (calibrer == true) {
+      await navigator.push(MaterialPageRoute(builder: (_) => CalibrationScreen(source: source)));
+      if (mounted) setState(() {});
+    }
   }
 
   Widget _sectionRecherche() {

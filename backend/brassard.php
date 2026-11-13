@@ -116,6 +116,25 @@ function courbe_post(): ?string
     return json_encode(array_values($valeurs));
 }
 
+/** Courbe de la fréquence médiane (migration 005) : JSON [Hz, …], 200 valeurs au plus, de 0 à 1000. */
+function courbe_mdf_post(): ?string
+{
+    $brut = $_POST['courbe_mdf'] ?? '';
+    if ($brut === '') {
+        return null;
+    }
+    $valeurs = json_decode((string) $brut, true);
+    if (!is_array($valeurs) || count($valeurs) > 200) {
+        json_out(["status" => "error", "message" => "Champ invalide : courbe_mdf (tableau d'au plus 200 valeurs)"], 400);
+    }
+    foreach ($valeurs as $v) {
+        if (!(is_int($v) || is_float($v)) || $v < 0 || $v > 1000) {
+            json_out(["status" => "error", "message" => "Champ invalide : courbe_mdf (nombres de 0 à 1000 Hz)"], 400);
+        }
+    }
+    return json_encode(array_map(fn($v) => round((float) $v, 1), array_values($valeurs)));
+}
+
 /** Tracé GPS facultatif : JSON [[lat, lon, secondes, intensité], …], 500 points au plus. */
 function trace_post(): ?string
 {

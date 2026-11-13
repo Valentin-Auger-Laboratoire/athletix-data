@@ -7,6 +7,8 @@ import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/mesure_emg.dart';
+import 'package:athletix_data/services/brassard/mesure_frequence.dart';
+import 'package:athletix_data/services/brassard/suivi_fatigue.dart';
 import 'package:athletix_data/services/brassard/resume_seance.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
 import 'package:athletix_data/services/analyse/analyse_seance.dart';
@@ -49,6 +51,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   late final ResumeSeance _resume = ResumeSeance(refMvcMv: _brassard.refMvcMv);
   final AnalyseSeance _analyse = AnalyseSeance();
   StreamSubscription<MesureEmg>? _abonnement;
+  // Fatigue : fréquence médiane du signal brut (seulement si le brassard est en source RAW)
+  final SuiviFatigue _fatigue = SuiviFatigue();
+  StreamSubscription<MesureFrequence>? _abonnementFrequence;
+  late final bool _signalBrut = _brassard.source == GattAthletix.sourceRaw;
   MesureEmg? _derniere;
   bool _enregistrement = false;
   bool _echecEnregistrement = false;
@@ -91,6 +97,12 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     _abonnement = _brassard.mesures.listen(_recevoir, onError: (Object e) {
       if (mounted) setState(() => _erreurLiaison = e.toString());
     });
+    if (_signalBrut) {
+      _abonnementFrequence = _brassard.frequences.listen((f) {
+        _fatigue.ajouter(f);
+        if (mounted) setState(() {});
+      });
+    }
     _demarrer();
     _telephone?.demarrer().then((_) {
       if (mounted) setState(() {});
@@ -162,6 +174,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   @override
   void dispose() {
     _abonnement?.cancel();
+    _abonnementFrequence?.cancel();
     _abonnementCardio?.cancel();
     _minuteurPause?.cancel();
     _telephone?.arreter();
@@ -206,6 +219,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         ...?_telephone?.versApi(),
         ...?_meteo?.versApi(),
         ..._cardio.versApi(),
+        ...?_fatigue.resultat()?.versApi(),
         ...contexte,
         'mode_adapte': _modeAdapte ? '1' : '0',
         'client_uuid': FileEnvoi.nouvelUuid(),
@@ -320,6 +334,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                     enDirect: true,
                   ),
                   const Text("30 dernières secondes", style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  if (_signalBrut) ...[
+                    const SizedBox(height: 18),
+                    _fatigueEnDirect(),
+                  ],
                   if (_telephone != null || _fcActuelle != null) ...[
                     const SizedBox(height: 18),
                     _mesuresTelephone(),
@@ -468,6 +486,46 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           Expanded(child: Text(texte, style: TextStyle(color: couleur, fontSize: 13))),
         ]),
       );
+
+  /// Fatigue en direct : fréquence médiane actuelle et écart au début de la séance.
+  Widget _fatigueEnDirect() {
+    final mdf = _fatigue.mdfActuelle;
+    final ecart = _fatigue.ecartPct;
+    final couleur = ecart == null
+        ? Colors.white
+        : ecart <= -10
+            ? Colors.redAccent
+            : ecart <= -5
+                ? Colors.orangeAccent
+                : Colors.greenAccent;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(14)),
+      child: Column(children: [
+        const Text('FATIGUE DU MUSCLE (FRÉQUENCE MÉDIANE)',
+            style: TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 1)),
+        const SizedBox(height: 8),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          _stat('MAINTENANT', mdf == null ? '—' : '${mdf.round()} Hz'),
+          _stat('DÉBUT', _fatigue.mdfReference == null ? '—' : '${_fatigue.mdfReference!.round()} Hz'),
+          Column(children: [
+            const Text('ÉCART', style: TextStyle(color: Colors.white54, fontSize: 11)),
+            const SizedBox(height: 4),
+            Text(ecart == null ? '—' : '${ecart > 0 ? '+' : ''}${decimalFr(ecart, 0)} %',
+                style: TextStyle(color: couleur, fontSize: 16, fontWeight: FontWeight.bold)),
+          ]),
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          mdf == null
+              ? 'Contracte le muscle : la fréquence se calcule pendant l\'effort (au-dessus de 20 %).'
+              : 'Quand le muscle fatigue, la fréquence médiane baisse. Repère : une baisse de plus de 10 % = fatigue nette.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white38, fontSize: 11),
+        ),
+      ]),
+    );
+  }
 
   Widget _mesuresTelephone() {
     final t = _telephone;

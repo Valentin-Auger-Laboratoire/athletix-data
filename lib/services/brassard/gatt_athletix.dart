@@ -12,6 +12,7 @@ class GattAthletix {
   static const String configuration = 'abad0003-b097-4a54-8315-c2971fc04ce6'; // Read, Write, 5 octets
   static const String etat = 'abad0004-b097-4a54-8315-c2971fc04ce6'; // Read, Notify, 2 octets
   static const String horsLigne = 'abad0005-b097-4a54-8315-c2971fc04ce6'; // Read, 20 à 220 octets (natation)
+  static const String frequence = 'abad0006-b097-4a54-8315-c2971fc04ce6'; // Notify, 8 octets (fatigue, source RAW)
 
   // Services et caractéristiques standards du Bluetooth
   static const String serviceBatterie = '0000180f-0000-1000-8000-00805f9b34fb';
@@ -27,6 +28,11 @@ class GattAthletix {
   static const int cmdReglerSeuil = 0x04; // suivi de seuil_haut, seuil_bas (en %)
   static const int cmdDemarrerHorsLigne = 0x05; // mesure gardée dans le brassard (natation)
   static const int cmdEffacerHorsLigne = 0x06; // après lecture et enregistrement
+  static const int cmdSource = 0x07; // suivi de 0 (ENV) ou 1 (RAW), seulement au repos
+
+  // Signal lu par le brassard (interrupteur OUTPUT du Link Shield)
+  static const int sourceEnv = 0; // enveloppe : intensité seulement
+  static const int sourceRaw = 1; // signal brut : intensité + fréquence médiane (fatigue)
 
   // Valeurs par défaut de la configuration
   static const int seuilHautDefaut = 75;

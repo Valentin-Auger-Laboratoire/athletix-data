@@ -1,5 +1,6 @@
 import 'hors_ligne.dart';
 import 'mesure_emg.dart';
+import 'mesure_frequence.dart';
 
 export 'hors_ligne.dart' show ResumeHorsLigne;
 
@@ -36,6 +37,18 @@ abstract class SourceBrassard {
 
   /// Flux des mesures reçues (environ 50 par seconde pendant une séance).
   Stream<MesureEmg> get mesures;
+
+  /// Signal lu : [GattAthletix.sourceEnv] (enveloppe) ou [GattAthletix.sourceRaw] (signal brut).
+  int get source;
+
+  /// Vrai si le brassard sait lire le signal brut et mesurer la fatigue (firmware 1.2 et plus).
+  bool get mesureFatigue;
+
+  /// Commande 0x07, au repos seulement. La référence 100 % change d'échelle : il faut recalibrer.
+  Future<void> choisirSource(int source);
+
+  /// Fréquence médiane du signal brut, 2 fois par seconde (source RAW seulement, GATT.md §12).
+  Stream<MesureFrequence> get frequences;
 
   /// Commande 0x01 : démarre l'envoi des mesures.
   Future<void> demarrer();

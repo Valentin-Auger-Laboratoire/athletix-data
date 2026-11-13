@@ -6,6 +6,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 |---|---|
 | `firmware-brassard.ino` | Bluetooth, lecture du MyoWare, jauge de batterie, commandes |
 | `calcul_emg.h` | tous les calculs : RMS glissante 200 ms, % MVC, alerte avec hystérésis, calibration, paquets de 8 octets, résumé hors ligne (natation). Aucune dépendance au matériel |
+| `calcul_fatigue.h` | fatigue : suppression de la composante continue, FFT, **fréquence médiane** du signal brut (version 1.2, voir [`FATIGUE.md`](FATIGUE.md)) |
 
 ## Ce qu'il fait de plus que le faux brassard
 
@@ -15,6 +16,7 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
 - **Avertissements** (caractéristique État) : saturation pendant plus de 2 s (électrode décollée ?), batterie sous 10 %.
 - **Natation (version 1.1)** : commande `0x05`, le brassard continue de mesurer même si la liaison se coupe et garde le résumé de la séance (caractéristique `abad0005`, [`GATT.md`](../../architecture/GATT.md) §11). Arrêt automatique après 5 min sous 10 %, à la dernière activité. Le résumé n'est effacé que sur la commande `0x06`, envoyée par l'application une fois la séance enregistrée.
 - **Journal USB** (`JOURNAL_SERIE`) : pendant une mesure, chaque valeur est aussi écrite sur le port USB (`M,ms,mV,RMS,intensité,alerte`), pour la [comparaison automatique avec la simulation](../../mesures/README.md). Électrodes sur la peau : PC portable débranché du secteur.
+- **Fatigue (version 1.2)** : commande `0x07` pour lire le **signal brut** (interrupteur du Link Shield sur **RAW**) à 2 000 Hz. Le brassard calcule alors la fréquence médiane 2 fois par seconde (caractéristique `abad0006`) dans une tâche à part sur le second cœur. Explications et vérifications : [`FATIGUE.md`](FATIGUE.md).
 - **Commandes traitées dans `loop()`**, pas dans la tâche Bluetooth : évite les accès simultanés aux variables.
 
 ## Vérifications faites sans la carte
@@ -23,7 +25,11 @@ Programme de la carte **SparkFun Thing Plus ESP32-S3** du brassard EMG. Il respe
   ```bash
   g++ -std=c++17 -Wall -Wextra -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg
   ```
-- **Le programme complet** a été vérifié à la compilation avec des imitations des bibliothèques ESP32 (mêmes fonctions). Il n'a **pas encore été compilé pour l'ESP32 ni testé sur une carte** : c'est la première étape du [protocole de test](../PROTOCOLE-DE-TEST.md).
+- **La fatigue** (`calcul_fatigue.h`) : 34 vérifications, dont la comparaison avec la fréquence médiane théorique sur des signaux qui ressemblent à l'EMG.
+- **Le programme complet** est compilé ET **exécuté** sur ordinateur avec des imitations des bibliothèques ESP32 (mêmes fonctions, dans [`tests/firmware/imitations/`](../../tests/firmware/imitations/Arduino.h)) et un muscle simulé sur A0 : `setup()`, `loop()`, commandes Bluetooth, tâche d'analyse, natation (28 vérifications, aussi sous ThreadSanitizer). Il n'a **pas encore été compilé pour l'ESP32 ni testé sur une carte** : c'est la première étape du [protocole de test](../PROTOCOLE-DE-TEST.md).
+  ```bash
+  g++ -std=c++17 -pthread -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet && ./test_complet
+  ```
 
 ## Flasher la carte
 

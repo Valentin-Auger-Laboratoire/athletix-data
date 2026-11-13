@@ -22,6 +22,10 @@ class Reglages {
   /// Mode adapté : seuils d'alerte plus bas, pause conseillée régulièrement, alerte chaleur.
   static final ValueNotifier<bool> modeAdapte = ValueNotifier(false);
 
+  /// Fond de carte OpenStreetMap sous le tracé du parcours. Désactivé par défaut : afficher la carte
+  /// envoie la zone du parcours aux serveurs d'OpenStreetMap (sans compte ni identité, mais c'est une sortie).
+  static final ValueNotifier<bool> fondDeCarte = ValueNotifier(false);
+
   /// Seuils en mode adapté (au lieu de 75 / 70 %).
   static const int seuilHautAdapte = 60;
   static const int seuilBasAdapte = 55;
@@ -34,6 +38,7 @@ class Reglages {
     'reglage_vibration': alertesVibration,
     'reglage_voix': alertesVoix,
     'reglage_mode_adapte': modeAdapte,
+    'reglage_fond_carte': fondDeCarte,
   };
 
   /// Objectif de séances par semaine (accueil).

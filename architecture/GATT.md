@@ -27,7 +27,8 @@ Brassard Athletix (serveur GATT)
     ├── Point de contrôle     abad0002-…   Write           commandes (§5)
     ├── Configuration         abad0003-…   Read, Write     5 octets (§6)
     ├── État                  abad0004-…   Read, Notify    2 octets (§7)
-    └── Résumé hors ligne     abad0005-…   Read            20 à 220 octets (§11, firmware 1.1)
+    ├── Résumé hors ligne     abad0005-…   Read            20 à 220 octets (§11, firmware 1.1)
+    └── Fréquence (fatigue)   abad0006-…   Notify          8 octets (§12, firmware 1.2)
 ```
 
 Tous les UUID du service Athletix partagent la même base, seuls les 8 premiers caractères changent :
@@ -40,6 +41,7 @@ Tous les UUID du service Athletix partagent la même base, seuls les 8 premiers 
 | Configuration | `abad0003-b097-4a54-8315-c2971fc04ce6` |
 | État | `abad0004-b097-4a54-8315-c2971fc04ce6` |
 | Résumé hors ligne | `abad0005-b097-4a54-8315-c2971fc04ce6` |
+| Fréquence (fatigue) | `abad0006-b097-4a54-8315-c2971fc04ce6` |
 
 **Pourquoi réutiliser les services standards ?** Batterie et informations de l'appareil existent déjà dans la norme Bluetooth. N'importe quel outil (nRF Connect, Chrome, Android) sait les lire sans code spécial.
 
@@ -97,12 +99,13 @@ L'application écrit une commande. Le premier octet est le code de la commande, 
 | `0x04` | RÉGLER LE SEUIL | `seuil_haut` uint8, `seuil_bas` uint8 | change les seuils d'alerte (en %). Refusé si `seuil_bas ≥ seuil_haut` |
 | `0x05` | DÉMARRER HORS LIGNE | — | comme DÉMARRER, et le brassard garde le résumé de la séance, **même si la liaison se coupe** (§11) |
 | `0x06` | EFFACER HORS LIGNE | — | efface le résumé, une fois enregistré par l'application |
+| `0x07` | CHOISIR LA SOURCE | `source` uint8 : 0 = ENV, 1 = RAW | signal lu sur l'entrée analogique (§12). **Au repos seulement** (refusé pendant une mesure). La référence 100 % revient à une valeur d'attente (1 850 mV en ENV, 500 mV en RAW) : il faut recalibrer |
 
 Une commande inconnue ou mal formée met l'état en « erreur » avec le code `4` (§7). Le brassard ne plante pas.
 
 ## 6. Configuration — `abad0003` (Read, Write)
 
-5 octets :
+5 octets écrits par l'application ; **6 octets lus** à partir du firmware 1.2 (le 6e, `source`, en lecture seule, se change par la commande `0x07`). Un 6e octet écrit est ignoré.
 
 | Octets | Champ | Type | Défaut |
 |---|---|---|---|
@@ -110,6 +113,7 @@ Une commande inconnue ou mal formée met l'état en « erreur » avec le code `4
 | 1 | `seuil_bas` | uint8, % | 70 |
 | 2–3 | `ref_mvc` | uint16, mV | 1850 (valeur supposée dans la simulation) |
 | 4 | `frequence` | uint8, Hz | 50 |
+| 5 | `source` (lecture seule) | uint8 : 0 ENV, 1 RAW | 0 |
 
 Après une calibration, le brassard met à jour `ref_mvc`. L'application relit la configuration et envoie la nouvelle référence au serveur (`save_calibration.php`), pour garder l'historique des calibrations.
 
@@ -124,6 +128,7 @@ Après une calibration, le brassard met à jour `ref_mvc`. L'application relit l
 | 2 | calibration | | 2 | batterie faible (< 10 %) |
 | 3 | erreur | | 3 | calibration invalide (signal trop faible) |
 | | | | 4 | commande inconnue ou mal formée |
+| | | | 5 | source RAW demandée, mais le signal n'est pas centré sur ~1,65 V : l'interrupteur OUTPUT du Link Shield est sans doute resté sur ENV (avertissement, la mesure continue) |
 
 ## 8. Déroulé d'une séance
 
@@ -160,6 +165,7 @@ Application                                  Brassard
 | Connexion Bluetooth réelle dans l'app (Android et Chrome) | `lib/services/brassard/brassard_ble.dart` | ✅ écrite, ⏳ à tester avec une carte |
 | Firmware final (vrai MyoWare, jauge de batterie, intervalle 15–20 ms) | `hardware/firmware-brassard/` | ✅ calculs testés sur ordinateur (`tests/firmware/`), ⏳ à flasher |
 | Résumé hors ligne (natation, §11) : firmware 1.1, application, brassard simulé | `calcul_emg.h`, `hors_ligne.dart`, `natation_screen.dart` | ✅ testé sur ordinateur et dans l'application (simulé), ⏳ à essayer avec le vrai brassard dans l'eau |
+| Source RAW et fatigue par la fréquence médiane (§12) : firmware 1.2, application, brassard simulé | `calcul_fatigue.h`, `analyse_frequence.dart`, `suivi_fatigue.dart` | ✅ calcul testé sur ordinateur (C++ et Dart, même résultat), firmware complet exécuté avec un muscle simulé (`tests/firmware/test_firmware_complet.cpp`), ⏳ à essayer avec le vrai MyoWare en RAW |
 
 ## 11. Résumé hors ligne — `abad0005` (Read), natation
 
@@ -185,3 +191,22 @@ Le Bluetooth ne passe pas sous l'eau. Pour les sports aquatiques, l'application 
 La valeur dépasse les 20 octets d'une MTU par défaut : l'application la lit en **lecture longue** (gérée par Android et par `flutter_blue_plus`). `fin_il_y_a` est une durée mesurée par le brassard : l'application l'envoie au serveur (`fin_il_y_a_s`) pour dater la séance sans dépendre de l'heure du téléphone.
 
 Le calcul est dans `calcul_emg.h` (classe `EnregistrementHorsLigne`, testée sur ordinateur) ; le brassard simulé de l'application en utilise une copie en Dart, et un test vérifie que les deux produisent **les mêmes octets** sur le même scénario (`test/natation_test.dart`).
+
+## 12. Fréquence (fatigue) — `abad0006` (Notify), firmware 1.2
+
+Quand le brassard lit le **signal brut** (source RAW, commande `0x07`, interrupteur OUTPUT du Link Shield sur RAW), il échantillonne à 2 000 Hz et calcule, toutes les 1 024 valeurs (0,512 s), la **fréquence médiane** du spectre (MDF) : elle baisse quand le muscle fatigue. Le calcul et ses choix sont expliqués dans [`hardware/firmware-brassard/FATIGUE.md`](../hardware/firmware-brassard/FATIGUE.md).
+
+Environ 2 notifications par seconde, pendant l'état « mesure » seulement. 8 octets, little-endian :
+
+| Octets | Champ | Type | Sens |
+|---|---|---|---|
+| 0–3 | `horodatage` | uint32, ms | fin de la fenêtre analysée (même horloge que §4) |
+| 4–5 | `mdf` | uint16, 0,1 Hz | fréquence médiane ; **0 = pas de valeur** (intensité moyenne sur la fenêtre < 20 % : au repos, le spectre n'est que du bruit) |
+| 6–7 | `mnf` | uint16, 0,1 Hz | fréquence moyenne (barycentre du spectre), donnée en plus |
+
+Exemple : `e8 03 00 00 dc 03 60 04` = à 1 000 ms, MDF = 98,8 Hz, MNF = 112,0 Hz.
+
+Les mesures d'intensité (§4) continuent à 50 Hz en RAW : l'intensité est alors la valeur efficace du signal brut (sans sa composante continue) sur 200 ms, rapportée à la référence 100 % calibrée **dans cette source**.
+
+L'application ne stocke pas ces valeurs une par une : elle ajuste une droite sur la séance et envoie au serveur la MDF du début, celle de la fin, la baisse en % et une courbe (une valeur par bloc de 30 s), voir migration 005. Le brassard simulé de l'application fabrique un vrai signal brut et passe par le même calcul (copie Dart, `lib/services/brassard/analyse_frequence.dart`), testé contre le firmware sur le même signal (`test/fatigue_test.dart`).
+

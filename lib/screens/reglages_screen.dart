@@ -66,6 +66,12 @@ class ReglagesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
+          const Text('CARTE', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
+          const SizedBox(height: 6),
+          _interrupteur(Reglages.fondDeCarte, Icons.map_outlined, 'Fond de carte sous le parcours',
+              'Affiche les rues (OpenStreetMap) sous le tracé. Les images de la carte sont demandées aux serveurs '
+                  "d'OpenStreetMap pour la zone du parcours (sans compte ni nom). Désactivé : tracé seul, rien n'est envoyé."),
+          const SizedBox(height: 18),
           const Text('MODE ADAPTÉ', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
           const SizedBox(height: 6),
           _interrupteur(

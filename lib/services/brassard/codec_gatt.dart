@@ -9,12 +9,16 @@ class ConfigurationBrassard {
     required this.seuilBas,
     required this.refMvcMv,
     required this.frequenceHz,
+    this.source = GattAthletix.sourceEnv,
   });
 
   final int seuilHaut;
   final int seuilBas;
   final int refMvcMv;
   final int frequenceHz;
+
+  /// Signal lu (6e octet, en lecture seule, firmware 1.2) : ENV ou RAW. Absent avant : ENV.
+  final int source;
 
   static const int taille = 5;
 
@@ -25,7 +29,8 @@ class ConfigurationBrassard {
     frequenceHz: GattAthletix.frequenceDefautHz,
   );
 
-  /// Lit les 5 octets (little-endian). Les octets en plus sont ignorés (GATT.md §3).
+  /// Lit les 5 octets (little-endian), plus le 6e (source) s'il existe. Les autres octets en plus
+  /// sont ignorés (GATT.md §3).
   factory ConfigurationBrassard.depuisOctets(List<int> octets) {
     if (octets.length < taille) {
       throw FormatException('Configuration de ${octets.length} octets, $taille attendus');
@@ -36,6 +41,7 @@ class ConfigurationBrassard {
       seuilBas: d.getUint8(1),
       refMvcMv: d.getUint16(2, Endian.little),
       frequenceHz: d.getUint8(4),
+      source: octets.length > taille ? octets[taille] : GattAthletix.sourceEnv,
     );
   }
 
@@ -70,6 +76,7 @@ class EtatLu {
         2 => 'batterie faible (moins de 10 %)',
         3 => 'calibration invalide : signal trop faible, serre plus fort ou vérifie les électrodes',
         4 => 'commande refusée par le brassard',
+        5 => "signal brut demandé, mais l'interrupteur OUTPUT du Link Shield semble sur ENV : mets-le sur RAW",
         _ => 'erreur inconnue (code $codeErreur)',
       };
 }
@@ -83,6 +90,13 @@ class CommandeBrassard {
   static List<int> calibrer() => [GattAthletix.cmdCalibrer];
   static List<int> demarrerHorsLigne() => [GattAthletix.cmdDemarrerHorsLigne];
   static List<int> effacerHorsLigne() => [GattAthletix.cmdEffacerHorsLigne];
+
+  static List<int> choisirSource(int source) {
+    if (source != GattAthletix.sourceEnv && source != GattAthletix.sourceRaw) {
+      throw ArgumentError('Source inconnue : $source');
+    }
+    return [GattAthletix.cmdSource, source];
+  }
 
   /// Refusée côté application si seuilBas ≥ seuilHaut, comme côté brassard.
   static List<int> reglerSeuil(int seuilHaut, int seuilBas) {

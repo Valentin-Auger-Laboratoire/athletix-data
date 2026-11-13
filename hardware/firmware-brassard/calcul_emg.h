@@ -142,23 +142,32 @@ inline void encoderMesure(uint8_t paquet[8], uint32_t horodatageMs, uint16_t rms
   paquet[7] = drapeaux;
 }
 
-// Configuration de 5 octets (GATT.md §6)
+// Signal lu sur l'entrée analogique (interrupteur OUTPUT du Link Shield, GATT.md §6 et §12)
+const uint8_t SOURCE_ENV = 0;  // enveloppe : intensité seulement (par défaut)
+const uint8_t SOURCE_RAW = 1;  // signal brut : intensité ET fréquence médiane (fatigue)
+
+// Configuration (GATT.md §6) : 5 octets écrits par l'application, 6 octets lus
+// (le 6e, en lecture seule, donne la source ENV / RAW, changée par la commande 0x07).
 struct Configuration {
+  static const unsigned TAILLE_LUE = 6;
   uint8_t seuilHaut = 75;
   uint8_t seuilBas = 70;
   uint16_t refMvcMv = 1850;
   uint8_t frequenceHz = 50;
+  uint8_t source = SOURCE_ENV;
 
-  void encoder(uint8_t octets[5]) const {
+  void encoder(uint8_t octets[TAILLE_LUE]) const {
     octets[0] = seuilHaut;
     octets[1] = seuilBas;
     ecrire16(&octets[2], refMvcMv);
     octets[4] = frequenceHz;
+    octets[5] = source;
   }
 
   // Applique 5 octets reçus s'ils sont valides. Renvoie false (et ne change rien) sinon.
+  // La source n'est pas modifiable ici (commande 0x07) : un 6e octet éventuel est ignoré.
   bool appliquer(const uint8_t *d, unsigned taille) {
-    if (taille != 5) return false;
+    if (taille != 5 && taille != 6) return false;
     uint16_t ref = lire16(&d[2]);
     if (d[1] >= d[0] || ref < 100 || ref > 3300 || d[4] == 0 || d[4] > 100) return false;
     seuilHaut = d[0];

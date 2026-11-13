@@ -72,6 +72,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: g++ -std=c++17 -Wall -Wextra -Werror -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg
       - run: ./test_emg
+      - name: Fatigue (fréquence médiane)
+        run: g++ -std=c++17 -Wall -Wextra -Werror -I hardware/firmware-brassard tests/firmware/test_calcul_fatigue.cpp -o test_fatigue && ./test_fatigue
+      - name: Firmware complet exécuté avec des imitations des bibliothèques ESP32
+        run: |
+          g++ -std=c++17 -pthread -Wall -Wextra -Werror -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet
+          ./test_complet
+      - name: Même test sous ThreadSanitizer (échanges entre les deux cœurs)
+        run: |
+          g++ -std=c++17 -pthread -g -fsanitize=thread -I tests/firmware/imitations -I hardware/firmware-brassard tests/firmware/test_firmware_complet.cpp -o test_complet_tsan
+          TSAN_OPTIONS=halt_on_error=1 ./test_complet_tsan
 
   mesures:
     name: Outils de comparaison mesure / simulation (Python)

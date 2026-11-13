@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'analyse_frequence.dart';
 import 'codec_gatt.dart';
 import 'gatt_athletix.dart';
 import 'hors_ligne.dart';
 import 'mesure_emg.dart';
+import 'mesure_frequence.dart';
 import 'source_brassard.dart';
 
 /// Une phase du profil d'effort simulé : jusqu'à [finS] secondes, effort de [pct] % MVC.
@@ -52,6 +54,26 @@ class BrassardSimule implements SourceBrassard {
   /// Accélération du temps pour la démo de natation (×60 : 1 s réelle = 1 min de nage).
   int accelerationHorsLigne = 1;
 
+  // ---- Signal brut (source RAW) et fatigue ----
+  int _source = GattAthletix.sourceEnv;
+  final StreamController<MesureFrequence> _fluxFrequences = StreamController<MesureFrequence>.broadcast();
+  final AnalyseFrequence _analyse = AnalyseFrequence();
+  final PasseBande _filtre = PasseBande(fcRepos);
+  late final HasardReproductible _bruit = HasardReproductible(_hasard.nextInt(1 << 30));
+  final List<double> _fenetre = [];
+  int _sommeIntensiteFenetre = 0;
+
+  /// Fatigue simulée, de 0 (frais) à 1 : monte avec l'effort, redescend au repos.
+  double fatigue = 0;
+
+  /// Fréquence centrale du filtre pour un muscle frais (Hz) ; elle baisse jusqu'à −25 % avec la fatigue.
+  /// 70 Hz donne une fréquence médiane d'environ 110 Hz (muscle frais) à 90 Hz (très fatigué),
+  /// l'ordre de grandeur courant sur le biceps.
+  static const double fcRepos = 70;
+
+  /// Échantillons du signal brut à 2 000 Hz fabriqués à chaque mesure (toutes les 20 ms).
+  static const int echantillonsParMesure = 40;
+
   /// Durée de la calibration (commande 0x03), comme le vrai brassard.
   static const Duration dureeCalibration = Duration(seconds: 3);
 
@@ -89,6 +111,27 @@ class BrassardSimule implements SourceBrassard {
 
   @override
   Stream<MesureEmg> get mesures => _flux.stream;
+
+  @override
+  int get source => _source;
+
+  @override
+  bool get mesureFatigue => true;
+
+  @override
+  Stream<MesureFrequence> get frequences => _fluxFrequences.stream;
+
+  @override
+  Future<void> choisirSource(int source) async {
+    final commande = CommandeBrassard.choisirSource(source); // mêmes contrôles que le vrai brassard
+    if (_minuteur != null) throw ErreurBrassard('Arrête la séance avant de changer de signal');
+    if (source == _source) return;
+    _source = commande[1];
+    // Comme le firmware : la référence change d'échelle, il faut recalibrer
+    _refMvcMv = _source == GattAthletix.sourceRaw ? 500 : GattAthletix.refMvcDefautMv;
+    _fenetre.clear();
+    _sommeIntensiteFenetre = 0;
+  }
 
   /// Effort demandé (en % MVC) à l'instant [tempsS] du cycle.
   static double effortVise(double tempsS) {
@@ -144,7 +187,8 @@ class BrassardSimule implements SourceBrassard {
     _calibration = true;
     await Future.delayed(duree ?? dureeCalibration);
     _calibration = false;
-    _refMvcMv = (GattAthletix.refMvcDefautMv * (0.95 + _hasard.nextDouble() * 0.10)).round();
+    final base = _source == GattAthletix.sourceRaw ? 500 : GattAthletix.refMvcDefautMv;
+    _refMvcMv = (base * (0.95 + _hasard.nextDouble() * 0.10)).round();
     return _refMvcMv;
   }
 
@@ -152,6 +196,31 @@ class BrassardSimule implements SourceBrassard {
   void fermer() {
     arreter();
     _flux.close();
+    _fluxFrequences.close();
+  }
+
+  /// Fabrique 20 ms de signal brut (bruit filtré dont l'amplitude suit l'intensité et dont le spectre
+  /// glisse avec la fatigue), puis, toutes les 1 024 valeurs, calcule la fréquence médiane avec le
+  /// MÊME calcul que le firmware et l'envoie en paquet de 8 octets relu par le vrai décodeur.
+  void _signalBrut(int intensite, int ms) {
+    const dt = 0.02;
+    final charge = intensite / 100;
+    // Démo : fatigue rapide (quelques % de fréquence médiane en 1 min d'efforts répétés), récupération lente
+    fatigue = (fatigue + dt * (charge * charge / 60 - fatigue / 300)).clamp(0.0, 1.0);
+    _filtre.regler(fcRepos * (1 - 0.25 * fatigue));
+    for (var i = 0; i < echantillonsParMesure; i++) {
+      _fenetre.add((2 + intensite * 8) * _filtre.filtrer(_bruit.gauss()));
+    }
+    _sommeIntensiteFenetre += intensite * echantillonsParMesure;
+    if (_fenetre.length < _analyse.n) return;
+    final x = _fenetre.sublist(0, _analyse.n);
+    _fenetre.removeRange(0, _analyse.n);
+    final moyenne = _sommeIntensiteFenetre / _analyse.n;
+    _sommeIntensiteFenetre = 0;
+    final r = _analyse.analyser(x);
+    final travail = r.valide && moyenne >= 20; // même seuil que le firmware
+    final paquet = MesureFrequence(horodatageMs: ms, mdfHz: travail ? r.mdfHz : 0, mnfHz: travail ? r.mnfHz : 0).versOctets();
+    if (!_fluxFrequences.isClosed) _fluxFrequences.add(MesureFrequence.depuisOctets(paquet));
   }
 
   void _envoyerMesure() {
@@ -176,6 +245,8 @@ class BrassardSimule implements SourceBrassard {
       saturation: rms >= 3300,
       calibrationEnCours: _calibration,
     ).versOctets();
+
+    if (_source == GattAthletix.sourceRaw && !_calibration) _signalBrut(intensite, ms);
 
     // Même chemin que le Bluetooth : octets → décodeur
     for (final mesure in MesureEmg.depuisNotification(paquet)) {

@@ -5,7 +5,10 @@
 //   - lit le VRAI niveau de batterie avec la jauge MAX17048 de la carte (I2C, adresse 0x36) ;
 //   - demande un intervalle de connexion de 15 à 20 ms, nécessaire pour 50 mesures/s (GATT.md §4) ;
 //   - signale la saturation prolongée (électrode ?) et la batterie faible (GATT.md §7) ;
-//   - les calculs sont dans calcul_emg.h, testés sur ordinateur (tests/firmware/).
+//   - les calculs sont dans calcul_emg.h, testés sur ordinateur (tests/firmware/) ;
+//   - 1.2 : source RAW (signal brut à 2 000 Hz) en plus de ENV, pour mesurer la FATIGUE par la
+//     fréquence médiane (calcul_fatigue.h, caractéristique abad0006, FATIGUE.md). La FFT tourne
+//     dans une tâche séparée sur le cœur 0, pour ne pas décaler l'échantillonnage.
 //
 // ⚠️ Écrit sans le matériel. Avant de l'utiliser : vérifier PIN_EMG et les broches I2C sur la fiche
 // SparkFun de la carte, et suivre le protocole de test (hardware/PROTOCOLE-DE-TEST.md).
@@ -20,6 +23,7 @@
 #include <Wire.h>
 
 #include "calcul_emg.h"
+#include "calcul_fatigue.h"
 
 using namespace athletix;
 
@@ -28,6 +32,10 @@ const int PIN_EMG = A0;                // sortie ENV du MyoWare : A0 = GPIO10 su
 const uint8_t ADRESSE_JAUGE = 0x36;    // MAX17048, jauge de batterie de la Thing Plus ESP32-S3
 const uint16_t SATURATION_MV = 3250;   // convertisseur quasiment au maximum (3,3 V)
 const uint8_t BATTERIE_FAIBLE = 10;    // en %
+// Source RAW : le signal brut du MyoWare est centré sur la moitié de l'alimentation (~1,65 V).
+// Une moyenne sous ce seuil veut dire que l'interrupteur OUTPUT du Link Shield n'est pas sur RAW.
+const uint16_t RAW_CENTRE_MIN_MV = 900;
+const uint16_t RAW_CENTRE_MAX_MV = 2400;
 
 // Journal des mesures sur le port USB (CSV, 50 lignes/s pendant une mesure) pour comparer
 // le brassard à la simulation : mesures/capturer.py puis mesures/comparer_simulation.py.
@@ -41,16 +49,18 @@ const bool JOURNAL_SERIE = true;
 #define UUID_CONFIGURATION  "abad0003-b097-4a54-8315-c2971fc04ce6"
 #define UUID_ETAT           "abad0004-b097-4a54-8315-c2971fc04ce6"
 #define UUID_HORS_LIGNE     "abad0005-b097-4a54-8315-c2971fc04ce6"
+#define UUID_FREQUENCE      "abad0006-b097-4a54-8315-c2971fc04ce6"
 
-const char *VERSION_FIRMWARE = "1.1.0";  // 1.1 : enregistrement sans connexion (natation)
+const char *VERSION_FIRMWARE = "1.2.0";  // 1.1 : natation ; 1.2 : source RAW et fatigue (fréquence médiane)
 
 enum : uint8_t { CMD_DEMARRER = 0x01, CMD_ARRETER = 0x02, CMD_CALIBRER = 0x03, CMD_SEUIL = 0x04,
-                 CMD_DEMARRER_HORS_LIGNE = 0x05, CMD_EFFACER_HORS_LIGNE = 0x06 };
+                 CMD_DEMARRER_HORS_LIGNE = 0x05, CMD_EFFACER_HORS_LIGNE = 0x06, CMD_SOURCE = 0x07 };
 enum : uint8_t { ETAT_REPOS = 0, ETAT_MESURE = 1, ETAT_CALIBRATION = 2, ETAT_ERREUR = 3 };
-enum : uint8_t { ERR_AUCUNE = 0, ERR_SATURATION = 1, ERR_BATTERIE = 2, ERR_CALIBRATION = 3, ERR_COMMANDE = 4 };
+enum : uint8_t { ERR_AUCUNE = 0, ERR_SATURATION = 1, ERR_BATTERIE = 2, ERR_CALIBRATION = 3, ERR_COMMANDE = 4,
+                 ERR_SOURCE = 5 };  // 5 : source RAW demandée mais l'interrupteur du Link Shield semble sur ENV
 
 // ---- État ----
-BLECharacteristic *carMesure, *carConfiguration, *carEtat, *carHorsLigne, *carBatterie = nullptr;
+BLECharacteristic *carMesure, *carConfiguration, *carEtat, *carHorsLigne, *carFrequence, *carBatterie = nullptr;
 volatile bool connecte = false;
 uint8_t etat = ETAT_REPOS;
 uint8_t codeErreur = ERR_AUCUNE;
@@ -61,12 +71,47 @@ Configuration config;
 Alerte alerte;
 Calibration calibration;
 FenetreRms<100> fenetre;               // 200 ms à 500 Hz, comme la simulation Simulink
+FenetreRms<400> fenetreRaw;            // 200 ms à 2 000 Hz (source RAW)
+FiltreContinu filtreContinu;           // retire le ~1,65 V du signal brut
+float moyenneRawMv = 0;                // moyenne lente du signal brut, en mV (contrôle de l'interrupteur)
 SurveillanceSaturation saturation;
 EnregistrementHorsLigne horsLigne;    // natation : résumé calculé dans le brassard
 
 // Les commandes arrivent dans la tâche Bluetooth : on les transmet à loop() par ces variables
 volatile int commandeEnAttente = -1;
-volatile uint8_t seuilHautDemande = 0, seuilBasDemande = 0;
+volatile uint8_t seuilHautDemande = 0, seuilBasDemande = 0, sourceDemandee = 0;
+
+// ---- Fatigue : fenêtres de 1 024 échantillons RAW analysées par une tâche à part ----
+const int N_FFT = 1024;                         // 0,512 s à 2 000 Hz
+AnalyseFrequence<N_FFT> *analyseFrequence;      // ~16 Ko, alloué au démarrage
+float tampons[2][N_FFT];                        // l'un se remplit pendant que l'autre est analysé
+int tamponEcrit = 0, indexTampon = 0;
+uint32_t sommeIntensiteFenetre = 0;             // pour savoir si le muscle travaillait
+// Échanges entre loop() (cœur 1) et la tâche d'analyse (cœur 0) : deux files FreeRTOS,
+// qui copient les données et garantissent l'ordre entre les deux cœurs (pas de variable partagée).
+struct FenetreAAnalyser {
+  int8_t tampon;        // 0 ou 1
+  uint8_t intensite;    // intensité moyenne sur la fenêtre, en %
+  uint32_t finMs;
+};
+struct ResultatAEnvoyer {
+  uint32_t finMs;
+  float mdfHz, mnfHz;   // 0 = pas de valeur (muscle au repos)
+};
+QueueHandle_t fileFenetres, fileResultats;
+uint32_t debutCompteMs = 0, nbEchantillons = 0;  // contrôle du rythme d'échantillonnage
+bool analyseEnCours = false;  // une fenêtre envoyée dont le résultat n'est pas encore revenu (loop() seulement)
+
+void tacheFrequence(void *) {
+  FenetreAAnalyser f;
+  for (;;) {
+    if (xQueueReceive(fileFenetres, &f, portMAX_DELAY) != pdTRUE) continue;
+    ResultatFrequence r = analyseFrequence->analyser(tampons[f.tampon]);
+    bool travail = r.valide && f.intensite >= SEUIL_INTENSITE_FATIGUE;
+    ResultatAEnvoyer e = {f.finMs, travail ? r.mdfHz : 0, travail ? r.mnfHz : 0};
+    xQueueSend(fileResultats, &e, portMAX_DELAY);  // loop() vide la file à chaque tour
+  }
+}
 
 void publierEtat() {
   uint8_t octets[2] = {etat, codeErreur};
@@ -75,11 +120,11 @@ void publierEtat() {
 }
 
 void publierConfiguration() {
-  uint8_t octets[5];
+  uint8_t octets[Configuration::TAILLE_LUE];
   config.seuilHaut = alerte.seuilHaut();
   config.seuilBas = alerte.seuilBas();
   config.encoder(octets);
-  carConfiguration->setValue(octets, 5);
+  carConfiguration->setValue(octets, Configuration::TAILLE_LUE);
 }
 
 void changerEtat(uint8_t nouvelEtat, uint8_t erreur = ERR_AUCUNE) {
@@ -126,6 +171,13 @@ class ControleCallbacks : public BLECharacteristicCallbacks {
       seuilHautDemande = d[1];
       seuilBasDemande = d[2];
     }
+    if (d[0] == CMD_SOURCE) {
+      if (n != 2 || d[1] > SOURCE_RAW) {
+        commandeEnAttente = 0xFF;
+        return;
+      }
+      sourceDemandee = d[1];
+    }
     commandeEnAttente = d[0];
   }
 };
@@ -169,9 +221,33 @@ class ServeurCallbacks : public BLEServerCallbacks {
   }
 };
 
+// Nouvelle mesure : la fenêtre de fatigue repart de zéro (pas de reste d'une calibration)
+void viderFenetreFatigue() {
+  indexTampon = 0;
+  sommeIntensiteFenetre = 0;
+}
+
+// La référence 100 % n'a pas la même échelle en ENV (enveloppe) et en RAW (valeur efficace du
+// signal brut) : une nouvelle calibration est nécessaire après un changement de source.
+void changerSource(uint8_t source) {
+  if (source == config.source) return;
+  config.source = source;
+  config.refMvcMv = source == SOURCE_RAW ? 500 : 1850;  // valeurs d'attente : calibrer ensuite
+  fenetre.vider();
+  fenetreRaw.vider();
+  filtreContinu.vider();
+  moyenneRawMv = 0;
+  debutCompteMs = 0;  // le rythme change : on recommence à compter
+  viderFenetreFatigue();
+  publierConfiguration();
+  Serial.printf("Source : %s (interrupteur OUTPUT du Link Shield sur %s), calibrer de nouveau\n",
+                source == SOURCE_RAW ? "RAW" : "ENV", source == SOURCE_RAW ? "RAW" : "ENV");
+}
+
 void executerCommande(int commande) {
   switch (commande) {
     case CMD_DEMARRER:
+      viderFenetreFatigue();
       alerte.reinitialiser();
       changerEtat(ETAT_MESURE);
       break;
@@ -180,6 +256,7 @@ void executerCommande(int commande) {
       if (etat != ETAT_REPOS) changerEtat(ETAT_REPOS);
       break;
     case CMD_DEMARRER_HORS_LIGNE:
+      viderFenetreFatigue();
       alerte.reinitialiser();
       horsLigne.demarrer(millis());
       changerEtat(ETAT_MESURE);
@@ -199,6 +276,14 @@ void executerCommande(int commande) {
       } else {
         changerEtat(ETAT_ERREUR, ERR_COMMANDE);
       }
+      break;
+    case CMD_SOURCE:
+      // Seulement au repos : changer de signal en pleine séance mélangerait deux échelles
+      if (etat != ETAT_REPOS) {
+        changerEtat(ETAT_ERREUR, ERR_COMMANDE);
+        break;
+      }
+      changerSource(sourceDemandee);
       break;
     default:
       changerEtat(ETAT_ERREUR, ERR_COMMANDE);
@@ -253,7 +338,15 @@ void setup() {
   publierEtat();
   carHorsLigne = service->createCharacteristic(UUID_HORS_LIGNE, BLECharacteristic::PROPERTY_READ);
   carHorsLigne->setCallbacks(new HorsLigneCallbacks());
+  carFrequence = service->createCharacteristic(UUID_FREQUENCE, BLECharacteristic::PROPERTY_NOTIFY);
+  carFrequence->addDescriptor(new BLE2902());
   service->start();
+
+  // Analyse de fréquence (fatigue) : tâche de faible priorité sur le cœur 0 (loop() tourne sur le cœur 1)
+  analyseFrequence = new AnalyseFrequence<N_FFT>(2000.0f);
+  fileFenetres = xQueueCreate(1, sizeof(FenetreAAnalyser));
+  fileResultats = xQueueCreate(4, sizeof(ResultatAEnvoyer));
+  xTaskCreatePinnedToCore(tacheFrequence, "frequence", 4096, nullptr, 1, nullptr, 0);
 
   BLEAdvertising *annonce = BLEDevice::getAdvertising();
   annonce->addServiceUUID(UUID_SERVICE);
@@ -275,12 +368,49 @@ void loop() {
     executerCommande(commande);
   }
 
-  // 1. Échantillonnage à 500 Hz (toutes les 2 ms) et RMS glissante sur 200 ms
+  // 1. Échantillonnage et RMS glissante sur 200 ms :
+  //    ENV : 500 Hz (toutes les 2 ms) ; RAW : 2 000 Hz (toutes les 0,5 ms), composante continue retirée
+  const bool raw = config.source == SOURCE_RAW;
   if ((int32_t)(micros() - prochainEchantillonUs) < 0) return;
-  prochainEchantillonUs += 2000;
+  prochainEchantillonUs += raw ? 500 : 2000;
   uint32_t maintenant = millis();
   uint16_t mv = (uint16_t)analogReadMilliVolts(PIN_EMG);
-  uint16_t rms = fenetre.ajouter(mv);
+  uint16_t rms;
+
+  // Contrôle du rythme : nombre d'échantillons pris chaque seconde (2 000 attendus en RAW, 500 en ENV).
+  // S'il en manque (loop() trop lente sur la vraie carte), la fréquence médiane serait fausse : on le dit.
+  nbEchantillons++;
+  if (maintenant - debutCompteMs >= 1000) {
+    uint32_t attendu = raw ? 2000 : 500;
+    if (debutCompteMs != 0 && nbEchantillons < attendu * 97 / 100) {
+      Serial.printf("Avertissement : %lu échantillons/s au lieu de %lu (loop() trop lente)\n",
+                    (unsigned long)nbEchantillons, (unsigned long)attendu);
+    }
+    debutCompteMs = maintenant;
+    nbEchantillons = 0;
+  }
+  if (raw) {
+    float ac = filtreContinu.filtrer(mv);
+    rms = fenetreRaw.ajouter(ac);
+    moyenneRawMv = moyenneRawMv == 0 ? mv : moyenneRawMv + (mv - moyenneRawMv) / 2000.0f;  // moyenne lente (~1 s)
+    // Fenêtre pour la fatigue : quand elle est pleine, elle passe à la tâche d'analyse
+    tampons[tamponEcrit][indexTampon++] = ac;
+    sommeIntensiteFenetre += intensitePct(rms, config.refMvcMv);
+    if (indexTampon == N_FFT) {
+      // Une seule analyse à la fois : si la précédente n'est pas revenue (elle prend quelques ms
+      // pour 512 ms de signal, ça ne devrait pas arriver), cette fenêtre est sautée. Ainsi le
+      // tampon en cours d'analyse n'est jamais réécrit.
+      FenetreAAnalyser f = {(int8_t)tamponEcrit, (uint8_t)(sommeIntensiteFenetre / N_FFT), maintenant};
+      if (etat == ETAT_MESURE && !analyseEnCours && xQueueSend(fileFenetres, &f, 0) == pdTRUE) {
+        analyseEnCours = true;
+        tamponEcrit ^= 1;
+      }
+      indexTampon = 0;
+      sommeIntensiteFenetre = 0;
+    }
+  } else {
+    rms = fenetre.ajouter(mv);
+  }
 
   // 2. Calibration : maximum de la RMS pendant 3 s
   if (etat == ETAT_CALIBRATION) {
@@ -303,6 +433,29 @@ void loop() {
     signaler(ERR_SATURATION);
   } else if (codeErreur == ERR_SATURATION) {
     signaler(ERR_AUCUNE);
+  }
+
+  // 3 bis. Source RAW : le signal brut doit tourner autour de ~1,65 V. Sinon, l'interrupteur
+  //        OUTPUT du Link Shield est sans doute resté sur ENV (vérifié une fois par seconde).
+  static uint32_t dernierControleSourceMs = 0;
+  if (raw && maintenant - dernierControleSourceMs >= 1000) {
+    dernierControleSourceMs = maintenant;
+    bool horsCentre = moyenneRawMv > 0 && (moyenneRawMv < RAW_CENTRE_MIN_MV || moyenneRawMv > RAW_CENTRE_MAX_MV);
+    if (horsCentre) signaler(ERR_SOURCE);
+    else if (codeErreur == ERR_SOURCE) signaler(ERR_AUCUNE);
+  }
+
+  // 3 ter. Fatigue : résultat de la tâche d'analyse (2 par seconde), envoyé sur abad0006
+  ResultatAEnvoyer res;
+  if (xQueueReceive(fileResultats, &res, 0) == pdTRUE) {
+    analyseEnCours = false;
+    if (JOURNAL_SERIE) Serial.printf("F,%lu,%.1f,%.1f\n", (unsigned long)res.finMs, res.mdfHz, res.mnfHz);
+    if (connecte) {
+      uint8_t paquet[8];
+      encoderFrequence(paquet, res.finMs, res.mdfHz, res.mnfHz);
+      carFrequence->setValue(paquet, 8);
+      carFrequence->notify();
+    }
   }
 
   // 4. Mesure à la fréquence configurée (50 Hz par défaut) : paquet de 8 octets si l'application

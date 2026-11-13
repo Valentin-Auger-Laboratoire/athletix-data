@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:athletix_data/services/api.dart';
+import 'package:athletix_data/services/reglages.dart';
+import 'package:athletix_data/services/brassard/suivi_fatigue.dart';
 import 'package:athletix_data/services/telephone/meteo.dart';
 import 'package:athletix_data/widgets/graphiques.dart';
 import 'historique_screen.dart';
@@ -57,7 +59,8 @@ class SeanceDetailScreen extends StatelessWidget {
               BarreZones(secondes: zones.map((z) => z!).toList()),
             ],
           ]),
-          if (fatigue != null)
+          if (_decimal('baisse_mdf_pct') != null) _sectionFatigueMesuree(),
+          if (fatigue != null && _decimal('baisse_mdf_pct') == null)
             _section('Indice de fatigue (expérimental)', [
               Text(
                 fatigue > 10
@@ -70,7 +73,7 @@ class SeanceDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text("Repère seulement : il dépend aussi de l'exercice choisi. La vraie mesure de la fatigue "
-                  "(baisse de la fréquence médiane) demandera le signal brut du capteur.",
+                  "(baisse de la fréquence médiane) se fait avec le brassard en « Brut + fatigue » (écran Brassard).",
                   style: TextStyle(color: Colors.white38, fontSize: 11)),
             ]),
           if (_entier('distance_m') != null || _entier('nb_pas') != null)
@@ -126,6 +129,40 @@ class SeanceDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Fatigue mesurée par la fréquence médiane du signal brut (brassard en source RAW).
+  Widget _sectionFatigueMesuree() {
+    final baisse = _decimal('baisse_mdf_pct')!;
+    final debut = _decimal('mdf_debut_hz'), fin = _decimal('mdf_fin_hz');
+    final courbe = (seance['courbe_mdf'] as List?)?.map((v) => (v as num).toDouble()).toList() ?? [];
+    final couleur = baisse >= 10 ? Colors.redAccent : (baisse >= 5 ? Colors.orangeAccent : Colors.greenAccent);
+    return _section('Fatigue du muscle (fréquence médiane)', [
+      Row(children: [
+        if (debut != null) _chiffre('début', '${decimalFr(debut, 0)} Hz'),
+        if (fin != null) _chiffre('fin', '${decimalFr(fin, 0)} Hz'),
+        Expanded(
+          child: Column(children: [
+            Text('${baisse > 0 ? '−' : '+'}${decimalFr(baisse.abs(), 1)} %',
+                style: TextStyle(color: couleur, fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 2),
+            const Text('baisse', style: TextStyle(color: Colors.white54, fontSize: 10)),
+          ]),
+        ),
+      ]),
+      const SizedBox(height: 8),
+      Text('${ResultatFatigue.interpretation(baisse)[0].toUpperCase()}${ResultatFatigue.interpretation(baisse).substring(1)}.',
+          style: TextStyle(color: couleur, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 10),
+      if (courbe.isNotEmpty) CourbeFrequence(valeurs: courbe, debutHz: debut, finHz: fin),
+      const SizedBox(height: 6),
+      const Text(
+        "Quand un muscle fatigue, ses fibres conduisent le signal moins vite : le spectre glisse vers les basses "
+        "fréquences et la fréquence médiane baisse. Repères usuels : une baisse de 10 à 30 % accompagne un effort "
+        "qui fatigue. Points : un par bloc de 30 s avec effort ; pointillés : tendance. Repère d'un prototype, pas un avis médical.",
+        style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.35),
+      ),
+    ]);
   }
 
   static String _allure(double kmh) {
@@ -212,9 +249,23 @@ class _SectionParcoursState extends State<_SectionParcours> {
           style: TextStyle(color: Colors.white38, fontSize: 12));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      CarteParcours(trace: t),
-      const SizedBox(height: 4),
-      const Text('Les 200 premiers et derniers mètres ne sont pas enregistrés (domicile).',
+      ValueListenableBuilder<bool>(
+        valueListenable: Reglages.fondDeCarte,
+        builder: (context, fond, _) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          CarteParcours(trace: t, fondDeCarte: fond),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => Reglages.changer(Reglages.fondDeCarte, !fond),
+              icon: Icon(fond ? Icons.layers_clear : Icons.map_outlined, size: 16, color: Colors.white54),
+              label: Text(fond ? 'Masquer la carte' : 'Afficher la carte (OpenStreetMap)',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            ),
+          ),
+        ]),
+      ),
+      const Text('Les 200 premiers et derniers mètres ne sont pas enregistrés (domicile). La carte, si elle est '
+          "affichée, est demandée à OpenStreetMap pour la zone du parcours (sans compte ni nom).",
           style: TextStyle(color: Colors.white38, fontSize: 11)),
       const SizedBox(height: 14),
       VitesseIntensite(trace: t),

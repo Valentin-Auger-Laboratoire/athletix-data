@@ -75,6 +75,20 @@ List<Map<String, dynamic>> seancesDemo({DateTime? derniere}) {
       final distance = course ? (duree / 3600 * (discipline == 'Trail' ? 8.5 : 10.5) * (1 + progres) * (mauvaise ? 0.85 : 1) * 1000).round() : null;
       final ressenti = mauvaise ? 7 + alea.nextInt(2) : 3 + alea.nextInt(3);
 
+      // Musculation : brassard en signal brut (source RAW), donc fatigue mesurée par la fréquence
+      // médiane. Elle baisse pendant la séance (plus fort la semaine moins bonne). Courses : enveloppe.
+      final mdfDebut = 112 + alea.nextDouble() * 10;
+      final baisse = mauvaise ? 18 + alea.nextDouble() * 5 : 7 + alea.nextDouble() * 6;
+      final courbeMdf = <double>[];
+      if (!course) {
+        final blocs = duree ~/ 30;
+        for (var k = 0; k < blocs; k++) {
+          final effort = courbe.skip(k * 6).take(6).any((v) => v >= 30);
+          final v = mdfDebut * (1 - baisse / 100 * k / max(1, blocs - 1)) + (alea.nextDouble() - 0.5) * 4;
+          courbeMdf.add(effort ? double.parse(v.toStringAsFixed(1)) : 0);
+        }
+      }
+
       seances.add({
         'id': 0,
         'discipline': discipline,
@@ -93,6 +107,10 @@ List<Map<String, dynamic>> seancesDemo({DateTime? derniere}) {
         'nb_contractions': course ? null : contractions,
         'indice_fatigue_pct': course ? (mauvaise ? 14 : 2 + alea.nextInt(6)) : (mauvaise ? 18 : 6 + alea.nextInt(6)),
         'courbe': courbe,
+        'mdf_debut_hz': course ? null : double.parse(mdfDebut.toStringAsFixed(1)),
+        'mdf_fin_hz': course ? null : double.parse((mdfDebut * (1 - baisse / 100)).toStringAsFixed(1)),
+        'baisse_mdf_pct': course ? null : double.parse(baisse.toStringAsFixed(1)),
+        'courbe_mdf': course ? null : courbeMdf,
         'distance_m': distance,
         'denivele_m': discipline == 'Trail' ? 180 + alea.nextInt(150) : (course ? 15 + alea.nextInt(20) : null),
         'vitesse_moy_kmh': distance == null ? null : double.parse((distance / duree * 3.6).toStringAsFixed(1)),

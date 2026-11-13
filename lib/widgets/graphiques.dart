@@ -1,7 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../services/telephone/fond_carte.dart';
 
 /// Nombre décimal à la française (virgule).
 String decimalFr(num v, int chiffres) => v.toStringAsFixed(chiffres).replaceAll('.', ',');
@@ -365,10 +369,13 @@ double _sqrt(double x) => math.sqrt(x);
 /// Pas de fond de carte : aucune requête vers un service de cartes, et le tracé
 /// arrive déjà sans ses 200 premiers et derniers mètres.
 class CarteParcours extends StatelessWidget {
-  const CarteParcours({super.key, required this.trace, this.hauteur = 220});
+  const CarteParcours({super.key, required this.trace, this.hauteur = 220, this.fondDeCarte = false});
 
   final List<PointTrace> trace;
   final double hauteur;
+
+  /// Rues d'OpenStreetMap sous le tracé (réglage « Fond de carte », désactivé par défaut).
+  final bool fondDeCarte;
 
   @override
   Widget build(BuildContext context) {
@@ -377,8 +384,11 @@ class CarteParcours extends StatelessWidget {
       Container(
         height: hauteur,
         width: double.infinity,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10)),
-        child: CustomPaint(painter: _PeintreParcours(trace)),
+        child: fondDeCarte
+            ? LayoutBuilder(builder: (context, c) => _avecFond(VueCarte(trace, c.maxWidth, hauteur)))
+            : CustomPaint(painter: _PeintreParcours(trace)),
       ),
       const SizedBox(height: 6),
       Wrap(spacing: 12, runSpacing: 4, children: [
@@ -396,26 +406,86 @@ class CarteParcours extends StatelessWidget {
       ]),
     ]);
   }
+
+  /// Tuiles OpenStreetMap (grisées et assombries pour que le tracé coloré reste lisible),
+  /// tracé par-dessus avec la même projection, crédit obligatoire en bas à droite.
+  Widget _avecFond(VueCarte vue) {
+    const t = FondCarte.tailleTuile * 1.0;
+    return Stack(children: [
+      for (final (x, y, gauche, haut) in vue.tuiles())
+        Positioned(
+          // Pixels entiers et 1 px de recouvrement : pas de fine ligne entre deux tuiles
+          left: gauche.floorToDouble(),
+          top: haut.floorToDouble(),
+          width: t + 1,
+          height: t + 1,
+          child: ColorFiltered(
+            colorFilter: const ColorFilter.matrix([
+              0.16, 0.32, 0.06, 0, -20, //
+              0.16, 0.32, 0.06, 0, -20,
+              0.16, 0.32, 0.06, 0, -20,
+              0, 0, 0, 1, 0,
+            ]),
+            child: Image.network(
+              FondCarte.urlTuile(vue.zoom, x, y),
+              // Le navigateur envoie déjà son identité ; l'application s'identifie (règles d'OSM)
+              headers: kIsWeb ? null : const {'User-Agent': FondCarte.agent},
+              fit: BoxFit.fill,
+              errorBuilder: (context, erreur, pile) => const SizedBox(), // hors ligne : tracé seul
+            ),
+          ),
+        ),
+      Positioned.fill(child: CustomPaint(painter: _PeintreParcours(trace, vue: vue))),
+      Positioned(
+        right: 4,
+        bottom: 2,
+        child: GestureDetector(
+          onTap: () => launchUrl(Uri.parse(FondCarte.lienCredit), mode: LaunchMode.externalApplication),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            color: Colors.black54,
+            child: const Text(FondCarte.credit, style: TextStyle(color: Colors.white70, fontSize: 9)),
+          ),
+        ),
+      ),
+    ]);
+  }
 }
 
 class _PeintreParcours extends CustomPainter {
-  _PeintreParcours(this.t);
+  _PeintreParcours(this.t, {this.vue});
 
   final List<PointTrace> t;
 
+  /// Avec un fond de carte : projection de Mercator des tuiles, imposée par la carte.
+  final VueCarte? vue;
+
   @override
   void paint(Canvas canvas, Size size) {
-    // Projection équirectangulaire (suffisante sur quelques kilomètres), mêmes échelles en x et y
-    final lat0 = t.map((p) => p[0]).reduce((a, b) => a + b) / t.length;
-    final kx = 111195 * math.cos(lat0 * math.pi / 180), ky = 111195.0;
-    final xs = t.map((p) => p[1] * kx).toList(), ys = t.map((p) => -p[0] * ky).toList();
-    final minX = xs.reduce(math.min), maxX = xs.reduce(math.max);
-    final minY = ys.reduce(math.min), maxY = ys.reduce(math.max);
-    const marge = 16.0;
-    final largeurM = math.max(maxX - minX, 1.0), hauteurM = math.max(maxY - minY, 1.0);
-    final echelle = math.min((size.width - 2 * marge) / largeurM, (size.height - 2 * marge) / hauteurM);
-    final dx = (size.width - largeurM * echelle) / 2, dy = (size.height - hauteurM * echelle) / 2;
-    Offset o(int i) => Offset(dx + (xs[i] - minX) * echelle, dy + (ys[i] - minY) * echelle);
+    final Offset Function(int) o;
+    final double echelle; // pixels par mètre
+    final v = vue;
+    if (v != null) {
+      o = (i) {
+        final (x, y) = v.position(t[i]);
+        return Offset(x, y);
+      };
+      final lat0 = t.map((p) => p[0]).reduce((a, b) => a + b) / t.length;
+      echelle = 1 / (156543.03392 * math.cos(lat0 * math.pi / 180) / (1 << v.zoom));
+    } else {
+      // Projection équirectangulaire (suffisante sur quelques kilomètres), mêmes échelles en x et y
+      final lat0 = t.map((p) => p[0]).reduce((a, b) => a + b) / t.length;
+      final kx = 111195 * math.cos(lat0 * math.pi / 180), ky = 111195.0;
+      final xs = t.map((p) => p[1] * kx).toList(), ys = t.map((p) => -p[0] * ky).toList();
+      final minX = xs.reduce(math.min), maxX = xs.reduce(math.max);
+      final minY = ys.reduce(math.min), maxY = ys.reduce(math.max);
+      const marge = 16.0;
+      final largeurM = math.max(maxX - minX, 1.0), hauteurM = math.max(maxY - minY, 1.0);
+      final e = math.min((size.width - 2 * marge) / largeurM, (size.height - 2 * marge) / hauteurM);
+      final dx = (size.width - largeurM * e) / 2, dy = (size.height - hauteurM * e) / 2;
+      echelle = e;
+      o = (i) => Offset(dx + (xs[i] - minX) * e, dy + (ys[i] - minY) * e);
+    }
 
     final trait = Paint()
       ..strokeWidth = 4
@@ -445,7 +515,7 @@ class _PeintreParcours extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PeintreParcours old) => !identical(old.t, t);
+  bool shouldRepaint(_PeintreParcours old) => !identical(old.t, t) || old.vue?.zoom != vue?.zoom;
 }
 
 /// Vitesse et intensité musculaire le long du parcours (axe commun : la distance).
@@ -515,5 +585,97 @@ class VitesseIntensite extends StatelessWidget {
       const Text('En haut : vitesse (GPS) · en bas : intensité musculaire (brassard)',
           style: TextStyle(color: Colors.white38, fontSize: 11)),
     ]);
+  }
+}
+
+/// Fréquence médiane du signal brut au fil de la séance (un point par bloc de 30 s où le muscle
+/// travaillait), avec la droite ajustée du début à la fin (pointillés) : elle descend si le muscle fatigue.
+class CourbeFrequence extends StatelessWidget {
+  const CourbeFrequence({
+    super.key,
+    required this.valeurs,
+    this.debutHz,
+    this.finHz,
+    this.pasS = 30,
+    this.hauteur = 170,
+  });
+
+  /// Une valeur par bloc (0 = bloc sans effort, non tracé).
+  final List<num> valeurs;
+  final double? debutHz;
+  final double? finHz;
+  final double pasS;
+  final double hauteur;
+
+  @override
+  Widget build(BuildContext context) {
+    final points = [
+      for (var i = 0; i < valeurs.length; i++)
+        if (valeurs[i] > 0) FlSpot(i * pasS + pasS / 2, valeurs[i].toDouble()),
+    ];
+    if (points.length < 2) {
+      return SizedBox(
+        height: hauteur,
+        child: const Center(child: Text('Pas assez de blocs avec effort', style: TextStyle(color: Colors.white38))),
+      );
+    }
+    final ys = <double>[...points.map((p) => p.y), if (debutHz != null) debutHz!, if (finHz != null) finHz!];
+    final minY = (ys.reduce(math.min) / 10).floor() * 10.0 - 10;
+    final maxY = (ys.reduce(math.max) / 10).ceil() * 10.0 + 10;
+    final duree = valeurs.length * pasS;
+    String temps(double s) => s >= 120 ? '${(s / 60).round()} min' : '${s.round()} s';
+    return SizedBox(
+      height: hauteur,
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: duree,
+          minY: math.max(0, minY),
+          maxY: maxY,
+          gridData: const FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 10),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 46,
+                interval: maxY - minY > 60 ? 20 : 10,
+                getTitlesWidget: (v, m) => _titre(v, m, (x) => '${x.round()} Hz'),
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 22,
+                interval: duree / 4,
+                getTitlesWidget: (v, m) => _titre(v, m, temps),
+              ),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: points,
+              color: Colors.cyanAccent,
+              barWidth: 0,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (s, x, b, i) => FlDotCirclePainter(radius: 3, color: Colors.cyanAccent, strokeWidth: 0),
+              ),
+            ),
+            if (debutHz != null && finHz != null)
+              LineChartBarData(
+                spots: [FlSpot(points.first.x, debutHz!), FlSpot(points.last.x, finHz!)],
+                color: Colors.orangeAccent,
+                barWidth: 2,
+                dashArray: [6, 4],
+                dotData: const FlDotData(show: false),
+              ),
+          ],
+        ),
+        duration: Duration.zero,
+      ),
+    );
   }
 }

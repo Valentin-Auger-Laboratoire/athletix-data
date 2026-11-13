@@ -92,19 +92,22 @@ int main() {
     VERIFIER(c.terminer() == 0, "signal trop faible → refus");
   }
 
-  // 6. Configuration de 5 octets
+  // 6. Configuration : 5 octets écrits, 6 lus (source ENV / RAW en plus)
   {
     Configuration cfg;
-    uint8_t o[5];
+    uint8_t o[Configuration::TAILLE_LUE];
     cfg.encoder(o);
-    VERIFIER(o[0] == 75 && o[1] == 70 && lire16(&o[2]) == 1850 && o[4] == 50, "configuration par défaut");
+    VERIFIER(o[0] == 75 && o[1] == 70 && lire16(&o[2]) == 1850 && o[4] == 50 && o[5] == SOURCE_ENV, "configuration par défaut");
+    cfg.source = SOURCE_RAW;
+    const uint8_t avecSource[6] = {80, 60, 0x08, 0x07, 25, SOURCE_ENV};
+    VERIFIER(cfg.appliquer(avecSource, 6) && cfg.source == SOURCE_RAW, "6e octet écrit ignoré : la source ne change que par la commande 0x07");
     const uint8_t bon[5] = {80, 60, 0x08, 0x07, 25};
     VERIFIER(cfg.appliquer(bon, 5) && cfg.refMvcMv == 1800 && cfg.frequenceHz == 25, "configuration valide appliquée");
     const uint8_t mauvais[5] = {60, 80, 0x08, 0x07, 25};
     VERIFIER(!cfg.appliquer(mauvais, 5) && cfg.seuilHaut == 80, "seuils inversés refusés");
     const uint8_t refHorsPlage[5] = {80, 60, 0xFF, 0xFF, 25};
     VERIFIER(!cfg.appliquer(refHorsPlage, 5), "référence hors plage refusée");
-    VERIFIER(!cfg.appliquer(bon, 4), "taille fausse refusée");
+    VERIFIER(!cfg.appliquer(bon, 4) && !cfg.appliquer(bon, 7), "taille fausse refusée");
   }
 
   // 7. Saturation prolongée (2 s)

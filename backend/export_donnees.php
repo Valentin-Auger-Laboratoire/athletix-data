@@ -21,12 +21,13 @@ $compte = lignes($conn, "SELECT pseudo, email, sport, created_at FROM users WHER
 $seances = lignes($conn,
     "SELECT s.*, r.duree_s, r.nb_echantillons, r.intensite_moyenne_pct, r.intensite_max_pct,
             r.temps_effort_intense_s, r.nb_alertes, r.temps_zone_repos_s, r.temps_zone_moderee_s,
-            r.temps_zone_soutenue_s, r.nb_contractions, r.nb_series, r.indice_fatigue_pct, r.courbe, r.ref_mvc_mv
+            r.temps_zone_soutenue_s, r.nb_contractions, r.nb_series, r.indice_fatigue_pct, r.courbe, r.ref_mvc_mv,
+            r.mdf_debut_hz, r.mdf_fin_hz, r.baisse_mdf_pct, r.courbe_mdf
      FROM sessions_entrainement s LEFT JOIN resultats_emg r ON r.session_id = s.id
      WHERE s.user_id = ? ORDER BY s.debut", $user_id);
 foreach ($seances as &$s) {
     unset($s['user_id']);
-    foreach (['courbe', 'trace_gps'] as $c) {
+    foreach (['courbe', 'trace_gps', 'courbe_mdf'] as $c) {
         $s[$c] = $s[$c] === null ? null : json_decode($s[$c], true);
     }
 }
