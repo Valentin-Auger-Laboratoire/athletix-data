@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'batterie_ble.dart';
 import 'montre_yoho.dart';
 import 'montre_yoho_simulee.dart';
 import 'protocole_yoho.dart';
@@ -29,6 +30,9 @@ class MontrePodometre {
   final StreamController<MesurePodometre> _flux = StreamController<MesurePodometre>.broadcast();
   final List<StreamSubscription> _abonnements = [];
   final ValueNotifier<MesurePodometre?> derniere = ValueNotifier<MesurePodometre?>(null);
+
+  /// Batterie de la montre : service YOHO (CC03) s'il existe, sinon service standard 0x180F.
+  final ValueNotifier<int?> batterie = ValueNotifier<int?>(null);
   BluetoothCharacteristic? _carPas;
 
   /// Service propre aux bracelets YOHO (MSGM115), null si le bracelet ne l'a pas.
@@ -52,6 +56,7 @@ class MontrePodometre {
       if (msg is PasYoho) m._recevoirMesure(MesurePodometre(pas: msg.pas));
     }));
     await y.demarrer();
+    m._suivreBatterieYoho();
     return m;
   }
   Stream<MesurePodometre> get mesures => _flux.stream;
@@ -120,8 +125,22 @@ class MontrePodometre {
         if (msg is PasYoho) m._recevoirMesure(MesurePodometre(pas: msg.pas));
       }));
     }
+    if (m.yoho != null) {
+      m._suivreBatterieYoho();
+    } else {
+      final abo = await BatterieBle.suivre(services, m.batterie);
+      if (abo != null) m._abonnements.add(abo);
+    }
     await m.relire();
     return m;
+  }
+
+  void _suivreBatterieYoho() {
+    final y = yoho;
+    if (y == null) return;
+    void copier() => batterie.value = y.batterie.value;
+    y.batterie.addListener(copier);
+    copier();
   }
 
   void _recevoir(List<int> octets) {

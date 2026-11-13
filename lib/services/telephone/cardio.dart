@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'batterie_ble.dart';
+
 /// Ceinture ou montre cardio du commerce, reliée en Bluetooth (service standard « Heart Rate »).
 ///
 /// Le brassard EMG sur le biceps mesure le muscle, pas le cœur : pour la fréquence cardiaque,
@@ -17,6 +19,9 @@ class CeintureCardio {
   final StreamController<int> _flux = StreamController<int>.broadcast();
   final List<StreamSubscription> _abonnements = [];
   final ValueNotifier<int?> derniere = ValueNotifier<int?>(null);
+
+  /// Batterie de la ceinture / montre (service standard 0x180F), null si elle ne la donne pas.
+  final ValueNotifier<int?> batterie = ValueNotifier<int?>(null);
 
   /// Ceinture choisie dans l'écran « Brassard », partagée par l'application.
   static final ValueNotifier<CeintureCardio?> active = ValueNotifier<CeintureCardio?>(null);
@@ -64,6 +69,8 @@ class CeintureCardio {
       }
     }));
     await mesure.setNotifyValue(true);
+    final abo = await BatterieBle.suivre(services, c.batterie);
+    if (abo != null) c._abonnements.add(abo);
     return c;
   }
 

@@ -14,6 +14,7 @@ import 'package:athletix_data/services/brassard/resume_seance.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
 import 'package:athletix_data/services/analyse/analyse_seance.dart';
 import 'package:athletix_data/services/reglages.dart';
+import 'package:athletix_data/services/telephone/batterie_ble.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
 import 'package:athletix_data/services/telephone/meteo.dart';
 import 'package:athletix_data/services/telephone/montre_podometre.dart';
@@ -61,6 +62,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   StreamSubscription<EtatLu>? _abonnementEtats;
   String? _avertissement;
   bool _batterieSignalee = false;
+  final Set<String> _batteriesAppareilsSignalees = {};
   late final bool _signalBrut = _brassard.source == GattAthletix.sourceRaw;
   MesureEmg? _derniere;
   bool _enregistrement = false;
@@ -163,6 +165,21 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         _mesureCoeurMontre = Timer.periodic(const Duration(seconds: 60), (_) => relancer());
       }
     }
+    // Batterie faible de la montre ou de la ceinture : prévenir une fois pendant la séance
+    void surveiller(String nom, ValueNotifier<int?> b) {
+      void verifier() {
+        final v = b.value;
+        if (v != null && v <= 15 && _batteriesAppareilsSignalees.add(nom)) {
+          _alerteur.signaler('Batterie de la $nom faible : $v %');
+          if (mounted) setState(() => _avertissement ??= 'batterie de la $nom à $v %');
+        }
+      }
+      b.addListener(verifier);
+      verifier();
+    }
+    final montreBat = _montre;
+    if (montreBat != null) surveiller('montre', montreBat.batterie);
+    if (ceinture != null) surveiller('ceinture', ceinture.batterie);
     if (_modeAdapte) {
       _minuteurPause = Timer.periodic(const Duration(seconds: 15), (_) => _verifierPause());
     }
@@ -611,6 +628,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             _stat("PAS", "${t.podometre.pas}"),
           if (_fcActuelle != null) _stat("CŒUR", "$_fcActuelle bpm"),
         ]),
+        if (_montre != null || CeintureCardio.active.value != null) ...[
+          const SizedBox(height: 8),
+          Wrap(alignment: WrapAlignment.center, spacing: 8, children: [
+            if (_montre != null)
+              ValueListenableBuilder<int?>(valueListenable: _montre!.batterie, builder: (context, b, _) => b == null ? const SizedBox.shrink() : PastilleBatterie(b, libelle: 'Montre')),
+            if (CeintureCardio.active.value != null)
+              ValueListenableBuilder<int?>(valueListenable: CeintureCardio.active.value!.batterie, builder: (context, b, _) => b == null ? const SizedBox.shrink() : PastilleBatterie(b, libelle: 'Cardio')),
+          ]),
+        ],
         const SizedBox(height: 6),
         Text(
           [

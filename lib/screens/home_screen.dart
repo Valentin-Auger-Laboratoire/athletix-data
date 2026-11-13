@@ -18,6 +18,9 @@ import 'package:athletix_data/widgets/carte_semaine.dart';
 import 'consentement.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
+import 'package:athletix_data/services/telephone/batterie_ble.dart';
+import 'package:athletix_data/services/telephone/cardio.dart';
+import 'package:athletix_data/services/telephone/montre_podometre.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -117,16 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
       cat['desc'] ?? '(${List<String>.from(cat['subCategories']).join(', ')})';
 
   /// Icône de batterie qui suit le niveau réel (inconnu, faible, puis par paliers).
-  IconData _batteryIcon(int? niveau) {
-    if (niveau == null) return Icons.battery_unknown;
-    if (niveau <= 10) return Icons.battery_alert;
-    if (niveau >= 95) return Icons.battery_full;
-    const paliers = [
-      Icons.battery_0_bar, Icons.battery_1_bar, Icons.battery_2_bar, Icons.battery_3_bar,
-      Icons.battery_4_bar, Icons.battery_5_bar, Icons.battery_6_bar,
-    ];
-    return paliers[(niveau * 7 ~/ 100).clamp(0, 6)];
-  }
+  IconData _batteryIcon(int? niveau) => iconeBatterie(niveau);
 
   // ✅ Bloc IA : ouvre IaResultScreen si un profil existe, sinon le questionnaire
   void _onIaTap() {
@@ -405,6 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          const _BatteriesAppareils(),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ValueListenableBuilder<SourceBrassard?>(
@@ -544,4 +539,36 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+
+/// Batterie de la montre et de la ceinture cardio, visible sur l'accueil quand elles sont reliées.
+class _BatteriesAppareils extends StatelessWidget {
+  const _BatteriesAppareils();
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<MontrePodometre?>(
+        valueListenable: MontrePodometre.active,
+        builder: (context, montre, _) => ValueListenableBuilder<CeintureCardio?>(
+          valueListenable: CeintureCardio.active,
+          builder: (context, ceinture, _) {
+            if (montre == null && ceinture == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Wrap(spacing: 8, runSpacing: 6, children: [
+                if (montre != null)
+                  ValueListenableBuilder<int?>(
+                    valueListenable: montre.batterie,
+                    builder: (context, b, _) => PastilleBatterie(b, libelle: 'Montre'),
+                  ),
+                if (ceinture != null)
+                  ValueListenableBuilder<int?>(
+                    valueListenable: ceinture.batterie,
+                    builder: (context, b, _) => PastilleBatterie(b, libelle: ceinture.nom.length > 14 ? 'Cardio' : ceinture.nom),
+                  ),
+              ]),
+            );
+          },
+        ),
+      );
 }

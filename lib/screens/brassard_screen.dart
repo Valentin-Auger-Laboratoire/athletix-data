@@ -7,6 +7,7 @@ import 'package:athletix_data/services/brassard/brassard_ble.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
+import 'package:athletix_data/services/telephone/batterie_ble.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
 import 'package:athletix_data/services/telephone/montre_podometre.dart';
 import 'package:athletix_data/services/telephone/montre_yoho.dart';
@@ -445,7 +446,12 @@ class _SectionCardioState extends State<_SectionCardio> {
                   builder: (context, s) => Text(s.hasData ? '${s.data} bpm' : 'en attente de mesure…',
                       style: const TextStyle(color: Colors.white54)),
                 ),
-                trailing: IconButton(
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  ValueListenableBuilder<int?>(
+                    valueListenable: ceinture.batterie,
+                    builder: (context, b, _) => b == null ? const SizedBox.shrink() : PastilleBatterie(b),
+                  ),
+                  IconButton(
                   tooltip: 'Déconnecter',
                   icon: const Icon(Icons.link_off, color: Colors.white54),
                   onPressed: () async {
@@ -453,6 +459,7 @@ class _SectionCardioState extends State<_SectionCardio> {
                     CeintureCardio.active.value = null;
                   },
                 ),
+                ]),
               ),
             )
           else
@@ -610,14 +617,20 @@ class _SectionPodometreState extends State<_SectionPodometre> {
                       m?.pas == null ? 'en attente du compteur…' : "${m!.pas} pas aujourd'hui (compteur du bracelet)",
                       style: const TextStyle(color: Colors.white54)),
                 ),
-                trailing: IconButton(
-                  tooltip: 'Déconnecter',
-                  icon: const Icon(Icons.link_off, color: Colors.white54),
-                  onPressed: () {
-                    montre.fermer();
-                    MontrePodometre.active.value = null;
-                  },
-                ),
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  ValueListenableBuilder<int?>(
+                    valueListenable: montre.batterie,
+                    builder: (context, b, _) => b == null ? const SizedBox.shrink() : PastilleBatterie(b),
+                  ),
+                  IconButton(
+                    tooltip: 'Déconnecter',
+                    icon: const Icon(Icons.link_off, color: Colors.white54),
+                    onPressed: () {
+                      montre.fermer();
+                      MontrePodometre.active.value = null;
+                    },
+                  ),
+                ]),
               ),
             ),
           if (montre != null && montre.yoho != null) _PanneauYoho(montre.yoho!),
@@ -767,7 +780,7 @@ class _PanneauYohoState extends State<_PanneauYoho> {
           ValueListenableBuilder<int?>(
             valueListenable: y.batterie,
             builder: (context, b, _) => Text(
-              'Bracelet YOHO${y.firmware != null ? ' · firmware ${y.firmware}' : ''}${b != null ? ' · batterie $b %' : ''}',
+              'Bracelet YOHO${y.firmware != null ? ' · firmware ${y.firmware}' : ''}',
               style: const TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ),
