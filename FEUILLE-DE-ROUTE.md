@@ -105,7 +105,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 
 - [x] **Vraie mesure de la fatigue** (13 novembre) : fréquence médiane du signal brut, firmware 1.2 + application + serveur. ⏳ À valider avec le vrai MyoWare (étape 8 du protocole).
 - [ ] **Capteur de température de la peau** (chaleur et sclérose en plaques), à ajouter à une future commande.
-- [ ] **Deux brassards** pour comparer le côté gauche et le côté droit (raideurs, asymétrie).
+- ~~Deux brassards pour comparer le côté gauche et le côté droit~~ : non retenu (13 novembre 2026), le matériel commandé ne suffit pas pour un second brassard.
 - [x] Fond de carte sous le tracé du parcours (13 novembre, OpenStreetMap, désactivé par défaut).
 - [x] Appairage Bluetooth sécurisé (13 novembre, `APPAIRAGE_SECURISE`). ⏳ À essayer avec un téléphone (étape 9 du protocole). API en HTTPS : fournie par l'adresse ngrok.
 - [x] Limite du nombre d'essais de mot de passe côté serveur (13 novembre, migration `006`).
@@ -119,7 +119,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 | Données de santé protégées | ✅ consentement, résumé seulement (pas de signal brut), export et suppression des données |
 | **Fatigue** : la suivre, proposer une pause avant l'épuisement | ✅ **fréquence médiane** du signal brut (firmware 1.2, en direct et par semaine), semaines moins bonnes, pause conseillée en mode adapté ; ⏳ à valider avec le vrai capteur |
 | **Chaleur** | ✅ météo et avertissement en mode adapté ; ⏳ capteur de température de la peau (§4) |
-| Raideurs et spasmes, asymétrie gauche / droite | ⏳ deuxième brassard (§4) |
+| Raideurs et spasmes, asymétrie gauche / droite | non retenu : il faudrait un second brassard, le matériel commandé ne suffit pas |
 | Gestes fins et vue parfois difficiles | ✅ grands caractères, alertes par vibration et à voix haute |
 | Suivi avec les soignants | ✅ carnet PDF et tableau CSV |
 
