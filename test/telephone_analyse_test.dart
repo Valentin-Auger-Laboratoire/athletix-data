@@ -172,6 +172,9 @@ void main() {
       expect(m.causes.any((c) => c.startsWith('fatigue')), isTrue);
       expect(m.causes.any((c) => c.startsWith('mauvais sommeil')), isTrue);
       expect(m.causes.any((c) => c.startsWith('douleur')), isTrue);
+      // Musculation en signal brut : la fatigue mesurée (fréquence médiane) est plus forte cette semaine-là
+      expect(m.causes.any((c) => c.startsWith('fatigue musculaire mesurée')), isTrue);
+      expect(evolution.semaines[3].baisseMdfMoyenne!, greaterThan(evolution.semaines[2].baisseMdfMoyenne! + 5));
     });
 
     test('points identiques à la règle du classement', () {

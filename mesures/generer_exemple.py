@@ -42,10 +42,28 @@ def generer(nb_cycles=3, decalage_s=1.2, niveaux=(2, 36, 88, 47, 2), retard_s=0.
     return lignes
 
 
+def generer_fatigue(debut_hz=112.0, baisse_pct=18.0, duree_effort_s=90.0, repos_s=5.0, bruit_hz=3.0, graine=2026):
+    """FAUX journal de fatigue (source RAW, firmware 1.2) : lignes « F,ms,MDF,MNF » toutes les 0,512 s.
+    Repos (MDF = 0), puis un effort tenu pendant lequel la fréquence médiane baisse de baisse_pct %."""
+    alea = np.random.default_rng(graine)
+    lignes = ["Source : RAW (interrupteur OUTPUT du Link Shield sur RAW), calibrer de nouveau"]
+    t = 0.0
+    while t < repos_s + duree_effort_s + 3:
+        ms = int(5000 + t * 1000)
+        if repos_s <= t < repos_s + duree_effort_s:
+            mdf = debut_hz * (1 - baisse_pct / 100 * (t - repos_s) / duree_effort_s) + bruit_hz * alea.standard_normal()
+            lignes.append(f"F,{ms},{mdf:.1f},{mdf + 15 + bruit_hz * alea.standard_normal():.1f}")
+        else:
+            lignes.append(f"F,{ms},0.0,0.0")
+        t += 0.512
+    return lignes
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("sortie", nargs="?", default="exemple/seance-simulee.txt")
+    p.add_argument("--fatigue", action="store_true", help="journal de fatigue (lignes F) au lieu de la séance ENV")
     a = p.parse_args()
     with open(a.sortie, "w", encoding="utf-8") as f:
-        f.write("\n".join(generer()) + "\n")
+        f.write("\n".join(generer_fatigue() if a.fatigue else generer()) + "\n")
     print("Écrit :", a.sortie)

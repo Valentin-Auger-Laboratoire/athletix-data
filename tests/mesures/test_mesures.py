@@ -92,3 +92,49 @@ class Comparaison(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+import analyser_fatigue as af  # noqa: E402
+
+
+class Fatigue(unittest.TestCase):
+    def test_baisse_retrouvee_sur_l_exemple(self):
+        m = af.lire(journal(ge.generer_fatigue(debut_hz=110, baisse_pct=20, bruit_hz=2)))
+        a = af.analyser(m)
+        self.assertAlmostEqual(a["baisse"], 20, delta=1.5)
+        self.assertAlmostEqual(a["debut"], 110, delta=1.5)
+        self.assertEqual(af.interpretation(a["baisse"]), "fatigue nette du muscle")
+
+    def test_repos_ignore(self):
+        m = af.lire(journal(ge.generer_fatigue()))
+        self.assertTrue((m["mdf"] > 0).all())
+        self.assertLess(len(m["mdf"]), m["nb_total"])
+
+    def test_meme_calcul_que_l_application(self):
+        # Même scénario que test/fatigue_test.dart (120 → 96 Hz en 2 min, ± 1,5 Hz) : baisse ≈ 20 %, pente ≈ −12 Hz/min
+        lignes = []
+        for i in range(241):
+            t = i * 0.5
+            lignes.append(f"F,{int(t * 1000)},{120 - 24 * t / 120 + ((t * 7) % 3 - 1.5):.3f},130")
+        a = af.analyser(af.lire(journal(lignes)))
+        self.assertAlmostEqual(a["baisse"], 20, delta=1.5)
+        self.assertAlmostEqual(a["pente_hz_min"], -12, delta=1)
+
+    def test_pas_assez_de_valeurs(self):
+        with self.assertRaises(ValueError):
+            af.analyser(af.lire(journal([f"F,{i * 512},110,125" for i in range(30)])))  # 15 s seulement
+        with self.assertRaises(ValueError):
+            af.lire(journal(["M,1,2,3,4,0", "bonjour"]))
+
+    def test_reperes(self):
+        self.assertEqual(af.interpretation(6), "début de fatigue")
+        self.assertEqual(af.interpretation(0), "pas de fatigue mesurable")
+        self.assertIn("hausse", af.interpretation(-8))
+
+    def test_figure_et_rapport(self):
+        dossier = tempfile.mkdtemp()
+        src = journal(ge.generer_fatigue())
+        self.assertEqual(af.main([src, "--sortie", os.path.join(dossier, "f")]), 0)
+        self.assertTrue(os.path.getsize(os.path.join(dossier, "f-fatigue.png")) > 10000)
+        with open(os.path.join(dossier, "f-fatigue.md"), encoding="utf-8") as f:
+            self.assertIn("fatigue nette", f.read())

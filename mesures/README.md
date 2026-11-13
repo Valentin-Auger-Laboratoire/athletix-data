@@ -46,6 +46,21 @@ Prêt **avant** l'arrivée du matériel : dès que le brassard marche, une séan
 
 ![Exemple de comparaison, données simulées](exemple/seance-simulee-comparaison.png)
 
+## Analyser la fatigue (signal brut, firmware 1.2)
+
+Outil réalisé par **Valentin Auger**. Quand le brassard lit le signal brut (source RAW), le journal contient aussi les lignes `F,ms,MDF,MNF` : la fréquence médiane, 2 fois par seconde ([`FATIGUE.md`](../hardware/firmware-brassard/FATIGUE.md)). `analyser_fatigue.py` fait le même calcul que l'application (droite des moindres carrés, baisse entre le début et la fin, repères 5 % et 10 %) et produit une figure et un court rapport.
+
+```bash
+python mesures/capturer.py COM3 fatigue-1.txt --duree 120
+```
+```bash
+python mesures/analyser_fatigue.py fatigue-1.txt --sortie resultats/fatigue-1
+```
+
+Exemple sur des données **simulées** (pas une vraie mesure) : [`exemple/fatigue-simulee-fatigue.md`](exemple/fatigue-simulee-fatigue.md).
+
+![Exemple d'analyse de la fatigue, données simulées](exemple/fatigue-simulee-fatigue.png)
+
 ## Fichiers
 
 | Fichier | Rôle |
@@ -53,6 +68,7 @@ Prêt **avant** l'arrivée du matériel : dès que le brassard marche, une séan
 | `modele.py` | modèle de référence : profil d'effort de la simulation, RMS sur 200 ms, alerte 75 / 70 % |
 | `capturer.py` | enregistre le port USB du brassard dans un fichier |
 | `comparer_simulation.py` | aligne la mesure sur le modèle, calcule les critères, produit la figure et le rapport |
-| `generer_exemple.py` | fausse séance pour tester sans matériel |
+| `analyser_fatigue.py` | fréquence médiane (lignes `F,…`) : tendance, baisse, figure et rapport |
+| `generer_exemple.py` | fausse séance (et `--fatigue` : faux journal de fréquence médiane) pour tester sans matériel |
 
-Testés par `python -m unittest discover -s tests/mesures` (12 tests), relancés par GitHub à chaque envoi.
+Testés par `python -m unittest discover -s tests/mesures` (18 tests), relancés par GitHub à chaque envoi.

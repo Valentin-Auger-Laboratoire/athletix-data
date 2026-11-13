@@ -100,6 +100,21 @@ class _EvolutionScreenState extends State<EvolutionScreen> {
             ],
           ),
         ]),
+        if (semaines.any((s) => s.baisseMdfMoyenne != null))
+          _section(
+              'Fatigue musculaire mesurée',
+              'Baisse moyenne de la fréquence médiane pendant les séances faites en signal brut (%). '
+                  'Plus elle est forte, plus le muscle a fatigué. Repère : au-delà de 10 %, fatigue nette.',
+              [
+                Histogramme(
+                  valeurs: semaines.map((s) => s.baisseMdfMoyenne ?? 0).toList(),
+                  libelles: libelles,
+                  unite: '%',
+                  couleurs: semaines
+                      .map((s) => (s.baisseMdfMoyenne ?? 0) >= 10 ? Colors.redAccent : Colors.cyan)
+                      .toList(),
+                ),
+              ]),
         _section('Semaines moins bonnes', 'Rendement (points par heure) en baisse d\'au moins 15 % par rapport aux semaines précédentes.', [
           if (moinsBonnes.isEmpty)
             const Text('Aucune baisse marquée pour l\'instant.', style: TextStyle(color: Colors.white54))

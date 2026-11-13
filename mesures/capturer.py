@@ -6,6 +6,7 @@
 Pendant l'enregistrement : lancer une séance dans l'application (état « mesure »), puis suivre
 le cycle d'effort (3 s repos, 4 s moyen, 3 s fort, 5 s moyen, 3 s repos), au moins deux fois.
 Sans pyserial : copier le moniteur série de l'IDE Arduino dans un fichier, cela marche aussi.
+En source RAW (firmware 1.2), le journal contient aussi les lignes « F,… » : analyser_fatigue.py.
 """
 import argparse
 import sys
@@ -23,7 +24,7 @@ def main():
         import serial
     except ImportError:
         sys.exit("pyserial manque : pip install pyserial")
-    n = 0
+    n = nf = 0
     fin = time.time() + a.duree
     with serial.Serial(a.port, a.debit, timeout=1) as port, open(a.fichier, "w", encoding="utf-8") as f:
         print(f"Enregistrement {a.duree:.0f} s sur {a.port}…")
@@ -36,9 +37,11 @@ def main():
                 n += 1
                 if n % 250 == 0:
                     print(f"  {n} mesures")
+            elif ligne.startswith("F,"):
+                nf += 1  # fréquence médiane (source RAW) : pour analyser_fatigue.py
             else:
                 print("  brassard :", ligne)
-    print(f"{n} mesures écrites dans {a.fichier}")
+    print(f"{n} mesures écrites dans {a.fichier}" + (f", et {nf} valeurs de fréquence médiane" if nf else ""))
     if n == 0:
         print("Aucune mesure : la séance est-elle lancée (état « mesure ») et JOURNAL_SERIE vaut-il true ?")
 

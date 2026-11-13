@@ -20,6 +20,7 @@ class SeanceResume {
     this.douleur,
     this.sommeil,
     this.indiceFatigue,
+    this.baisseMdfPct,
   });
 
   final DateTime debut;
@@ -37,6 +38,9 @@ class SeanceResume {
   final int? douleur;
   final String? sommeil;
   final int? indiceFatigue;
+
+  /// Baisse de la fréquence médiane pendant la séance, en % (signal brut seulement, migration 005).
+  final double? baisseMdfPct;
 
   /// Points de la séance, avec la règle du classement (backend/get_classement.php).
   int get points => 10 + (dureeS / 60 * intensiteMoyenne / 50).round();
@@ -64,6 +68,7 @@ class SeanceResume {
       douleur: entier('douleur'),
       sommeil: m['sommeil']?.toString(),
       indiceFatigue: entier('indice_fatigue_pct'),
+      baisseMdfPct: (m['baisse_mdf_pct'] as num?)?.toDouble(),
     );
   }
 }
@@ -105,6 +110,12 @@ class Semaine {
   double? get temperatureMax {
     final v = seances.map((x) => x.temperatureC).whereType<double>();
     return v.isEmpty ? null : v.reduce((a, b) => a > b ? a : b);
+  }
+
+  /// Baisse moyenne de la fréquence médiane (fatigue mesurée par le brassard), ou null.
+  double? get baisseMdfMoyenne {
+    final v = seances.map((x) => x.baisseMdfPct).whereType<double>();
+    return v.isEmpty ? null : _moyenne(v);
   }
 
   int get nbNuitsMauvaises => seances.where((x) => x.sommeil == 'Mauvais').length;
@@ -186,6 +197,11 @@ class Evolution {
     final f = s.fatigueRessentie, fRef = moyenne(reference.map((x) => x.fatigueRessentie));
     if (f != null && (f >= 7 || (fRef != null && f - fRef >= 2))) {
       causes.add('fatigue ressentie élevée (${f.toStringAsFixed(1).replaceAll('.', ',')}/10)');
+    }
+    final m = s.baisseMdfMoyenne, mRef = moyenne(reference.map((x) => x.baisseMdfMoyenne));
+    if (m != null && mRef != null && m - mRef >= 5) {
+      String pct(double v) => v.toStringAsFixed(0);
+      causes.add('fatigue musculaire mesurée plus forte (fréquence médiane −${pct(m)} % par séance, contre −${pct(mRef)} % avant)');
     }
     if (s.nbNuitsMauvaises > 0) {
       causes.add('mauvais sommeil (${s.nbNuitsMauvaises} nuit${s.nbNuitsMauvaises > 1 ? 's' : ''})');
