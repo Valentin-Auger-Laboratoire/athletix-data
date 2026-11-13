@@ -1,5 +1,7 @@
 # Comparer le vrai brassard à la simulation
 
+Outil réalisé par **Valentin Auger** (novembre 2026).
+
 Prêt **avant** l'arrivée du matériel : dès que le brassard marche, une séance enregistrée est comparée automatiquement au modèle de la simulation Simulink ([`hardware/simulation-emg/`](../hardware/simulation-emg/README.md)), avec les critères du [protocole de test](../hardware/PROTOCOLE-DE-TEST.md).
 
 ## Le jour de l'essai

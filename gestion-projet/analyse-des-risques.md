@@ -1,5 +1,7 @@
 # Analyse des risques
 
+Réalisée par **Valentin Auger** (novembre 2026).
+
 > Mise à jour : 13 novembre 2026. Méthode de type AMDEC : pour chaque risque, **G** gravité, **O** probabilité d'apparition, **D** difficulté à le détecter, chacun noté de 1 à 4. **Criticité = G × O × D** (de 1 à 64). Au-dessus de **12**, une action est prévue avant les essais.
 
 | Note | G (gravité) | O (apparition) | D (détection) |
