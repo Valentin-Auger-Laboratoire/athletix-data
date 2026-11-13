@@ -6,15 +6,39 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 
 **📋 [Feuille de route : ce qui est fait, ce qu'il reste à faire](FEUILLE-DE-ROUTE.md)** · [Protocole de test du brassard](hardware/PROTOCOLE-DE-TEST.md) · [Démo en ligne](https://valentin-auger-laboratoire.github.io/athletix-data/)
 
+**📄 [Mode d'emploi](mode-emploi/mode-emploi.pdf)** · **[Fiche de test à imprimer](hardware/fiche-de-test.pdf)** · **[Cahier des charges du boîtier](hardware/boitier/README.md)** · [Gantt](#planning-diagramme-de-gantt)
+
 [![Tests](https://github.com/Valentin-Auger-Laboratoire/athletix-data/actions/workflows/tests.yml/badge.svg)](https://github.com/Valentin-Auger-Laboratoire/athletix-data/actions/workflows/tests.yml)
 
 ## L'équipe
 
 | Membre | Rôle | Tâches principales |
 |---|---|---|
-| **Valentin Auger** | Chef de projet, matériel et application | **Projet** : pilotage, planning (MPM), choix du matériel et devis<br>**Brassard** : schéma électrique, [câblage présumé](hardware/README.md), acquisition et calcul RMS<br>**Application Flutter** : accueil, inscription et vérification par e-mail, connexion, questionnaire de profil et historique, conseils, catégories de sports et séances, classement, mode démo<br>**API PHP / MySQL** : comptes et code de vérification par e-mail, connexion par jeton, profils, performances, classement, état du brassard, base de données (`database.sql`)<br>**Application (suite, novembre 2026)** : connexion Bluetooth réelle, calibration, historique et détail des séances, graphiques et évolution, GPS, pas, météo et ceinture cardio, natation (résumé gardé dans le brassard), accessibilité et mode adapté, carnet PDF pour les soignants, séances envoyées plus tard sans réseau, RGPD (export et suppression du compte)<br>**Firmware final** du brassard (calculs testés sur ordinateur) et protocole de test<br>**Comparaison automatique avec la simulation** ([`mesures/`](mesures/README.md)), **analyse des risques**, **mode d'emploi** et **vidéo de démonstration**<br>**Gantt mis à jour** (2e année)<br>**Tests** de l'application, de l'API et du firmware, lancés automatiquement par GitHub<br>**Démo en ligne** (GitHub Pages) et captures d'écran<br>**Première piste, capteur cardiaque** : montage photopléthysmographe, code ESP32, simulation Wokwi, schéma d'implantation<br>**Documentation** : README, page électronique, page de la simulation (relecture, corrections et limites) |
+| **Valentin Auger** | Chef de projet, matériel et application | **Projet** : pilotage, planning (MPM), choix du matériel et devis<br>**Brassard** : schéma électrique, [câblage présumé](hardware/README.md), acquisition et calcul RMS<br>**Application Flutter** : accueil, inscription et vérification par e-mail, connexion, questionnaire de profil et historique, conseils, catégories de sports et séances, classement, mode démo<br>**API PHP / MySQL** : comptes et code de vérification par e-mail, connexion par jeton, profils, performances, classement, état du brassard, base de données (`database.sql`)<br>**Application (suite, novembre 2026)** : connexion Bluetooth réelle, calibration, historique et détail des séances, graphiques et évolution, GPS, pas, météo et ceinture cardio, natation (résumé gardé dans le brassard), accessibilité et mode adapté, carnet PDF pour les soignants, séances envoyées plus tard sans réseau, RGPD (export et suppression du compte)<br>**Firmware final** du brassard (calculs testés sur ordinateur) et protocole de test<br>**Comparaison automatique avec la simulation** ([`mesures/`](mesures/README.md)), **analyse des risques**, **mode d'emploi**, **fiche de test**, **cahier des charges du boîtier** et **vidéo de démonstration**<br>**Gantt mis à jour** (2e année)<br>**Tests** de l'application, de l'API et du firmware, lancés automatiquement par GitHub<br>**Démo en ligne** (GitHub Pages) et captures d'écran<br>**Première piste, capteur cardiaque** : montage photopléthysmographe, code ESP32, simulation Wokwi, schéma d'implantation<br>**Documentation** : README, page électronique, page de la simulation (relecture, corrections et limites) |
 | **Maxence Olivier** | Simulation et planning | **simulation Simulink de la chaîne EMG** ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)) : modèle et résultats ; diagramme de Gantt |
 | **Othmen Al Bydeoi** | Architecture système | architecture Bluetooth Low Energy (GATT), intégration réseau, modèles de données (MCD, MLD, MCT), schémas ; dans le dépôt : la spécification [`architecture/`](architecture/README.md), le brassard simulé et l'écran de séance EMG de l'appli, l'enregistrement des séances et des calibrations (API PHP + [`migrations/`](migrations/001_brassard_emg.sql)), le firmware de test [`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md) et les tests |
+
+## 📄 Documents pour les essais (réalisés par Valentin Auger)
+
+Trois documents prêts **avant** l'arrivée du matériel, pour que les essais commencent dès la réception.
+
+### 📘 Mode d'emploi
+
+Réalisé par **Valentin Auger**. Poser le brassard et les électrodes, calibrer, faire une séance, récupérer une séance de natation, donner le carnet à un soignant, problèmes fréquents. À imprimer pour les essais : **[`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)**. Il s'ouvre aussi depuis l'application (menu du profil, « Mode d'emploi »).
+
+<img src="mode-emploi/apercu-page-1.png" alt="Mode d'emploi, page 1 : sécurité, pose des électrodes, calibration, séance" width="380"> <img src="mode-emploi/apercu-page-2.png" alt="Mode d'emploi, page 2 : natation, carnet pour les soignants, problèmes fréquents" width="380">
+
+### ✅ Fiche de test à imprimer
+
+Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception (3 pages) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
+
+<img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
+
+### 📦 Cahier des charges du boîtier
+
+Réalisé par **Valentin Auger**, pour modéliser le boîtier sous Fusion 360 avant de recevoir les pièces : dimensions des cartes, de la batterie et de l'interrupteur, ouvertures, fixation au bras, pistes pour une version étanche (cotes à vérifier à la réception). Détail : **[`hardware/boitier/`](hardware/boitier/README.md)**.
+
+![Implantation proposée du boîtier principal, vue de dessus à l'échelle](hardware/boitier/implantation.png)
 
 ## Le brassard (version finale)
 
@@ -31,10 +55,6 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 **Le câblage présumé** : le matériel n'est pas encore reçu, ce schéma montre comment les composants commandés seront reliés (non testé) :
 
 ![Câblage présumé du brassard : électrodes, MyoWare 2.0 et Link Shield, câble jack vers l'ESP32-S3, batterie LiPo avec interrupteur, Bluetooth vers le téléphone](hardware/cablage-presume.png)
-
-**Le boîtier** : cahier des charges préparé par **Valentin Auger** pour le modéliser sous Fusion 360 avant de recevoir les pièces (dimensions des cartes, de la batterie et de l'interrupteur, ouvertures, fixation au bras, pistes pour une version étanche) : [`hardware/boitier/`](hardware/boitier/README.md).
-
-![Implantation proposée du boîtier principal, à l'échelle](hardware/boitier/implantation.png)
 
 **Le modèle Simulink** (signal du muscle, capteur MyoWare 2.0, puis conversion et calcul sur l'ESP32-S3) :
 
@@ -94,16 +114,6 @@ Ce brassard n'est **pas un dispositif médical**. Une activité physique adapté
 > **Historique :** la première piste du projet utilisait un capteur cardiaque (photopléthysmographe : LED infrarouge, phototransistor, LM358) sur un ESP32 classique. Son code et sa simulation Wokwi sont conservés dans [`hardware/`](hardware/README.md). L'application a d'abord été construite à cette étape ; l'écran de séance affiche maintenant l'intensité musculaire (simulée).
 
 ▶️ **Démo en ligne (sans serveur, données fictives) :** https://valentin-auger-laboratoire.github.io/athletix-data/ puis « Essayer la démo ».
-
-**Mode d'emploi** (2 pages, réalisé par **Valentin Auger**) : poser le brassard et les électrodes, calibrer, faire une séance, récupérer une séance de natation, donner le carnet à un soignant, problèmes fréquents. À imprimer pour les essais : **[`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)**.
-
-<img src="mode-emploi/apercu-page-1.png" alt="Mode d'emploi, page 1 : sécurité, pose des électrodes, calibration, séance" width="380"> <img src="mode-emploi/apercu-page-2.png" alt="Mode d'emploi, page 2 : natation, carnet pour les soignants, problèmes fréquents" width="380">
-
-Il s'ouvre aussi depuis l'application (menu du profil, « Mode d'emploi »).
-
-**Fiche de test à imprimer** (réalisée par **Valentin Auger**) : le protocole de test avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
-
-<img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
 
 **La démo en vidéo** (70 s, brassard simulé) : séance en direct, ressenti, détail d'une course avec son parcours, évolution, natation. Version MP4 pour une présentation : [`media/demo-application.mp4`](media/demo-application.mp4).
 
@@ -274,6 +284,8 @@ Le questionnaire porte sur des **données de santé** (poids, blessures, antéc�
 A connected armband that measures muscle activity (electromyography, EMG) and a fitness-tracking app. Group project at EPISEN (French engineering school), February to June 2026.
 
 **📋 [Roadmap: done and to do (in French)](FEUILLE-DE-ROUTE.md)** · [Armband test protocol](hardware/PROTOCOLE-DE-TEST.md) · [Online demo](https://valentin-auger-laboratoire.github.io/athletix-data/)
+
+**Documents for the tests, by Valentin Auger (in French):** [two-page user guide](mode-emploi/mode-emploi.pdf) · [printable test sheet](hardware/fiche-de-test.pdf) · [enclosure specification](hardware/boitier/README.md)
 
 **Team:** Valentin Auger (project lead, hardware and app: project management, planning (MPM), hardware choice and quote; armband wiring diagram and presumed wiring, acquisition and RMS; the whole Flutter app: home, e-mail-verified sign-up, login, profile questionnaire and history, advice, sport categories and workouts, leaderboard, demo mode; the PHP/MySQL API and database: accounts and e-mail codes, token login, profiles, performances, leaderboard, armband status; then (November 2026) the real Bluetooth connection, calibration, session history and detail, charts and progress, GPS, steps, weather and heart-rate strap, swimming (summary kept in the armband), accessibility and adapted mode, PDF log for carers, deferred sending without network, GDPR (export and account deletion), the final armband firmware, the automated tests; the online demo and screenshots; the first heart-rate sensor track: PPG circuit, ESP32 code, Wokwi simulation, layout diagram; the documentation), Maxence Olivier (simulation and planning: the Simulink model of the EMG chain in `hardware/simulation-emg/`, and the Gantt chart), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
 
