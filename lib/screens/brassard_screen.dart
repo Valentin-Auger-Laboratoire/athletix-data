@@ -8,6 +8,7 @@ import 'package:athletix_data/services/brassard/brassard_simule.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/source_brassard.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
+import 'package:athletix_data/services/telephone/montre_podometre.dart';
 import 'calibration_screen.dart';
 
 /// Choix du brassard : recherche Bluetooth du vrai brassard, ou brassard simulé (démo).
@@ -154,6 +155,8 @@ class _BrassardScreenState extends State<BrassardScreen> {
             if (_bluetoothDisponible == true) ...[
               const SizedBox(height: 28),
               const _SectionCardio(),
+              const SizedBox(height: 28),
+              const _SectionPodometre(),
             ],
           ],
         ),
@@ -508,6 +511,134 @@ class _AideMontre extends StatelessWidget {
             "Les Apple Watch, Galaxy Watch et Fitbit ne diffusent pas en Bluetooth standard sans application en plus.",
             style: style,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bracelet qui compte les pas au format « podomètre WeChat » (service FEE7), comme le bracelet
+/// MSGM115 de Valentin. Ses pas remplacent ceux de l'accéléromètre du téléphone pendant la séance.
+class _SectionPodometre extends StatefulWidget {
+  const _SectionPodometre();
+
+  @override
+  State<_SectionPodometre> createState() => _SectionPodometreState();
+}
+
+class _SectionPodometreState extends State<_SectionPodometre> {
+  bool _recherche = false;
+  bool _connexion = false;
+  String? _erreur;
+  List<ScanResult> _resultats = [];
+  StreamSubscription<List<ScanResult>>? _abonnement;
+
+  @override
+  void dispose() {
+    _abonnement?.cancel();
+    if (_recherche) FlutterBluePlus.stopScan();
+    super.dispose();
+  }
+
+  Future<void> _rechercher() async {
+    setState(() {
+      _recherche = true;
+      _erreur = null;
+      _resultats = [];
+    });
+    try {
+      await _abonnement?.cancel();
+      _abonnement = MontrePodometre.rechercher().listen((r) {
+        if (mounted) setState(() => _resultats = r);
+      });
+      await Future.delayed(const Duration(seconds: 8));
+    } catch (e) {
+      if (mounted) setState(() => _erreur = 'Recherche impossible : $e');
+    }
+    if (mounted) setState(() => _recherche = false);
+  }
+
+  Future<void> _connecter(ScanResult r) async {
+    await FlutterBluePlus.stopScan();
+    setState(() {
+      _connexion = true;
+      _erreur = null;
+    });
+    try {
+      MontrePodometre.active.value?.fermer();
+      MontrePodometre.active.value = await MontrePodometre.connecter(r.device);
+    } catch (e) {
+      _erreur = '$e';
+    }
+    if (mounted) setState(() => _connexion = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<MontrePodometre?>(
+      valueListenable: MontrePodometre.active,
+      builder: (context, montre, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('BRACELET PODOMÈTRE (FACULTATIF)', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
+          const SizedBox(height: 6),
+          const Text(
+            "Pour les bracelets qui ne diffusent pas le cœur en Bluetooth standard mais comptent les pas "
+            "(format « WeChat », service FEE7) : leurs pas remplacent ceux du téléphone pendant la séance. "
+            "Testé avec un bracelet MSGM115.",
+            style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+          const SizedBox(height: 10),
+          if (montre != null)
+            Card(
+              color: Colors.grey[900],
+              child: ListTile(
+                leading: const Icon(Icons.directions_walk, color: Colors.lightGreenAccent),
+                title: Text(montre.nom, style: const TextStyle(color: Colors.white)),
+                subtitle: ValueListenableBuilder<MesurePodometre?>(
+                  valueListenable: montre.derniere,
+                  builder: (context, m, _) => Text(
+                      m?.pas == null ? 'en attente du compteur…' : "${m!.pas} pas aujourd'hui (compteur du bracelet)",
+                      style: const TextStyle(color: Colors.white54)),
+                ),
+                trailing: IconButton(
+                  tooltip: 'Déconnecter',
+                  icon: const Icon(Icons.link_off, color: Colors.white54),
+                  onPressed: () {
+                    montre.fermer();
+                    MontrePodometre.active.value = null;
+                  },
+                ),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.lightGreenAccent),
+                minimumSize: const Size(double.infinity, 48),
+              ),
+              onPressed: (_recherche || _connexion) ? null : _rechercher,
+              icon: const Icon(Icons.directions_walk, color: Colors.lightGreenAccent),
+              label: Text(_recherche ? 'Recherche…' : 'Rechercher un bracelet podomètre',
+                  style: const TextStyle(color: Colors.lightGreenAccent)),
+            ),
+          if (montre == null)
+            for (final r in _resultats)
+              Card(
+                color: Colors.grey[900],
+                child: ListTile(
+                  leading: const Icon(Icons.watch, color: Colors.lightGreenAccent),
+                  title: Text(r.device.platformName.isNotEmpty ? r.device.platformName : r.device.remoteId.str,
+                      style: const TextStyle(color: Colors.white)),
+                  subtitle: Text('Signal : ${r.rssi} dBm', style: const TextStyle(color: Colors.white54)),
+                  onTap: _connexion ? null : () => _connecter(r),
+                ),
+              ),
+          if (_erreur != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_erreur!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+            ),
         ],
       ),
     );

@@ -16,6 +16,7 @@ import 'package:athletix_data/services/analyse/analyse_seance.dart';
 import 'package:athletix_data/services/reglages.dart';
 import 'package:athletix_data/services/telephone/cardio.dart';
 import 'package:athletix_data/services/telephone/meteo.dart';
+import 'package:athletix_data/services/telephone/montre_podometre.dart';
 import 'package:athletix_data/services/telephone/suivi_telephone.dart';
 import 'package:athletix_data/widgets/graphiques.dart';
 import 'contexte_seance.dart';
@@ -84,6 +85,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   bool _meteoDemandee = false;
   final StatsCardio _cardio = StatsCardio();
   StreamSubscription<int>? _abonnementCardio;
+  // Bracelet podomètre (FEE7) : ses pas remplacent ceux de l'accéléromètre du téléphone
+  final MontrePodometre? _montre = MontrePodometre.active.value;
+  final PasSeance _pasMontre = PasSeance();
+  StreamSubscription<MesurePodometre>? _abonnementMontre;
+  Timer? _relectureMontre;
   int? _fcActuelle;
 
   // Alertes vibration / voix et mode adapté
@@ -127,6 +133,19 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         _cardio.ajouter(bpm);
         if (mounted) setState(() => _fcActuelle = bpm);
       });
+    }
+    final montre = _montre;
+    if (montre != null) {
+      final depart = montre.derniere.value?.pas;
+      if (depart != null) _pasMontre.ajouter(depart);
+      _abonnementMontre = montre.mesures.listen((m) {
+        if (m.pas == null) return;
+        _pasMontre.ajouter(m.pas!);
+        if (mounted) setState(() {});
+      });
+      // Au cas où le bracelet ne prévient pas de lui-même : relecture toutes les 10 s
+      _relectureMontre = Timer.periodic(const Duration(seconds: 10), (_) => montre.relire());
+      montre.relire();
     }
     if (_modeAdapte) {
       _minuteurPause = Timer.periodic(const Duration(seconds: 15), (_) => _verifierPause());
@@ -194,6 +213,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     _abonnement?.cancel();
     _abonnementFrequence?.cancel();
     _abonnementEtats?.cancel();
+    _abonnementMontre?.cancel();
+    _relectureMontre?.cancel();
     _brassard.reconnexion.removeListener(_majReconnexion);
     _abonnementCardio?.cancel();
     _minuteurPause?.cancel();
@@ -237,6 +258,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         ),
         ..._analyse.versApi(),
         ...?_telephone?.versApi(),
+        if (_montre != null && _pasMontre.pas > 0) 'nb_pas': '${_pasMontre.pas}', // le bracelet prime
         ...?_meteo?.versApi(),
         ..._cardio.versApi(),
         ...?_fatigue.resultat()?.versApi(),
@@ -362,7 +384,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                     const SizedBox(height: 18),
                     _fatigueEnDirect(),
                   ],
-                  if (_telephone != null || _fcActuelle != null) ...[
+                  if (_telephone != null || _fcActuelle != null || _montre != null) ...[
                     const SizedBox(height: 18),
                     _mesuresTelephone(),
                   ],
@@ -562,7 +584,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
           if (trace != null) _stat("DISTANCE", "${decimalFr(trace.distanceM / 1000, 2)} km"),
           if (trace != null) _stat("VITESSE", "${decimalFr(trace.vitesseMoyKmh, 1)} km/h"),
-          if (t != null && t.pas) _stat("PAS", "${t.podometre.pas}"),
+          if (_montre != null)
+            _stat("PAS (BRACELET)", "${_pasMontre.pas}")
+          else if (t != null && t.pas)
+            _stat("PAS", "${t.podometre.pas}"),
           if (_fcActuelle != null) _stat("CŒUR", "$_fcActuelle bpm"),
         ]),
         const SizedBox(height: 6),

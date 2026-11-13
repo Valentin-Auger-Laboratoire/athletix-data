@@ -86,6 +86,7 @@ Si 4.4 reste bloqué vers 3,3 V : électrodes trop proches ou gain du MyoWare tr
 | 6.6 | Brassard rallumé, choisir un sport sans calibrer | l'application propose « Calibrer avant la séance ? » | | |
 | 6.7 | Batterie sous 10 % (fin du test d'autonomie) | bandeau « batterie faible » et vibration pendant la séance | | |
 | 6.8 | Ceinture ou montre qui diffuse sa fréquence cardiaque, écran Brassard → Rechercher | fréquence cardiaque affichée pendant la séance et dans son détail | | |
+| 6.9 | Bracelet MSGM115 : écran Brassard → « Rechercher un bracelet podomètre », puis séance en marchant 100 pas comptés | « PAS (BRACELET) » ≈ 100 pendant la séance, et dans son détail | | |
 
 ## Étape 7 — Séance sans connexion (natation), HORS DE L'EAU
 
