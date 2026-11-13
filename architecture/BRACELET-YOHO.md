@@ -4,7 +4,11 @@ Fiche rédigée le 13 novembre 2026. Le bracelet MSGM115 de Valentin Auger (« Y
 
 > ⚠️ Le bracelet **estime** la tension à partir de son capteur optique : ce n'est pas une mesure au brassard. Athletix-Data n'est pas un dispositif médical.
 
-État : format codé et testé (`test/montre_yoho_test.dart`, 15 tests), **pas encore essayé avec le bracelet** (à faire avec l'APK sur un téléphone Android).
+État : format codé et testé (`test/montre_yoho_test.dart`, 16 tests), **pas encore essayé avec le bracelet** (à faire avec l'APK sur un téléphone Android).
+
+![Échanges entre le téléphone et le bracelet](bracelet-yoho.png)
+
+**Démo** : un bracelet simulé (`lib/services/telephone/montre_yoho_simulee.dart`) renvoie ces mêmes octets ; il est proposé dans la démo en ligne (BRASSARD NON RELIÉ → « Démo : bracelet MSGM115 simulé »).
 
 ## Caractéristiques
 

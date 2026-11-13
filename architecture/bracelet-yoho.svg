@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="640" viewBox="0 0 1100 640" font-family="DejaVu Sans, Arial, sans-serif">
+  <rect width="1100" height="640" fill="#ffffff"/>
+  <text x="40" y="44" font-size="22" font-weight="bold" fill="#111">Téléphone (Athletix-Data) ↔ bracelet MSGM115 : service Bluetooth CC00</text>
+  <text x="40" y="72" font-size="15" fill="#555">Format retrouvé par Valentin Auger dans l'appli d'origine du bracelet (compatibilité) · aucun code repris</text>
+  <!-- colonnes -->
+  <rect x="40" y="100" width="250" height="56" rx="10" fill="#1d3557"/>
+  <text x="165" y="135" font-size="18" fill="#fff" text-anchor="middle" font-weight="bold">Téléphone</text>
+  <rect x="810" y="100" width="250" height="56" rx="10" fill="#2a9d8f"/>
+  <text x="935" y="135" font-size="18" fill="#fff" text-anchor="middle" font-weight="bold">Bracelet MSGM115</text>
+  <line x1="165" y1="156" x2="165" y2="610" stroke="#1d3557" stroke-width="3" stroke-dasharray="6 6"/>
+  <line x1="935" y1="156" x2="935" y2="610" stroke="#2a9d8f" stroke-width="3" stroke-dasharray="6 6"/>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <g font-size="15" fill="#111">
+    <!-- 1 -->
+    <text x="40" y="196" font-size="14" fill="#888">Connexion</text>
+    <line x1="170" y1="205" x2="928" y2="205" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="198" text-anchor="middle">lire CC02 (firmware 82.78.00.3d, fonctions) · lire CC03 (batterie) · notifications CC04</text>
+    <!-- 2 cœur -->
+    <text x="40" y="250" font-size="14" fill="#888">Cœur</text>
+    <line x1="170" y1="258" x2="928" y2="258" stroke="#c1121f" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="251" text-anchor="middle">écrit dans CC06 : 0A 01  « mesure le cœur »</text>
+    <line x1="928" y1="292" x2="172" y2="292" stroke="#c1121f" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="285" text-anchor="middle">CC04 : drapeaux bit 5, octet 10 = 67 bpm</text>
+    <!-- 3 tension -->
+    <text x="40" y="336" font-size="14" fill="#888">Tension</text>
+    <line x1="170" y1="344" x2="928" y2="344" stroke="#e76f51" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="337" text-anchor="middle">écrit dans CC06 : F1 03 14 01  « estime la tension »</text>
+    <line x1="928" y1="378" x2="172" y2="378" stroke="#e76f51" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="371" text-anchor="middle">CC04 : F3 14 72 4A  = 114/74 (estimation, pas une mesure médicale)</text>
+    <!-- 4 synchro -->
+    <text x="40" y="422" font-size="14" fill="#888">Sommeil</text>
+    <line x1="170" y1="430" x2="928" y2="430" stroke="#457b9d" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="423" text-anchor="middle">écrit dans CC06 : F4 00  « envoie l'historique »</text>
+    <line x1="928" y1="464" x2="172" y2="464" stroke="#457b9d" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="457" text-anchor="middle">CC04 : F4 01 date · F4 02 lignes (état, minutes, pas) · F4 03 … (accusé à chaque paquet)</text>
+    <text x="550" y="488" text-anchor="middle" font-size="13" fill="#555">états : 3 = sommeil profond · 5 = sommeil léger · 4 = réveillé → nuit : profond / léger / réveils</text>
+    <!-- 5 réglages -->
+    <text x="40" y="530" font-size="14" fill="#888">Réglages</text>
+    <line x1="170" y1="538" x2="928" y2="538" stroke="#6a4c93" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="531" text-anchor="middle">08 01 vibrer · 04 00 heure · F1 01 profil (taille, poids) · 07 rappel d'inactivité</text>
+    <!-- 6 pas -->
+    <text x="40" y="584" font-size="14" fill="#888">Pas</text>
+    <line x1="928" y1="592" x2="172" y2="592" stroke="#2a9d8f" stroke-width="2" marker-end="url(#a)"/>
+    <text x="550" y="585" text-anchor="middle">CC04 : état + compteur de pas (aussi par FEE7 / FEA1, format WeChat)</text>
+  </g>
+</svg>

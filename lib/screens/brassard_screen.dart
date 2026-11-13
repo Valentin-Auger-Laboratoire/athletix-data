@@ -160,6 +160,10 @@ class _BrassardScreenState extends State<BrassardScreen> {
               const _SectionCardio(),
               const SizedBox(height: 28),
               const _SectionPodometre(),
+            ] else if (Api.isDemo) ...[
+              // Démo sans Bluetooth (navigateur) : seul le bracelet simulé est proposé
+              const SizedBox(height: 28),
+              const _SectionPodometre(bluetooth: false),
             ],
           ],
         ),
@@ -523,7 +527,8 @@ class _AideMontre extends StatelessWidget {
 /// Bracelet qui compte les pas au format « podomètre WeChat » (service FEE7), comme le bracelet
 /// MSGM115 de Valentin. Ses pas remplacent ceux de l'accéléromètre du téléphone pendant la séance.
 class _SectionPodometre extends StatefulWidget {
-  const _SectionPodometre();
+  const _SectionPodometre({this.bluetooth = true});
+  final bool bluetooth;
 
   @override
   State<_SectionPodometre> createState() => _SectionPodometreState();
@@ -616,7 +621,7 @@ class _SectionPodometreState extends State<_SectionPodometre> {
               ),
             ),
           if (montre != null && montre.yoho != null) _PanneauYoho(montre.yoho!),
-          if (montre == null)
+          if (montre == null && widget.bluetooth)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.lightGreenAccent),
@@ -626,6 +631,21 @@ class _SectionPodometreState extends State<_SectionPodometre> {
               icon: const Icon(Icons.directions_walk, color: Colors.lightGreenAccent),
               label: Text(_recherche ? 'Recherche…' : 'Rechercher un bracelet podomètre',
                   style: const TextStyle(color: Colors.lightGreenAccent)),
+            ),
+          if (montre == null && Api.isDemo)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton.icon(
+                onPressed: _connexion
+                    ? null
+                    : () async {
+                        setState(() => _connexion = true);
+                        MontrePodometre.active.value = await MontrePodometre.simulee();
+                        if (mounted) setState(() => _connexion = false);
+                      },
+                icon: const Icon(Icons.watch, color: Colors.lightGreenAccent),
+                label: const Text('Démo : bracelet MSGM115 simulé', style: TextStyle(color: Colors.lightGreenAccent)),
+              ),
             ),
           if (montre == null)
             for (final r in _resultats)

@@ -92,10 +92,10 @@ class MesureHistorique {
 /// Format retrouvé dans l'appli d'origine (voir protocole_yoho.dart) ; essayé seulement dans les tests
 /// tant que Valentin ne l'a pas lancé sur son téléphone avec le bracelet.
 class LiaisonYoho {
-  LiaisonYoho._(this._commande, this._tempsReel, this._infos, this._batterie);
+  /// Liaison sur un « transport » quelconque : le vrai Bluetooth, ou la montre simulée de la démo.
+  LiaisonYoho(this._transport);
 
-  final BluetoothCharacteristic _commande, _tempsReel;
-  final BluetoothCharacteristic? _infos, _batterie;
+  final TransportYoho _transport;
   final StreamController<MessageYoho> _messages = StreamController<MessageYoho>.broadcast();
   final List<StreamSubscription> _abonnements = [];
 
@@ -123,30 +123,27 @@ class LiaisonYoho {
       }
     }
     if (commande == null || tempsReel == null) return null;
-    final l = LiaisonYoho._(commande, tempsReel, infos, batterie);
-    await l._demarrer();
+    final l = LiaisonYoho(_TransportBle(commande, tempsReel, infos, batterie));
+    await l.demarrer();
     return l;
   }
 
   /// Même ordre que l'appli d'origine : informations, batterie, notifications, puis l'heure.
-  Future<void> _demarrer() async {
+  Future<void> demarrer() async {
     try {
-      final o = await _infos?.read();
+      final o = await _transport.lireInfos();
       if (o != null) {
         firmware = ProtocoleYoho.versionFirmware(o);
         fonctions = ProtocoleYoho.fonctions(o);
       }
     } catch (_) {}
-    final bat = _batterie;
-    if (bat != null) {
-      try {
-        batterie.value = ProtocoleYoho.batterie(await bat.read());
-        _abonnements.add(bat.onValueReceived.listen((o) => batterie.value = ProtocoleYoho.batterie(o)));
-        await bat.setNotifyValue(true);
-      } catch (_) {}
-    }
-    _abonnements.add(_tempsReel.onValueReceived.listen(_recevoir));
-    await _tempsReel.setNotifyValue(true);
+    try {
+      final b = await _transport.lireBatterie();
+      if (b != null) batterie.value = ProtocoleYoho.batterie(b);
+      _abonnements.add(_transport.batterie.listen((o) => batterie.value = ProtocoleYoho.batterie(o)));
+    } catch (_) {}
+    _abonnements.add(_transport.tempsReel.listen(_recevoir));
+    await _transport.activer();
     await envoyer(ProtocoleYoho.heure(DateTime.now()));
   }
 
@@ -158,7 +155,7 @@ class LiaisonYoho {
     if (!_messages.isClosed) _messages.add(m);
   }
 
-  Future<void> envoyer(List<int> commande) => _commande.write(commande, withoutResponse: false);
+  Future<void> envoyer(List<int> commande) => _transport.ecrire(commande);
 
   /// Lance une mesure du cœur et attend un résultat non nul (le bracelet mesure en ~30 s).
   Future<int> mesurerCoeur({Duration attente = const Duration(seconds: 60)}) async {
@@ -225,5 +222,41 @@ class LiaisonYoho {
       a.cancel();
     }
     if (!_messages.isClosed) _messages.close();
+    _transport.fermer();
+  }
+}
+
+/// Ce dont la liaison a besoin : écrire dans CC06, lire CC02 / CC03, recevoir CC03 / CC04.
+abstract class TransportYoho {
+  Future<void> ecrire(List<int> octets);
+  Future<List<int>?> lireInfos();
+  Future<List<int>?> lireBatterie();
+  Stream<List<int>> get tempsReel;
+  Stream<List<int>> get batterie;
+  Future<void> activer();
+  void fermer() {}
+}
+
+class _TransportBle extends TransportYoho {
+  _TransportBle(this._commande, this._tempsReel, this._infos, this._batterie);
+  final BluetoothCharacteristic _commande, _tempsReel;
+  final BluetoothCharacteristic? _infos, _batterie;
+
+  @override
+  Future<void> ecrire(List<int> octets) => _commande.write(octets, withoutResponse: false);
+  @override
+  Future<List<int>?> lireInfos() async => _infos?.read();
+  @override
+  Future<List<int>?> lireBatterie() async => _batterie?.read();
+  @override
+  Stream<List<int>> get tempsReel => _tempsReel.onValueReceived;
+  @override
+  Stream<List<int>> get batterie => _batterie?.onValueReceived ?? const Stream.empty();
+  @override
+  Future<void> activer() async {
+    try {
+      await _batterie?.setNotifyValue(true);
+    } catch (_) {}
+    await _tempsReel.setNotifyValue(true);
   }
 }

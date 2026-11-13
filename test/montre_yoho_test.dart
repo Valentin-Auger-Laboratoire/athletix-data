@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:athletix_data/services/telephone/montre_podometre.dart';
 import 'package:athletix_data/services/telephone/montre_yoho.dart';
+import 'package:athletix_data/services/telephone/montre_yoho_simulee.dart';
 import 'package:athletix_data/services/telephone/protocole_yoho.dart';
 
 void main() {
@@ -175,6 +177,40 @@ void main() {
     test('pas de sommeil : pas de nuit', () {
       final p = [PeriodeActivite(DateTime(2026, 11, 13, 1), EtatActivite.marche, 10), PeriodeActivite(DateTime(2026, 11, 13, 2), EtatActivite.immobile, 0)];
       expect(NuitYoho.calculer(p, DateTime(2026, 11, 13, 10)), isNull);
+    });
+  });
+
+  group('Bracelet MSGM115 simulé, de bout en bout (mêmes octets que le vrai)', () {
+    test('firmware, cœur, tension, pas, vibration et nuit', () async {
+      final t = TransportYohoSimule(vitesse: 40);
+      final m = await MontrePodometre.simulee(transport: t);
+      final y = m.yoho!;
+      expect(y.firmware, '82.78.00.3d');
+      expect(y.batterie.value, 76);
+      expect(y.fonctions.coeur && y.fonctions.tension, isTrue);
+
+      final bpm = await y.mesurerCoeur();
+      expect(bpm, inInclusiveRange(64, 72));
+      expect(y.coeur.value, bpm);
+
+      final tension = await y.mesurerTension();
+      expect(tension.systolique, inInclusiveRange(112, 116));
+      expect(y.tension.value, isNotNull);
+
+      await y.faireVibrer();
+      expect(t.vibre, isTrue);
+
+      await Future.delayed(const Duration(milliseconds: 200));
+      expect(m.derniere.value?.pas, greaterThan(177));
+
+      final s = await y.synchroniser();
+      expect(s.periodes, hasLength(10));
+      expect(s.mesures, hasLength(2));
+      final nuit = y.nuit.value!;
+      expect(nuit.profond, const Duration(minutes: 15));
+      expect(nuit.leger, const Duration(minutes: 482));
+      expect(nuit.reveils, 1);
+      m.fermer();
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'montre_yoho.dart';
+import 'montre_yoho_simulee.dart';
 import 'protocole_yoho.dart';
 
 /// Bracelet ou montre qui compte les pas au format « podomètre WeChat » (service 0xFEE7,
@@ -24,7 +25,7 @@ class MontrePodometre {
   static const String uuidService = '0000fee7-0000-1000-8000-00805f9b34fb';
   static const String uuidPas = '0000fea1-0000-1000-8000-00805f9b34fb';
 
-  final BluetoothDevice _appareil;
+  final BluetoothDevice? _appareil;
   final StreamController<MesurePodometre> _flux = StreamController<MesurePodometre>.broadcast();
   final List<StreamSubscription> _abonnements = [];
   final ValueNotifier<MesurePodometre?> derniere = ValueNotifier<MesurePodometre?>(null);
@@ -36,7 +37,23 @@ class MontrePodometre {
   /// Montre choisie dans l'écran « Brassard », partagée par l'application.
   static final ValueNotifier<MontrePodometre?> active = ValueNotifier<MontrePodometre?>(null);
 
-  String get nom => _appareil.platformName.isNotEmpty ? _appareil.platformName : 'Montre';
+  String get nom {
+    final a = _appareil;
+    if (a == null) return 'MSGM115 (simulé)';
+    return a.platformName.isNotEmpty ? a.platformName : 'Montre';
+  }
+
+  /// Bracelet MSGM115 simulé (démo) : mêmes octets que le vrai, décodés par le même code.
+  static Future<MontrePodometre> simulee({TransportYohoSimule? transport}) async {
+    final m = MontrePodometre._(null);
+    final y = LiaisonYoho(transport ?? TransportYohoSimule());
+    m.yoho = y;
+    m._abonnements.add(y.messages.listen((msg) {
+      if (msg is PasYoho) m._recevoirMesure(MesurePodometre(pas: msg.pas));
+    }));
+    await y.demarrer();
+    return m;
+  }
   Stream<MesurePodometre> get mesures => _flux.stream;
 
   /// Lit une valeur de FEA1. Renvoie null si elle est trop courte pour les drapeaux annoncés.
@@ -132,7 +149,7 @@ class MontrePodometre {
       a.cancel();
     }
     if (!_flux.isClosed) _flux.close();
-    _appareil.disconnect().catchError((_) {});
+    _appareil?.disconnect().catchError((_) {});
   }
 }
 
