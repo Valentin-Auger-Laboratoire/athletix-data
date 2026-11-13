@@ -5,6 +5,7 @@ import 'package:athletix_data/services/api.dart';
 import 'package:athletix_data/services/file_envoi.dart';
 import 'package:athletix_data/services/brassard/brassard_actif.dart';
 import 'package:athletix_data/services/brassard/brassard_simule.dart';
+import 'package:athletix_data/services/brassard/codec_gatt.dart';
 import 'package:athletix_data/services/brassard/gatt_athletix.dart';
 import 'package:athletix_data/services/brassard/mesure_emg.dart';
 import 'package:athletix_data/services/brassard/mesure_frequence.dart';
@@ -54,6 +55,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   // Fatigue : fréquence médiane du signal brut (seulement si le brassard est en source RAW)
   final SuiviFatigue _fatigue = SuiviFatigue();
   StreamSubscription<MesureFrequence>? _abonnementFrequence;
+  // Avertissements du brassard (batterie faible, saturation, interrupteur sur ENV…)
+  StreamSubscription<EtatLu>? _abonnementEtats;
+  String? _avertissement;
+  bool _batterieSignalee = false;
   late final bool _signalBrut = _brassard.source == GattAthletix.sourceRaw;
   MesureEmg? _derniere;
   bool _enregistrement = false;
@@ -97,6 +102,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     _abonnement = _brassard.mesures.listen(_recevoir, onError: (Object e) {
       if (mounted) setState(() => _erreurLiaison = e.toString());
     });
+    _abonnementEtats = _brassard.etats.listen((e) {
+      if (e.codeErreur == 3 || e.codeErreur == 4) return; // calibration, commande : pas pendant une séance
+      if (e.codeErreur == 2 && !_batterieSignalee) {
+        _batterieSignalee = true;
+        _alerteur.signaler('Batterie du brassard faible');
+      }
+      if (mounted) setState(() => _avertissement = e.codeErreur == 0 ? null : e.message);
+    });
+    _brassard.reconnexion.addListener(_majReconnexion);
     if (_signalBrut) {
       _abonnementFrequence = _brassard.frequences.listen((f) {
         _fatigue.ajouter(f);
@@ -131,6 +145,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     _brassard.demarrer().catchError((Object e) {
       if (mounted) setState(() => _erreurLiaison = e.toString());
     });
+  }
+
+  void _majReconnexion() {
+    if (mounted) setState(() {});
   }
 
   void _verifierPause() {
@@ -175,6 +193,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   void dispose() {
     _abonnement?.cancel();
     _abonnementFrequence?.cancel();
+    _abonnementEtats?.cancel();
+    _brassard.reconnexion.removeListener(_majReconnexion);
     _abonnementCardio?.cancel();
     _minuteurPause?.cancel();
     _telephone?.arreter();
@@ -318,6 +338,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                       child: Text("Signal saturé : vérifie la position des électrodes",
                           style: TextStyle(color: Colors.orangeAccent, fontSize: 12)),
                     ),
+                  if (_brassard.reconnexion.value)
+                    _bandeau('Liaison Bluetooth coupée : reconnexion au brassard… (la séance continue)',
+                        Icons.bluetooth_searching, Colors.lightBlueAccent),
+                  if (_avertissement != null) _bandeau('Brassard : $_avertissement', Icons.warning_amber, Colors.orangeAccent),
                   if (_conseilPause != null) _bandeau(_conseilPause!, Icons.local_cafe, Colors.lightBlueAccent),
                   if (_modeAdapte && (_meteo?.chaud ?? false))
                     _bandeau('${decimalFr(_meteo!.temperatureC, 0)} °C : la chaleur fatigue plus vite. '

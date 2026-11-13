@@ -415,13 +415,14 @@ class _SectionCardioState extends State<_SectionCardio> {
       builder: (context, ceinture, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('CEINTURE CARDIO (FACULTATIF)', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
+          const Text('CEINTURE OU MONTRE CARDIO (FACULTATIF)', style: TextStyle(color: Colors.white54, letterSpacing: 1, fontSize: 12)),
           const SizedBox(height: 6),
           const Text(
-            "Le brassard mesure l'effort des muscles, pas le cœur. Une ceinture cardio Bluetooth standard "
-            "(Polar, Garmin, Decathlon…) ajoute la fréquence cardiaque aux séances.",
+            "Le brassard mesure l'effort des muscles, pas le cœur. Une ceinture cardio Bluetooth (Polar, Garmin, "
+            "Decathlon…) ou une MONTRE qui diffuse sa fréquence cardiaque ajoute le cœur aux séances.",
             style: TextStyle(color: Colors.white38, fontSize: 11),
           ),
+          const _AideMontre(),
           const SizedBox(height: 10),
           if (ceinture != null)
             Card(
@@ -472,6 +473,41 @@ class _SectionCardioState extends State<_SectionCardio> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(_erreur!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Comment faire apparaître sa montre : elle doit DIFFUSER sa fréquence cardiaque en Bluetooth
+/// standard (service 0x180D), comme une ceinture. Toutes les montres ne le font pas.
+class _AideMontre extends StatelessWidget {
+  const _AideMontre();
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(color: Colors.white54, fontSize: 12, height: 1.4);
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: const ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.only(bottom: 8),
+        iconColor: Colors.white54,
+        collapsedIconColor: Colors.white54,
+        title: Text('Utiliser ma montre', style: TextStyle(color: Colors.white70, fontSize: 13)),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Sur la montre, active la diffusion de la fréquence cardiaque, puis appuie sur « Rechercher » ci-dessous. "
+            "Le menu dépend de la marque (son nom exact peut varier selon le modèle) :\n"
+            "• Garmin : Paramètres → Capteurs → Fréquence cardiaque → « Diffuser la fréquence cardiaque ».\n"
+            "• Polar : réglages → « Partager la FC avec d'autres appareils ».\n"
+            "• Coros, Suunto : « Diffusion de la fréquence cardiaque » dans les réglages ou au départ d'une activité.\n"
+            "• Amazfit (Zepp) : application Zepp → profil → la montre → « Diffusion de la fréquence cardiaque ».\n"
+            "• Huawei, Honor : selon le modèle, « Partage de la fréquence cardiaque » dans les réglages de la montre.\n"
+            "Les Apple Watch, Galaxy Watch et Fitbit ne diffusent pas en Bluetooth standard sans application en plus.",
+            style: style,
+          ),
         ],
       ),
     );

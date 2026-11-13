@@ -21,7 +21,7 @@ class CeintureCardio {
   /// Ceinture choisie dans l'écran « Brassard », partagée par l'application.
   static final ValueNotifier<CeintureCardio?> active = ValueNotifier<CeintureCardio?>(null);
 
-  String get nom => _appareil.platformName.isNotEmpty ? _appareil.platformName : 'Ceinture cardio';
+  String get nom => _appareil.platformName.isNotEmpty ? _appareil.platformName : 'Capteur cardio';
   Stream<int> get bpm => _flux.stream;
 
   /// Lit une valeur de la caractéristique 0x2A37 (norme Bluetooth « Heart Rate Measurement ») :

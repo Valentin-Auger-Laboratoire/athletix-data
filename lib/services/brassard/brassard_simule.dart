@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import 'analyse_frequence.dart';
 import 'codec_gatt.dart';
 import 'gatt_athletix.dart';
@@ -112,6 +114,24 @@ class BrassardSimule implements SourceBrassard {
   @override
   Stream<MesureEmg> get mesures => _flux.stream;
 
+  final StreamController<EtatLu> _fluxEtats = StreamController<EtatLu>.broadcast();
+  DateTime? _calibreLe;
+
+  @override
+  Stream<EtatLu> get etats => _fluxEtats.stream;
+
+  /// Pour les tests et la démo : fait comme si le brassard envoyait un avertissement (GATT.md §7).
+  void simulerAvertissement(int code) {
+    if (!_fluxEtats.isClosed) _fluxEtats.add(EtatLu(_minuteur != null ? EtatBrassard.mesure : EtatBrassard.repos, code));
+  }
+
+  /// Le brassard simulé ne perd jamais la liaison.
+  @override
+  ValueListenable<bool> get reconnexion => const _Toujours(false);
+
+  @override
+  DateTime? get calibreLe => _calibreLe;
+
   @override
   int get source => _source;
 
@@ -189,6 +209,7 @@ class BrassardSimule implements SourceBrassard {
     _calibration = false;
     final base = _source == GattAthletix.sourceRaw ? 500 : GattAthletix.refMvcDefautMv;
     _refMvcMv = (base * (0.95 + _hasard.nextDouble() * 0.10)).round();
+    _calibreLe = DateTime.now();
     return _refMvcMv;
   }
 
@@ -197,6 +218,7 @@ class BrassardSimule implements SourceBrassard {
     arreter();
     _flux.close();
     _fluxFrequences.close();
+    _fluxEtats.close();
   }
 
   /// Fabrique 20 ms de signal brut (bruit filtré dont l'amplitude suit l'intensité et dont le spectre
@@ -261,4 +283,15 @@ class BrassardSimule implements SourceBrassard {
       }
     }
   }
+}
+
+/// Valeur fixe qui ne change jamais (ValueListenable sans notification).
+class _Toujours<T> implements ValueListenable<T> {
+  const _Toujours(this.value);
+  @override
+  final T value;
+  @override
+  void addListener(VoidCallback listener) {}
+  @override
+  void removeListener(VoidCallback listener) {}
 }

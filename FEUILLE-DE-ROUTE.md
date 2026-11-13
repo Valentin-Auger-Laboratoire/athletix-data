@@ -45,6 +45,7 @@
 - **Fatigue du muscle** (13 novembre) : choix du signal brut dans l'écran Brassard, fréquence médiane en direct et écart au début, baisse en fin de séance, courbe dans le détail, fatigue par semaine dans « Mon évolution » (et cause possible d'une semaine moins bonne), colonnes dans le PDF et le CSV ([`FATIGUE.md`](hardware/firmware-brassard/FATIGUE.md)).
 - **Appairage chiffré** : code à 6 chiffres demandé une fois, état de la liaison, « Oublier l'appairage » ([`SECURITE.md`](hardware/firmware-brassard/SECURITE.md)).
 - **Fond de carte OpenStreetMap** sous le parcours (désactivé par défaut, réglage et bouton dans le détail).
+- **Prêt pour le vrai brassard** (13 novembre, soir) : reconnexion automatique pendant une séance, avertissements du brassard affichés (batterie, électrode, interrupteur), rappel de calibration avant la séance, **montre** qui diffuse sa fréquence cardiaque reliée comme une ceinture (aide par marque dans l'écran Brassard). À tester : étapes 6.5 à 6.8 du protocole.
 - **Démo en ligne** sans serveur, avec six semaines de séances fictives ; elle se met à jour sans vider le cache du navigateur.
 
 ### Serveur

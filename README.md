@@ -189,6 +189,8 @@ Le format Bluetooth, les modèles de données (MCD, MLD, MCT) et l'intégration 
 - **Fatigue du muscle** (brassard en signal brut) : fréquence médiane en direct, baisse en fin de séance, courbe, fatigue par semaine. Sinon, un **indice de fatigue expérimental** tiré de l'intensité, expliqué à l'écran avec ses limites.
 - **Détail d'une séance** : courbe complète (une valeur toutes les 5 s), temps passé dans chaque zone d'intensité, contractions, GPS, cœur, météo, ressenti, fatigue.
 - **Brassard sécurisé** : appairage avec le code à 6 chiffres du brassard (liaison chiffrée), état de la liaison et « Oublier l'appairage » dans l'écran Brassard.
+- **Prêt pour le vrai brassard** : **reconnexion automatique** si le Bluetooth coupe en pleine séance (30 s, la séance continue), **avertissements du brassard** affichés pendant la séance (batterie faible avec vibration, électrode décollée, interrupteur du Link Shield mal placé), **rappel de calibration** avant la séance si le brassard vient d'être allumé ou si la dernière date de plus de 4 h.
+- **Montre** : une montre qui diffuse sa fréquence cardiaque (Garmin, Polar, Coros, Suunto, Amazfit…) se relie comme une ceinture cardio ; l'écran Brassard explique où activer la diffusion selon la marque.
 - **Natation et sports d'eau** : le Bluetooth ne passe pas sous l'eau, donc le brassard calcule et garde lui-même le résumé de la séance (intensité, efforts intenses, courbe toutes les 30 s) ; l'application le récupère au retour. Arrêt automatique après 5 min de repos (le temps au bord ne compte pas), rien n'est effacé du brassard avant d'être enregistré.
 - **Parcours** : tracé GPS coloré par l'intensité musculaire, vitesse et intensité le long du parcours. Les 200 premiers et derniers mètres ne sont pas enregistrés (souvent le domicile). **Fond de carte OpenStreetMap** au choix (désactivé par défaut : la zone du parcours est alors demandée aux serveurs d'OpenStreetMap, avec le crédit obligatoire), tuiles placées par un calcul de projection écrit à la main.
 - **Musculation** : contractions (répétitions) et **séries** comptées par le brassard.
@@ -271,7 +273,7 @@ ngrok http --url=mon-domaine.ngrok-free.app 80
 
 ### 6. Tests
 ```bash
-flutter test                                   # application (92 tests) : Bluetooth, séance, natation, fatigue, GPS, carte, évolution, exports, démo
+flutter test                                   # application (95 tests) : Bluetooth, séance, natation, fatigue, GPS, carte, évolution, exports, démo
 ATHLETIX_TEST=1 bash tests/api/test_api.sh     # API sur une base de TEST (le script la vide) : 93 vérifications
 g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_emg.cpp -o test_emg && ./test_emg   # calculs du firmware : 42 vérifications
 g++ -std=c++17 -I hardware/firmware-brassard tests/firmware/test_calcul_fatigue.cpp -o test_fatigue && ./test_fatigue   # fréquence médiane : 34
@@ -385,7 +387,7 @@ The Bluetooth format, data models and network integration are described (in Fren
 3. **Flutter app**: run `flutter pub get`, then `flutter run -d chrome --web-port 5000`. The API URL lives in `lib/config.dart`, or can be passed with `--dart-define=API_BASE_URL=...`.
 4. **Hosting the API on a PC**: XAMPP plus an **ngrok** tunnel (`ngrok http --url=<free static domain> 80`), then set the repository variable `API_BASE_URL` to `https://<domain>/athletix-data/backend` and rerun the “APK Android” workflow.
 5. **Android app** (real armband): download the ready-made [athletix-data.apk](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk) built by GitHub, or open the project in Android Studio and build with `--dart-define=API_BASE_URL=...`.
-6. **Tests**: `flutter test` (92 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (93 checks, on a test database only), the firmware tests in `tests/firmware/` (calculations, fatigue, pairing, whole firmware run with stand-in libraries) and the measurement tools in `tests/mesures/` (18 tests). GitHub reruns them all on every push.
+6. **Tests**: `flutter test` (95 tests), `ATHLETIX_TEST=1 bash tests/api/test_api.sh` (93 checks, on a test database only), the firmware tests in `tests/firmware/` (calculations, fatigue, pairing, whole firmware run with stand-in libraries) and the measurement tools in `tests/mesures/` (18 tests). GitHub reruns them all on every push.
 7. **GitHub Pages**: `bash tools/build_web.sh` (builds, copies to `docs/`, adds a version number so browsers never keep an old copy), then enable Pages on `main` / `docs`.
 
 ## Personal data (GDPR)

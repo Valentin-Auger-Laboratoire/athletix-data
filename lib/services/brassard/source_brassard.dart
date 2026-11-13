@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+
+import 'codec_gatt.dart';
 import 'hors_ligne.dart';
 import 'mesure_emg.dart';
 import 'mesure_frequence.dart';
@@ -49,6 +52,17 @@ abstract class SourceBrassard {
 
   /// Fréquence médiane du signal brut, 2 fois par seconde (source RAW seulement, GATT.md §12).
   Stream<MesureFrequence> get frequences;
+
+  /// État et avertissements envoyés par le brassard (GATT.md §7) : batterie faible, saturation,
+  /// interrupteur du Link Shield mal placé… Code 0 = l'avertissement précédent a disparu.
+  Stream<EtatLu> get etats;
+
+  /// Vrai pendant une reconnexion automatique après une coupure du Bluetooth en pleine séance.
+  ValueListenable<bool> get reconnexion;
+
+  /// Heure de la dernière calibration réussie avec CE brassard depuis sa connexion, ou null.
+  /// Le brassard oublie sa référence quand il s'éteint : il faut recalibrer après chaque allumage.
+  DateTime? get calibreLe;
 
   /// Commande 0x01 : démarre l'envoi des mesures.
   Future<void> demarrer();

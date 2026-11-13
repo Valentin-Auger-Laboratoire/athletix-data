@@ -138,16 +138,68 @@ class BrassardBle implements SourceBrassard {
     }
   }
 
+  // ---- Reconnexion automatique (séance sur terre seulement) ----
+  // Le firmware arrête la mesure quand la liaison se coupe. Si une séance était en cours, on
+  // essaie de se reconnecter pendant [dureeReconnexion], puis on relance la mesure : la séance
+  // continue (le trou n'est pas compté comme effort intense, ResumeSeance.ecartMaxMs).
+  static const Duration dureeReconnexion = Duration(seconds: 30);
+  bool _mesureEnCours = false;
+  bool _ferme = false;
+  StreamSubscription? _abonnementConnexion;
+  final ValueNotifier<bool> _reconnexion = ValueNotifier<bool>(false);
+  DateTime? _calibreLe;
+
+  @override
+  ValueListenable<bool> get reconnexion => _reconnexion;
+
+  @override
+  Stream<EtatLu> get etats => _etats.stream;
+
+  @override
+  DateTime? get calibreLe => _calibreLe;
+
   Future<void> _ouvrir() async {
+    await _connecterEtAbonner();
+    _abonnementConnexion = _appareil.connectionState.listen((etat) {
+      connecte.value = etat == BluetoothConnectionState.connected;
+      if (connecte.value || _ferme || _reconnexion.value) return;
+      if (_mesureEnCours) {
+        _reconnecter();
+      } else if (!_flux.isClosed) {
+        _flux.addError(ErreurBrassard('Liaison Bluetooth perdue'));
+      }
+    });
+  }
+
+  Future<void> _reconnecter() async {
+    _reconnexion.value = true;
+    final limite = DateTime.now().add(dureeReconnexion);
+    while (!_ferme && DateTime.now().isBefore(limite)) {
+      try {
+        await _connecterEtAbonner();
+        await _envoyer(CommandeBrassard.demarrer()); // le firmware avait arrêté la mesure
+        _reconnexion.value = false;
+        return;
+      } catch (_) {
+        await Future.delayed(const Duration(seconds: 3));
+      }
+    }
+    _reconnexion.value = false;
+    _mesureEnCours = false;
+    if (!_flux.isClosed && !_ferme) {
+      _flux.addError(ErreurBrassard('Liaison Bluetooth perdue : brassard introuvable pendant 30 s (éteint ou trop loin ?)'));
+    }
+  }
+
+  /// Connexion, lecture des informations et abonnements. Rappelée à chaque reconnexion.
+  Future<void> _connecterEtAbonner() async {
+    for (final a in _abonnements) {
+      await a.cancel();
+    }
+    _abonnements.clear();
     // License.nonprofit : projet étudiant, usage pédagogique (licence FlutterBluePlus, section 2)
     await _appareil.connect(license: License.nonprofit, mtu: null, timeout: const Duration(seconds: 15));
     connecte.value = true;
-    _abonnements.add(_appareil.connectionState.listen((etat) {
-      connecte.value = etat == BluetoothConnectionState.connected;
-      if (!connecte.value && !_flux.isClosed) {
-        _flux.addError(ErreurBrassard('Liaison Bluetooth perdue'));
-      }
-    }));
 
     // 50 notifications par seconde demandent un intervalle de connexion court (GATT.md §4)
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -310,10 +362,14 @@ class BrassardBle implements SourceBrassard {
   }
 
   @override
-  Future<void> demarrer() => _envoyer(CommandeBrassard.demarrer());
+  Future<void> demarrer() async {
+    await _envoyer(CommandeBrassard.demarrer());
+    _mesureEnCours = true;
+  }
 
   @override
   Future<void> arreter() async {
+    _mesureEnCours = false;
     if (connecte.value) await _envoyer(CommandeBrassard.arreter());
   }
 
@@ -323,6 +379,7 @@ class BrassardBle implements SourceBrassard {
     if (_carHorsLigne == null) {
       throw ErreurBrassard("Ce brassard ne sait pas enregistrer sans connexion (firmware 1.1 nécessaire)");
     }
+    _mesureEnCours = false; // natation : la coupure est normale, le brassard continue seul
     await _envoyer(CommandeBrassard.demarrerHorsLigne());
   }
 
@@ -362,6 +419,7 @@ class BrassardBle implements SourceBrassard {
         await Future.delayed(const Duration(milliseconds: 3500));
       }
       await _lireConfiguration();
+      _calibreLe = DateTime.now();
       return _config.refMvcMv;
     } finally {
       await ecoute.cancel();
@@ -370,6 +428,9 @@ class BrassardBle implements SourceBrassard {
 
   @override
   void fermer() {
+    _ferme = true;
+    _mesureEnCours = false;
+    _abonnementConnexion?.cancel();
     for (final a in _abonnements) {
       a.cancel();
     }
