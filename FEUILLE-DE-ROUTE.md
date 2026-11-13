@@ -1,6 +1,6 @@
 # Feuille de route
 
-> Mise à jour : 12 novembre 2026.
+> Mise à jour : 13 novembre 2026.
 > Le matériel a été demandé en juin 2026 et commandé par l'école en novembre : livraison attendue **mi-décembre 2026 au plus tôt**.
 > En attendant, **tout ce qui ne dépend pas des pièces est fait** : l'application est quasiment finie et testée, le firmware est écrit et ses calculs sont testés sur ordinateur. Quand les pièces arrivent, il reste à souder, flasher, mesurer et comparer à la simulation.
 > Cochez les cases au fur et à mesure (bouton ✏️ de GitHub, puis remplacer `[ ]` par `[x]`).
@@ -20,9 +20,11 @@
 | Firmware de test (faux brassard) | ✅ écrit, ⏳ jamais testé sur une carte |
 | Câblage | ✅ schéma présumé vérifié sur les fiches SparkFun ([`hardware/`](hardware/README.md)), ⏳ non testé |
 | Protocole de test | ✅ ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) |
-| Projet Android | ✅ prêt (Bluetooth, GPS, vibration), ⏳ APK à compiler dans Android Studio |
+| Projet Android | ✅ prêt (Bluetooth, GPS, vibration), APK compilé par GitHub ([release « apk »](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ⏳ à installer sur un téléphone |
 | Règle de score du classement | ✅ validée (12 novembre 2026) et codée |
-| Boîtier (Fusion 360) | ✅ modélisé (Valentin), ⏳ fichiers à ajouter au dépôt, ⏳ pas étanche |
+| Boîtier | ✅ cahier des charges et implantation à l'échelle ([`hardware/boitier/`](hardware/boitier/README.md)), ⏳ modèle Fusion 360 à finir et à ajouter (STEP + STL), ⏳ pas étanche |
+| Documents pour les essais : mode d'emploi, fiche de test à imprimer | ✅ ([`mode-emploi/`](mode-emploi/mode-emploi.pdf), [`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)), visibles en haut du README |
+| Comparaison automatique mesure / simulation, analyse des risques, Gantt, vidéo | ✅ ([`mesures/`](mesures/README.md), [`gestion-projet/`](gestion-projet/README.md), [`media/`](media/demo-application.mp4)) |
 | Brassard réel câblé, mesuré, calibré | ❌ attend le matériel |
 
 ## Ce qui est fait
@@ -39,6 +41,7 @@
 - **Pour les soignants** : export du carnet en **PDF** (par semaine et par séance) et en **CSV** (Excel).
 - **Accessibilité et mode adapté** (rencontre avec la patiente atteinte de sclérose en plaques) : grands caractères, alertes par vibration et à voix haute, seuils plus bas, pause conseillée, avertissement chaleur.
 - **RGPD** : télécharger toutes ses données (JSON), supprimer son compte et ses données (mot de passe redemandé).
+- **Mode d'emploi** accessible depuis l'application (menu du profil).
 - **Démo en ligne** sans serveur, avec six semaines de séances fictives ; elle se met à jour sans vider le cache du navigateur.
 
 ### Serveur
@@ -99,7 +102,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 - [ ] **Deux brassards** pour comparer le côté gauche et le côté droit (raideurs, asymétrie).
 - [ ] Fond de carte sous le tracé du parcours (aujourd'hui le tracé seul, sans service de cartes).
 - [ ] Appairage Bluetooth sécurisé et API en HTTPS pour un vrai déploiement.
-- [ ] Version anglaise de l'application.
+- ~~Version anglaise de l'application~~ : non retenue (décision du 13 novembre 2026).
 
 ### Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
 
