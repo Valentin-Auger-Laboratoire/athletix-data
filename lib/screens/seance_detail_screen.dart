@@ -90,7 +90,7 @@ class SeanceDetailScreen extends StatelessWidget {
           if (_entier('distance_m') != null && s['id'] != null)
             _section('Parcours', [_SectionParcours(id: (s['id'] as num).toInt(), trace: s['trace'] as List?)]),
           if (_entier('fc_moy') != null)
-            _section('Cœur (ceinture cardio)', [
+            _section('Cœur (ceinture ou montre)', [
               Row(children: [
                 _chiffre('moyenne', '${_entier('fc_moy')} bpm'),
                 if (_entier('fc_max') != null) _chiffre('maximum', '${_entier('fc_max')} bpm'),

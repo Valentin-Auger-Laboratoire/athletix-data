@@ -165,9 +165,9 @@ Ce brassard n'est **pas un dispositif médical**. Une activité physique adapté
 
 ▶️ **Démo en ligne (sans serveur, données fictives) :** https://valentin-auger-laboratoire.github.io/athletix-data/ puis « Essayer la démo ».
 
-**La démo en vidéo** (70 s, brassard simulé) : séance en direct, ressenti, détail d'une course avec son parcours, évolution, natation. Version MP4 pour une présentation : [`media/demo-application.mp4`](media/demo-application.mp4).
+**La démo en vidéo** (85 s, brassard et montre simulés, réalisée par Valentin Auger) : montre reliée (cœur, tension, sommeil, batterie), séance de musculation avec la **fatigue** du muscle et le cœur et les pas de la montre, ressenti, détail de la séance, évolution. Version MP4 pour une présentation : [`media/demo-application.mp4`](media/demo-application.mp4).
 
-<img src="media/demo-application.gif" alt="Démonstration de l'application : séance en direct, détail d'une séance, évolution et natation" width="270">
+<img src="media/demo-application.gif" alt="Démonstration de l'application : montre reliée, séance avec la fatigue, détail d'une séance, évolution" width="270">
 
 | Accueil et objectif de la semaine | Séance en direct (brassard simulé) | Détail : parcours et intensité |
 |---|---|---|

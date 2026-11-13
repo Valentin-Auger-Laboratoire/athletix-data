@@ -55997,7 +55997,7 @@ if(i.dA(b)!=null)n.push(A.cH(A.bU(A.b([i.j3("pas",A.i(i.dA(b)))],m),B.P,B.M,B.Q,
 o.push(i.oV("T\xe9l\xe9phone",A.b([A.kk(B.cp,n,12,8)],m)))}if(i.dA(c)!=null&&a5.h(0,"id")!=null)o.push(i.oV("Parcours",A.b([new A.O5(B.n.bz(A.e_(a5.h(0,"id"))),a7.a(a5.h(0,"trace")),h)],m)))
 if(i.dA("fc_moy")!=null){a7=A.b([i.j3("moyenne",A.i(i.dA("fc_moy"))+" bpm")],m)
 if(i.dA("fc_max")!=null)a7.push(i.j3("maximum",A.i(i.dA("fc_max"))+" bpm"))
-o.push(i.oV("C\u0153ur (ceinture cardio)",A.b([A.bU(a7,B.P,B.M,B.Q,0)],m)))}if(i.jK(a1)!=null){a7=i.jK(a1)
+o.push(i.oV("C\u0153ur (ceinture ou montre)",A.b([A.bU(a7,B.P,B.M,B.Q,0)],m)))}if(i.jK(a1)!=null){a7=i.jK(a1)
 a7.toString
 a7=B.n.U(a7,1)
 a7=A.cR(a7,".",",")
