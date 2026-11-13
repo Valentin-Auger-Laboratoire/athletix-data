@@ -34,7 +34,10 @@ Réalisée par **Valentin Auger** (novembre 2026).
 | Bluetooth | liaison coupée pendant la séance | mesures perdues | 2 | 3 | 1 | 6 | coupure non comptée comme effort, résumé envoyé quand même ; natation : résumé gardé dans le brassard | — |
 | Bluetooth | débit insuffisant (50 mesures/s) | mesures en retard | 1 | 2 | 1 | 2 | paquets groupés acceptés par l'appli (GATT.md) | mesurer pendant les essais |
 | Batterie vide en séance | coupure du brassard | séance interrompue | 1 | 2 | 1 | 2 | batterie affichée, alerte sous 10 % (code 2) | mesurer l'autonomie (protocole, étape 6) |
-| Firmware | écrit sans la carte, jamais compilé pour l'ESP32 | erreurs à la compilation | 2 | 3 | 1 | 6 | calculs testés sur ordinateur (41 vérifications), programme vérifié avec des imitations des bibliothèques | compiler dans l'IDE Arduino dès la réception |
+| Firmware | écrit sans la carte, jamais compilé pour l'ESP32 | erreurs à la compilation | 2 | 3 | 1 | 6 | calculs testés sur ordinateur (129 vérifications), firmware complet exécuté avec des imitations des bibliothèques | compiler dans l'IDE Arduino dès la réception |
+| Montre MSGM115 | application d'origine encore connectée | montre introuvable ou mesures qui n'arrivent pas | 1 | 3 | 1 | 3 | consigne « forcer l'arrêt de Yoho Sports » dans l'appli, le mode d'emploi et le protocole | — |
+| Montre MSGM115 | format retrouvé dans l'appli d'origine, jamais essayé sur la montre | une commande mal comprise (heure sur 24 h, lever du poignet…) | 1 | 2 | 1 | 2 | format testé avec une montre simulée (mêmes octets) ; seules des lectures et des réglages réversibles, la remise à zéro n'est pas proposée dans Athletix-Data | protocole, étape 10 |
+| Tension de la montre | prise pour une vraie mesure | fausse confiance | 2 | 2 | 2 | 8 | « estimation, pas une mesure médicale » à chaque affichage | — |
 
 ## 3. Données et serveur
 
@@ -42,7 +45,7 @@ Réalisée par **Valentin Auger** (novembre 2026).
 |---|---|---|---|---|---|---|---|---|
 | Données de santé | fuite de la base | données personnelles exposées | 3 | 2 | 3 | **18** | mots de passe hachés, jetons stockés hachés, requêtes préparées, résumé seulement (jamais le signal brut), consentement, export et suppression du compte | HTTPS (tunnel ngrok) dès l'hébergement ; pas de vraies données de santé pendant le projet |
 | Jeton de session | lu sur un réseau en HTTP | accès au compte | 3 | 2 | 3 | **18** | HTTP réservé au réseau local du prototype | n'utiliser que l'adresse HTTPS de ngrok |
-| Mot de passe | essais en grand nombre | compte forcé | 3 | 1 | 3 | 9 | mot de passe redemandé pour supprimer le compte | limite d'essais si le serveur est utilisé au-delà du projet |
+| Mot de passe | essais en grand nombre | compte forcé | 3 | 1 | 3 | 9 | mot de passe redemandé pour supprimer le compte ; essais limités côté serveur (migration 006 : 5 par compte en 15 min, réponse 429) | — |
 | Tracé GPS | domicile visible | vie privée | 3 | 2 | 2 | **12** | 200 premiers et derniers mètres non enregistrés, position météo arrondie à ~1 km | — |
 | Classement | séance déclarée « mesurée » sans brassard | triche | 1 | 2 | 3 | 6 | séances simulées exclues | signature des résumés par le brassard (plus tard) |
 | Séance sans réseau | perte ou doublon | séance perdue ou comptée deux fois | 2 | 2 | 1 | 4 | gardée sur le téléphone, renvoyée sans doublon (identifiant unique, testé) | — |

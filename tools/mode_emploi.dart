@@ -181,7 +181,24 @@ Future<void> main() async {
         pw.SizedBox(width: 10),
         ecran(img('export.jpg'), 'Exporter', largeur: 68),
       ]),
-      titre('6', 'En cas de problème'),
+      titre('6', 'Relier sa montre (facultatif)'),
+      pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+        pw.Expanded(
+          child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+            etapes([
+              "Écran Brassard, partie « Bracelet podomètre » : « Rechercher un bracelet podomètre » et choisir la montre. Fermer d'abord l'application d'origine de la montre (forcer l'arrêt) : une montre n'accepte qu'une application à la fois.",
+              "Pendant les séances, les pas de la montre remplacent ceux du téléphone ; sans ceinture cardio, le cœur vient de la montre. Sa batterie s'affiche sur l'accueil et pendant la séance (alerte à 15 %).",
+              "Bracelet MSGM115 (« YOHO ») : « Mesurer le cœur », « Estimer la tension », « Synchroniser (sommeil) » pour la dernière nuit, « Faire vibrer », envoi du profil et rappel d'inactivité.",
+              "Autre montre ou ceinture : le cœur passe si elle le diffuse en Bluetooth standard (aide par marque dans l'écran Brassard).",
+            ]),
+            pw.SizedBox(height: 3),
+            note("La tension donnée par la montre est une estimation de son capteur optique, pas une mesure au brassard."),
+          ]),
+        ),
+        pw.SizedBox(width: 10),
+        ecran(img('montre.jpg'), 'Montre MSGM115', largeur: 76),
+      ]),
+      titre('7', 'En cas de problème'),
       pw.TableHelper.fromTextArray(
         headerStyle: gras,
         cellStyle: const pw.TextStyle(fontSize: 8),
@@ -194,6 +211,7 @@ Future<void> main() async {
           ['Alerte sans gros effort', 'Calibration trop faible : la refaire en serrant vraiment au maximum.'],
           ['« Signal saturé »', "Électrode décollée : la remplacer. Vérifier l'interrupteur ENV du Link Shield."],
           ['Batterie faible (sous 10 %)', "Recharger par l'USB-C, sous surveillance."],
+          ['La montre ne se connecte pas', "Forcer l'arrêt de son application d'origine, puis relancer la recherche. Montre chargée et proche du téléphone."],
           ['Séance pas encore dans « Mes séances »', "Pas de réseau : elle partira toute seule. L'accueil indique les séances en attente."],
         ].map((l) => l.map(sur).toList()).toList(),
       ),

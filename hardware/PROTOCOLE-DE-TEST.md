@@ -129,6 +129,23 @@ Détails : [`firmware-brassard/SECURITE.md`](firmware-brassard/SECURITE.md). Seu
 | 9.7 | Moniteur série : `OUBLIER`, puis se reconnecter | le code est redemandé (sur Android, « Oublier l'appairage » dans l'appli aussi) | | |
 | 9.8 | Moniteur série : `NOUVEAU` | nouveau code affiché ; mettre l'étiquette à jour | | |
 
+## Étape 10 — Montre MSGM115 (faisable dès maintenant, sans le brassard)
+
+Il faut seulement l'APK (release « apk » du dépôt), un téléphone Android et la montre chargée. **Forcer l'arrêt de Yoho Sports** avant (la montre n'accepte qu'une application à la fois). Garder Yoho Sports installée pour comparer les valeurs, puis la refermer. Format décrit dans [`architecture/BRACELET-YOHO.md`](../architecture/BRACELET-YOHO.md).
+
+| # | Vérification | Attendu | Mesuré | OK ? |
+|---|---|---|---|---|
+| 10.1 | Écran Brassard → « Rechercher un bracelet podomètre » → MSGM115 | carte de la montre avec ses pas ; panneau « Bracelet YOHO · firmware 82.78.00.3d » | | |
+| 10.2 | Batterie | pastille sur la carte, sur l'accueil (« Montre … % ») ; même valeur que Yoho Sports | | |
+| 10.3 | « Faire vibrer » | la montre vibre | | |
+| 10.4 | « Mesurer le cœur », bras immobile | valeur en 30 à 60 s ; écart de moins de 5 bpm avec une mesure Yoho Sports faite juste après | | |
+| 10.5 | « Estimer la tension » | deux valeurs (estimation) proches de celles de Yoho Sports | | |
+| 10.6 | Le matin : « Synchroniser (sommeil) » | durée de la nuit, profond, léger, réveils ; comparer avec Yoho Sports (le calcul est simplifié : quelques minutes d'écart possibles) | | |
+| 10.7 | « Envoyer mon profil », puis marcher 100 pas comptés | profil accepté ; distance et calories de la montre cohérentes avec la taille et le poids | | |
+| 10.8 | Rappel d'inactivité à 15 min, rester assis | la montre vibre après 15 min | | |
+| 10.9 | Séance (marche) sans ceinture cardio | « PAS (BRACELET) » et « CŒUR » viennent de la montre ; batterie de la montre sous les pas | | |
+| 10.10 | Appui long sur l'écran musique de la montre (montre appairée dans les réglages Bluetooth d'Android) | lecture / pause, morceau suivant | | |
+
 ## Comparer à la simulation
 
 ⚠️ Électrodes sur la peau et brassard relié en USB : **PC portable débranché du secteur** (ou isolateur USB).

@@ -24,13 +24,13 @@ Trois documents prêts **avant** l'arrivée du matériel, pour que les essais co
 
 ### 📘 Mode d'emploi
 
-Réalisé par **Valentin Auger**. Poser le brassard et les électrodes, calibrer, faire une séance, récupérer une séance de natation, donner le carnet à un soignant, problèmes fréquents. À imprimer pour les essais : **[`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)**. Il s'ouvre aussi depuis l'application (menu du profil, « Mode d'emploi »).
+Réalisé par **Valentin Auger**. Poser le brassard et les électrodes, calibrer, faire une séance, récupérer une séance de natation, donner le carnet à un soignant, **relier sa montre**, problèmes fréquents. À imprimer pour les essais : **[`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)**. Il s'ouvre aussi depuis l'application (menu du profil, « Mode d'emploi »).
 
-<img src="mode-emploi/apercu-page-1.png" alt="Mode d'emploi, page 1 : sécurité, pose des électrodes, calibration, séance" width="380"> <img src="mode-emploi/apercu-page-2.png" alt="Mode d'emploi, page 2 : natation, carnet pour les soignants, problèmes fréquents" width="380">
+<img src="mode-emploi/apercu-page-1.png" alt="Mode d'emploi, page 1 : sécurité, pose des électrodes, calibration, séance" width="380"> <img src="mode-emploi/apercu-page-2.png" alt="Mode d'emploi, page 2 : natation, carnet pour les soignants, montre, problèmes fréquents" width="380">
 
 ### ✅ Fiche de test à imprimer
 
-Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception (4 pages, dont la mesure de la fatigue) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
+Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main (5 pages, dont la mesure de la fatigue et une étape **montre** faisable dès maintenant, sans le brassard) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
 
 <img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
 
@@ -129,7 +129,7 @@ Le matériel, demandé en juin 2026, a été commandé par l'école en novembre 
 - ✅ **L'API** est testée sur une vraie base (93 vérifications). Le **firmware final 1.2** est écrit : ses calculs sont testés sur ordinateur (42 + 34 + 15 vérifications) et le programme entier y est **exécuté** avec des imitations des bibliothèques ESP32 et un muscle simulé (38 vérifications). GitHub relance tous les tests à chaque envoi.
 - ✅ **Nouveau (13 novembre)** : mesure de la **fatigue** par la fréquence médiane, **liaison Bluetooth chiffrée** avec code, **fond de carte** sous le parcours, limite des essais de mot de passe.
 - 🔜 **Encore sans le matériel** : essayer l'application sur un téléphone Android ([APK](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ajouter le boîtier, rapport du jalon 1. Planning : [diagramme de Gantt](gestion-projet/README.md).
-- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) ([fiche à imprimer](hardware/fiche-de-test.pdf)), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation ([automatique](mesures/README.md)), autonomie, boîtier, natation à sec, **fatigue**, **appairage chiffré**.
+- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) ([fiche à imprimer](hardware/fiche-de-test.pdf)), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation ([automatique](mesures/README.md)), autonomie, boîtier, natation à sec, **fatigue**, **appairage chiffré** ; et dès maintenant, sans le brassard : l'**étape 10, montre MSGM115**.
 
 Tout le détail (ce qui est fait, ce qui reste, cases à cocher, répartition) : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
 
@@ -345,7 +345,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **📋 [Roadmap: done and to do (in French)](FEUILLE-DE-ROUTE.md)** · [Armband test protocol](hardware/PROTOCOLE-DE-TEST.md) · [Online demo](https://valentin-auger-laboratoire.github.io/athletix-data/)
 
-**Documents for the tests, by Valentin Auger (in French):** [two-page user guide](mode-emploi/mode-emploi.pdf) · [printable test sheet](hardware/fiche-de-test.pdf) · [enclosure specification](hardware/boitier/README.md)
+**Documents for the tests, by Valentin Auger (in French):** [two-page user guide, now with the watch](mode-emploi/mode-emploi.pdf) · [printable test sheet](hardware/fiche-de-test.pdf) · [enclosure specification](hardware/boitier/README.md)
 
 **Team:** Valentin Auger (project lead, hardware and app: project management, planning (MPM), hardware choice and quote; armband wiring diagram and presumed wiring, acquisition and RMS; the whole Flutter app: home, e-mail-verified sign-up, login, profile questionnaire and history, advice, sport categories and workouts, leaderboard, demo mode; the PHP/MySQL API and database: accounts and e-mail codes, token login, profiles, performances, leaderboard, armband status; then (November 2026) the real Bluetooth connection, calibration, session history and detail, charts and progress, GPS, steps, weather and heart-rate strap, swimming (summary kept in the armband), accessibility and adapted mode, PDF log for carers, deferred sending without network, GDPR (export and account deletion), the final armband firmware, the automated tests; the online demo and screenshots; the first heart-rate sensor track: PPG circuit, ESP32 code, Wokwi simulation, layout diagram; the documentation), Maxence Olivier (simulation and planning: the Simulink model of the EMG chain in `hardware/simulation-emg/`, and the Gantt chart), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
 
