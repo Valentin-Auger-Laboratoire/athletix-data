@@ -148,6 +148,6 @@
 
   <!-- ===== Notes ===== -->
   <text x="40" y="742" font-size="14" fill="#555">Le capteur est alimenté en 3,3 V par la carte, donc sa sortie reste dans la plage du convertisseur (0 à 3,3 V). Jauge de batterie MAX17048 intégrée à la carte (I2C, GPIO8 / GPIO9).</text>
-  <text x="40" y="764" font-size="14" fill="#555">Non représentés : inverseurs GR33 / GA55 et résistances 150 Ω (usage à définir). Le câble Qwiic du devis est une liaison I2C : il ne transporte pas ce signal analogique.</text>
+  <text x="40" y="764" font-size="14" fill="#555">Non représentés : inverseurs GR33 / GA55 et résistances 150 Ω (sans doute pour le voyant de l'interrupteur DS12LR). Le câble Qwiic est une liaison I2C, pas ce signal.</text>
   <text x="40" y="786" font-size="14" fill="#555">Le montage n'est pas étanche : pour la natation, il faudra un boîtier étanche (en attendant, essais hors de l'eau).</text>
 </svg>

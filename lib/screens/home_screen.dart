@@ -1,6 +1,7 @@
 // home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:athletix_data/services/api.dart';
 import 'landing_screen.dart';
 import 'login_screen.dart';
@@ -57,6 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _ouvrirBrassard() =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => const BrassardScreen()));
+
+  /// Mode d'emploi (2 pages, PDF publié avec le dépôt : mode-emploi/mode-emploi.pdf).
+  static final Uri modeEmploi = Uri.parse(
+      'https://github.com/Valentin-Auger-Laboratoire/athletix-data/blob/main/mode-emploi/mode-emploi.pdf');
+
+  Future<void> _ouvrirModeEmploi() async {
+    final messenger = ScaffoldMessenger.of(context);
+    var ouvert = false;
+    try {
+      ouvert = await launchUrl(modeEmploi, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+    if (!ouvert) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text("Impossible d'ouvrir le mode d'emploi (pas de réseau ?). Il est aussi dans le dépôt GitHub, dossier mode-emploi."),
+      ));
+    }
+  }
 
   void _ouvrirHistorique() =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoriqueScreen()));
@@ -232,6 +250,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const ReglagesScreen()));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.menu_book, color: Colors.amber, size: 22),
+                ),
+                title: const Text("Mode d'emploi", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: const Text("Poser le brassard, calibrer, natation, carnet (PDF)",
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _ouvrirModeEmploi();
                 },
               ),
               ListTile(

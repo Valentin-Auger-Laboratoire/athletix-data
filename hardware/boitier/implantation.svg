@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720" font-family="DejaVu Sans, Arial, sans-serif">
+  <!-- Échelle : 1 mm = 5 px. Cotes des fiches : à vérifier au pied à coulisse sur les pièces reçues. -->
+  <rect width="1000" height="720" fill="#fff"/>
+  <defs><marker id="f" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#333"/></marker></defs>
+  <text x="30" y="38" font-size="22" font-weight="bold" fill="#1d1d1f">Boîtier principal : implantation proposée (vue de dessus, à l'échelle)</text>
+  <text x="30" y="62" font-size="13" fill="#666">1 carreau = 10 mm · cotes intérieures · à vérifier sur les pièces reçues avant de modéliser</text>
+  <g stroke="#eee" stroke-width="1">
+    <path d="M70 100 V 410 M120 100 V 410 M170 100 V 410 M220 100 V 410 M270 100 V 410 M320 100 V 410 M370 100 V 410"/>
+    <path d="M70 100 H 410 M70 150 H 410 M70 200 H 410 M70 250 H 410 M70 300 H 410 M70 350 H 410 M70 400 H 410"/>
+  </g>
+  <!-- intérieur 68 x 62 mm, paroi 2 mm -->
+  <rect x="60" y="90" width="360" height="330" rx="14" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect x="70" y="100" width="340" height="310" rx="10" fill="none" stroke="#333" stroke-width="3"/>
+  <!-- carte 58,4 x 22,9 -->
+  <rect x="90" y="115" width="292" height="114.5" rx="6" fill="#e6f2ea" stroke="#2f7d4f" stroke-width="2.5"/>
+  <text x="120" y="162" font-size="15" font-weight="bold" fill="#2f7d4f">Thing Plus ESP32-S3</text>
+  <text x="120" y="182" font-size="13" fill="#333">58,4 × 22,9 mm, sur 4 plots</text>
+  <circle cx="99" cy="124" r="5" fill="#fff" stroke="#2f7d4f" stroke-width="2"/><circle cx="373" cy="124" r="5" fill="#fff" stroke="#2f7d4f" stroke-width="2"/>
+  <circle cx="99" cy="220" r="5" fill="#fff" stroke="#2f7d4f" stroke-width="2"/><circle cx="373" cy="220" r="5" fill="#fff" stroke="#2f7d4f" stroke-width="2"/>
+  <rect x="62" y="158" width="30" height="30" fill="#777"/>
+  <path d="M60 173 L 22 173" stroke="#c8102e" stroke-width="2" marker-end="url(#f)"/>
+  <text x="14" y="205" font-size="12" fill="#333">USB-C</text>
+  <rect x="352" y="196" width="22" height="18" fill="#555"/>
+  <text x="300" y="248" font-size="12" fill="#555">prise JST</text>
+  <!-- batterie 47 x 29 -->
+  <rect x="90" y="262" width="235" height="145" rx="8" fill="#eef1fb" stroke="#4659a8" stroke-width="2.5"/>
+  <text x="105" y="318" font-size="15" font-weight="bold" fill="#4659a8">Batterie THYM-BAT</text>
+  <text x="105" y="338" font-size="13" fill="#333">47 × 29 × 10 mm</text>
+  <text x="105" y="356" font-size="13" fill="#333">ne pas comprimer</text>
+  <!-- interrupteur sur la paroi droite : 16 mm de profondeur, Ø 20,5 mm -->
+  <rect x="330" y="282" width="80" height="102.5" rx="4" fill="#fde7e9" stroke="#c8102e" stroke-width="2.5"/>
+  <text x="337" y="330" font-size="12" font-weight="bold" fill="#c8102e">DS12LR</text>
+  <text x="337" y="347" font-size="11" fill="#333">16 mm</text>
+  <rect x="408" y="282" width="14" height="102.5" fill="#c8102e"/>
+  <!-- câble jack -->
+  <rect x="404" y="128" width="18" height="22" fill="#e0a100"/>
+  <path d="M422 139 L 470 139" stroke="#8a8a8a" stroke-width="8" stroke-linecap="round"/>
+  <!-- étiquettes à droite -->
+  <text x="480" y="134" font-size="13" font-weight="bold" fill="#333">Passage du câble jack (Ø 4 mm)</text>
+  <text x="480" y="152" font-size="12" fill="#333">vers le capteur, serre-câble à l'intérieur</text>
+  <text x="440" y="310" font-size="13" font-weight="bold" fill="#c8102e">Interrupteur DS12LR sur la paroi</text>
+  <text x="440" y="328" font-size="12" fill="#333">perçage rond Ø 20,5 mm ; le corps entre</text>
+  <text x="440" y="345" font-size="12" fill="#333">de 16 mm, à côté de la batterie</text>
+  <text x="440" y="362" font-size="12" fill="#333">(il ne passe pas au-dessus : 16 + 10 mm)</text>
+  <!-- cotes -->
+  <path d="M70 440 H 410" stroke="#333" stroke-width="1.5" marker-start="url(#f)" marker-end="url(#f)"/>
+  <text x="190" y="460" font-size="14" fill="#333">68 mm intérieur</text>
+  <path d="M44 100 V 410" stroke="#333" stroke-width="1.5" marker-start="url(#f)" marker-end="url(#f)"/>
+  <text x="8" y="270" font-size="14" fill="#333" transform="rotate(-90 22 270)">62 mm</text>
+  <!-- module capteur -->
+  <text x="660" y="420" font-size="15" font-weight="bold" fill="#c8102e">Module capteur (sur le biceps)</text>
+  <rect x="690" y="435" width="188" height="180" rx="10" fill="#fde7e9" stroke="#c8102e" stroke-width="2.5"/>
+  <text x="702" y="462" font-size="12" fill="#333">MyoWare 2.0 + Link Shield</text>
+  <text x="702" y="480" font-size="12" fill="#333">37,6 × 35,9 mm, empilés</text>
+  <circle cx="784" cy="528" r="14" fill="#e8e8e8" stroke="#666" stroke-width="2"/><text x="803" y="533" font-size="12" fill="#333">MID</text>
+  <circle cx="784" cy="578" r="14" fill="#e8e8e8" stroke="#666" stroke-width="2"/><text x="803" y="583" font-size="12" fill="#333">END</text>
+  <rect x="874" y="488" width="16" height="18" fill="#333"/><text x="896" y="501" font-size="12" fill="#333">jack</text>
+  <text x="680" y="636" font-size="12" fill="#666">fond ouvert : électrodes clipsées dessous</text>
+  <!-- texte bas -->
+  <text x="30" y="500" font-size="15" font-weight="bold" fill="#1d1d1f">Hauteur intérieure : environ 23 mm</text>
+  <text x="30" y="522" font-size="13" fill="#333">fixée par le perçage de l'interrupteur (Ø 20,5 mm) ;</text>
+  <text x="30" y="540" font-size="13" fill="#333">batterie 10 mm, carte sur des plots de 3 mm.</text>
+  <text x="30" y="562" font-size="13" fill="#333">Parois de 2 mm : boîtier d'environ 72 × 66 × 27 mm.</text>
+  <text x="30" y="590" font-size="15" font-weight="bold" fill="#1d1d1f">Plus petit possible</text>
+  <text x="30" y="612" font-size="13" fill="#333">avec un interrupteur miniature (GR33 ou GA55 du devis,</text>
+  <text x="30" y="630" font-size="13" fill="#333">à mesurer) : hauteur ramenée à environ 15 mm.</text>
+  <text x="30" y="658" font-size="15" font-weight="bold" fill="#1d1d1f">Fixation au bras</text>
+  <text x="30" y="680" font-size="13" fill="#333">2 fentes sous le boîtier pour la bande élastique</text>
+  <text x="30" y="698" font-size="13" fill="#333">(largeur de la bande reçue + 1 mm), fond légèrement creusé.</text>
+</svg>

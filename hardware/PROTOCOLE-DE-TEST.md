@@ -1,5 +1,7 @@
 # Protocole de test du brassard (à la réception du matériel)
 
+> **Version à imprimer** (cases à cocher, colonnes « Mesuré » vides) : [`fiche-de-test.pdf`](fiche-de-test.pdf), générée à partir de ce fichier par `dart run tools/fiche_test.dart`.
+>
 > But : vérifier chaque élément **un par un**, du plus simple au plus complet, pour savoir tout de suite d'où vient un problème. Noter chaque résultat dans la colonne « Mesuré » (copier ce fichier ou l'imprimer).
 > Les valeurs attendues viennent de la simulation Simulink (Maxence Olivier, [`simulation-emg/`](simulation-emg/README.md)) et des fiches SparkFun.
 
@@ -64,7 +66,7 @@ Si 4.4 reste bloqué vers 3,3 V : électrodes trop proches ou gain du MyoWare tr
 | # | Vérification | Attendu | Mesuré | OK ? |
 |---|---|---|---|---|
 | 5.1 | Téléverser [`firmware-brassard/`](firmware-brassard/README.md) | `Jauge de batterie : trouvée`, `Brassard prêt` | | |
-| 5.2 | Appli → Brassard | firmware `1.0.0`, batterie en % (proche de la jauge) | | |
+| 5.2 | Appli → Brassard | firmware `1.1.0`, batterie en % (proche de la jauge) | | |
 | 5.3 | Calibrer en serrant au maximum 3 s | référence entre ~500 et ~3 000 mV ; si « signal trop faible », revoir les électrodes | | |
 | 5.4 | Repos, bras posé | intensité de quelques % (simulation : ≈ 3 %) | | |
 | 5.5 | Effort moyen (porter une bouteille d'eau) | ≈ 40 à 50 % | | |

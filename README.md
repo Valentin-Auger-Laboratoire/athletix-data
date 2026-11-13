@@ -32,6 +32,10 @@ La chaîne de mesure a été modélisée sous Simulink par Maxence Olivier avant
 
 ![Câblage présumé du brassard : électrodes, MyoWare 2.0 et Link Shield, câble jack vers l'ESP32-S3, batterie LiPo avec interrupteur, Bluetooth vers le téléphone](hardware/cablage-presume.png)
 
+**Le boîtier** : cahier des charges préparé par **Valentin Auger** pour le modéliser sous Fusion 360 avant de recevoir les pièces (dimensions des cartes, de la batterie et de l'interrupteur, ouvertures, fixation au bras, pistes pour une version étanche) : [`hardware/boitier/`](hardware/boitier/README.md).
+
+![Implantation proposée du boîtier principal, à l'échelle](hardware/boitier/implantation.png)
+
 **Le modèle Simulink** (signal du muscle, capteur MyoWare 2.0, puis conversion et calcul sur l'ESP32-S3) :
 
 ![Schéma du modèle Simulink de la chaîne EMG](hardware/simulation-emg/schema-modele.png)
@@ -55,7 +59,7 @@ Le matériel, demandé en juin 2026, a été commandé par l'école en novembre 
 - ✅ **L'application est quasiment finie** et testée (dans le navigateur) : séances en direct avec le brassard simulé, natation, graphiques, évolution, téléphone (GPS, pas, météo, cardio), accessibilité, carnets pour les soignants, RGPD, envoi différé sans réseau.
 - ✅ **L'API** est testée sur une vraie base (77 vérifications), le **firmware final** est écrit et ses calculs sont testés sur ordinateur (41 vérifications), et GitHub relance tous les tests à chaque envoi.
 - 🔜 **Encore sans le matériel** : essayer l'application sur un téléphone Android ([APK](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ajouter le boîtier, rapport du jalon 1. Planning : [diagramme de Gantt](gestion-projet/README.md).
-- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation ([automatique](mesures/README.md)), autonomie, boîtier.
+- ⏳ **À la réception** : le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) ([fiche à imprimer](hardware/fiche-de-test.pdf)), étape par étape : batterie, carte seule, application, MyoWare, firmware final, calibration, comparaison avec la simulation ([automatique](mesures/README.md)), autonomie, boîtier.
 
 Tout le détail (ce qui est fait, ce qui reste, cases à cocher, répartition) : **[`FEUILLE-DE-ROUTE.md`](FEUILLE-DE-ROUTE.md)**.
 
@@ -94,6 +98,12 @@ Ce brassard n'est **pas un dispositif médical**. Une activité physique adapté
 **Mode d'emploi** (2 pages, réalisé par **Valentin Auger**) : poser le brassard et les électrodes, calibrer, faire une séance, récupérer une séance de natation, donner le carnet à un soignant, problèmes fréquents. À imprimer pour les essais : **[`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)**.
 
 <img src="mode-emploi/apercu-page-1.png" alt="Mode d'emploi, page 1 : sécurité, pose des électrodes, calibration, séance" width="380"> <img src="mode-emploi/apercu-page-2.png" alt="Mode d'emploi, page 2 : natation, carnet pour les soignants, problèmes fréquents" width="380">
+
+Il s'ouvre aussi depuis l'application (menu du profil, « Mode d'emploi »).
+
+**Fiche de test à imprimer** (réalisée par **Valentin Auger**) : le protocole de test avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main le jour de la réception : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
+
+<img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
 
 **La démo en vidéo** (70 s, brassard simulé) : séance en direct, ressenti, détail d'une course avec son parcours, évolution, natation. Version MP4 pour une présentation : [`media/demo-application.mp4`](media/demo-application.mp4).
 

@@ -50,6 +50,8 @@
 - **Comparaison automatique avec la simulation** ([`mesures/`](mesures/README.md)) : le firmware écrit ses mesures sur le port USB, un script les enregistre, puis un autre les compare au modèle de la simulation (figure et rapport avec les critères du protocole). Testé sur des données simulées.
 - **Analyse des risques** ([`gestion-projet/analyse-des-risques.md`](gestion-projet/analyse-des-risques.md)) : gravité × apparition × détection, et actions prioritaires (pas d'essai dans l'eau sans boîtier étanche, PC portable débranché du secteur pendant une capture USB, polarité de la batterie).
 - **Mode d'emploi** de 2 pages ([`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)) : pose des électrodes, calibration, séance, natation, carnet pour les soignants, problèmes fréquents. À imprimer pour les essais.
+- **Fiche de test à imprimer** ([`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)), générée à partir du protocole.
+- **Cahier des charges du boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : dimensions des pièces, implantation à l'échelle, ouvertures, fixation, pistes pour une version étanche.
 - **Diagramme de Gantt** mis à jour et **vidéo de démonstration** de l'application ([`media/`](media/demo-application.mp4)).
 
 ### Brassard
@@ -63,7 +65,7 @@
 - [ ] **Héberger l'API sur le PC portable** (Valentin) : XAMPP + ngrok avec le domaine fixe gratuit, puis mettre l'adresse dans la variable `API_BASE_URL` du dépôt et relancer la compilation de l'APK (marche à suivre : README, Installation §5).
 - [ ] **Essayer l'application sur un téléphone Android** ([APK compilé par GitHub](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk), à installer directement) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
 - [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
-- [ ] **Boîtier** : exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.
+- [ ] **Boîtier** ([cahier des charges et implantation à l'échelle](hardware/boitier/README.md)) : exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.
 - [x] **Diagramme de Gantt** mis à jour ([`gestion-projet/`](gestion-projet/README.md)) : plan de la 1re année et ce qu'il est devenu, 2e année jusqu'à la soutenance (dates de livraison et de soutenance à confirmer).
 - [ ] **Rapport du jalon 1** (2e année, à rendre le lundi 16 novembre) : ce qui a été fait depuis le jalon 4, pourquoi ces choix, les perspectives (cette feuille de route) et une courte conclusion.
 
