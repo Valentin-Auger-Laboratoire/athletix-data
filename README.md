@@ -6,7 +6,7 @@ Brassard connecté qui mesure l'activité d'un muscle (électromyographie, EMG) 
 
 **📋 [Feuille de route : ce qui est fait, ce qu'il reste à faire](FEUILLE-DE-ROUTE.md)** · [Protocole de test du brassard](hardware/PROTOCOLE-DE-TEST.md) · [Démo en ligne](https://valentin-auger-laboratoire.github.io/athletix-data/)
 
-**📄 [Mode d'emploi](mode-emploi/mode-emploi.pdf)** · **[Fiche de test à imprimer](hardware/fiche-de-test.pdf)** · **[Boîtier et notice de pose](hardware/boitier/README.md)** · **[⌚ Ma montre reliée à l'appli](#-ma-montre-reliée-à-lapplication-réalisé-par-valentin-auger)** · [Gantt](#planning-diagramme-de-gantt)
+**📄 [Mode d'emploi](mode-emploi/mode-emploi.pdf)** · **[Fiche de test à imprimer](hardware/fiche-de-test.pdf)** · **[Boîtier et notice de pose](hardware/boitier/README.md)** · **[🧮 Étude RDM du boîtier](hardware/boitier/rdm/README.md)** · **[⌚ Ma montre reliée à l'appli](#-ma-montre-reliée-à-lapplication-réalisé-par-valentin-auger)** · [Gantt](#planning-diagramme-de-gantt)
 
 [![Tests](https://github.com/Valentin-Auger-Laboratoire/athletix-data/actions/workflows/tests.yml/badge.svg)](https://github.com/Valentin-Auger-Laboratoire/athletix-data/actions/workflows/tests.yml)
 
@@ -45,7 +45,13 @@ Conçu par **Valentin Auger** : **un seul boîtier long et fin posé sur le bice
 <img src="hardware/boitier/images/dessous-electrodes.jpg" width="48%" alt="Les 3 électrodes se clipsent sous le capteur, par l'ouverture du fond">
 </p>
 
+### 🧮 Étude de résistance des matériaux du boîtier (réalisée par Valentin Auger)
+
+Avant d'imprimer, les trois pièces du boîtier qui travaillent ont été calculées par la **RDM des poutres** : **clips du couvercle, barre des passants, pion du bouchon**. Sur le premier modèle, **les trois cassaient** : la barre des passants cédait même avec le brassard simplement porté. Le modèle a été corrigé, et toutes les pièces ont maintenant leur marge de sécurité. Hypothèses (PETG imprimé, efforts en course), formules et limites : **[étude complète](hardware/boitier/rdm/README.md)** · **[🖥️ page interactive](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/)** (matériau, tension du brassard et épaisseurs réglables, premier modèle / modèle corrigé).
+
 ![Étude RDM : les 3 points faibles du premier modèle, entourés, et leurs coefficients de sécurité avant et après correction](hardware/boitier/rdm/points-faibles.png)
+
+![Coefficients de sécurité avant et après correction](hardware/boitier/rdm/rdm-avant-apres.png)
 
 **Vues sous Fusion 360 par Valentin Auger** (13 vues, détail dans [`hardware/boitier/`](hardware/boitier/README.md#vues-sous-fusion-360-valentin-auger)) :
 
@@ -373,7 +379,7 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **📋 [Roadmap: done and to do (in French)](FEUILLE-DE-ROUTE.md)** · [Armband test protocol](hardware/PROTOCOLE-DE-TEST.md) · [Online demo](https://valentin-auger-laboratoire.github.io/athletix-data/)
 
-**Documents for the tests, by Valentin Auger (in French):** [two-page user guide, now with the watch](mode-emploi/mode-emploi.pdf) · [printable test sheet](hardware/fiche-de-test.pdf) · [enclosure: one screwless snap-fit case, STEP/STL files and fitting guide](hardware/boitier/README.md)
+**Documents for the tests, by Valentin Auger (in French):** [two-page user guide, now with the watch](mode-emploi/mode-emploi.pdf) · [printable test sheet](hardware/fiche-de-test.pdf) · [enclosure: one screwless snap-fit case, STEP/STL files and fitting guide](hardware/boitier/README.md) · [strength-of-materials study of the enclosure](hardware/boitier/rdm/README.md) ([interactive page](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/))
 
 **Team:** Valentin Auger (project lead, hardware and app: project management, planning (MPM), hardware choice and quote; armband wiring diagram and presumed wiring, acquisition and RMS; the whole Flutter app: home, e-mail-verified sign-up, login, profile questionnaire and history, advice, sport categories and workouts, leaderboard, demo mode; the PHP/MySQL API and database: accounts and e-mail codes, token login, profiles, performances, leaderboard, armband status; then (November 2026) the real Bluetooth connection, calibration, session history and detail, charts and progress, GPS, steps, weather and heart-rate strap, swimming (summary kept in the armband), accessibility and adapted mode, PDF log for carers, deferred sending without network, GDPR (export and account deletion), the final armband firmware, the automated tests; the online demo and screenshots; the first heart-rate sensor track: PPG circuit, ESP32 code, Wokwi simulation, layout diagram; the documentation), Maxence Olivier (simulation and planning: the Simulink model of the EMG chain in `hardware/simulation-emg/`, and the Gantt chart), Othmen Al Bydeoi (system architecture: Bluetooth Low Energy GATT, data models; in the repository: the `architecture/` specification, the simulated armband and EMG workout screen, session and calibration storage in the PHP API and `migrations/`, the `hardware/faux-brassard-ble/` test firmware, and the tests).
 
