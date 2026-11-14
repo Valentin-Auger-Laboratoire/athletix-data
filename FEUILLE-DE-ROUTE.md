@@ -84,7 +84,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 
 - [ ] **Inventaire** : tout est là ? (comparer au devis)
 - [ ] ⚠️ **Polarité de la batterie** : avant de la brancher, vérifier que le rouge du connecteur de la batterie arrive bien sur le **+** de la prise JST de la carte. Les fabricants ne câblent pas tous ce connecteur dans le même sens, et une inversion peut détruire la carte.
-- [ ] **Carte seule** (la Thing Plus reçue) par USB-C : téléverser le firmware, vérifier le Bluetooth avec nRF Connect.
+- [ ] **Carte seule** par USB-C : téléverser le faux brassard, vérifier le Bluetooth avec nRF Connect.
 - [ ] **Soudure** de l'interrupteur sur le fil rouge de la batterie (kit WTS100, gaine thermo), test de mise sous tension sur batterie.
 - [ ] **MyoWare sans électrodes** : alimentation 3,3 V, tension de sortie au multimètre (proche de 0 V au repos).
 - [ ] **MyoWare avec électrodes** sur le biceps : la tension monte quand on contracte.
