@@ -47,6 +47,13 @@ Conçu par **Valentin Auger** : **un seul boîtier long et fin posé sur le bice
 
 ![Étude RDM : les 3 points faibles du premier modèle, entourés, et leurs coefficients de sécurité avant et après correction](hardware/boitier/rdm/points-faibles.png)
 
+**Vues sous Fusion 360 par Valentin Auger** ([toutes les vues](hardware/boitier/README.md#vues-sous-fusion-360-valentin-auger)) :
+
+<p>
+<img src="hardware/boitier/images/fusion/01-ensemble-ds12lr.jpg" width="48%" alt="Boîtier sous Fusion 360 : ensemble, couvercle écarté">
+<img src="hardware/boitier/images/fusion/10-passant-renforce.jpg" width="48%" alt="Passant renforcé sous Fusion 360">
+</p>
+
 ## ⌚ Ma montre reliée à l'application (réalisé par Valentin Auger)
 
 Valentin Auger a relié **sa propre montre**, un bracelet connecté d'entrée de gamme **MSGM115** (« YOHO » au démarrage), à Athletix-Data. Ce bracelet ne suit **aucun format Bluetooth standard** pour le cœur : il fallait comprendre comment il parle à son application d'origine.

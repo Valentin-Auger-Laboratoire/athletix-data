@@ -6,6 +6,33 @@ Conçu par **Valentin Auger** (novembre 2026), modèle paramétrique en Python (
 
 ![Le boîtier : brassards, interrupteur, bouchon USB-C, flèche de pose, intérieur, couvercle, boucle de secours](images/apercu.jpg)
 
+## Vues sous Fusion 360 (Valentin Auger)
+
+Captures faites par **Valentin Auger** dans Fusion 360, sur les fichiers STEP du dépôt (version finale, après l'étude RDM). Les blocs de couleur sont les volumes des composants : rouge = MyoWare + Link Shield, blanc et jaune = batterie et mousse, noir = interrupteur, gris = fiche jack.
+
+<p>
+<img src="images/fusion/01-ensemble-ds12lr.jpg" width="48%" alt="Version DS12LR : ensemble, couvercle écarté au-dessus">
+<img src="images/fusion/02-interieur-petit-interrupteur.jpg" width="48%" alt="Intérieur : interrupteur, capteur, batterie, clips du couvercle, bouchon USB-C">
+</p>
+<p>
+<img src="images/fusion/03-bout-interrupteur-ds12lr.jpg" width="31%" alt="Bout côté coude : l'interrupteur rond DS12LR">
+<img src="images/fusion/04-dessous-ds12lr.jpg" width="25%" alt="Dessous : fenêtre des électrodes et 4 passants">
+<img src="images/fusion/09-boitier-vide-cote-interrupteur.jpg" width="40%" alt="Boîtier vide : poche du capteur, plots de la carte, creux des clips">
+</p>
+<p>
+<img src="images/fusion/08-boitier-vide-cote-usb.jpg" width="48%" alt="Boîtier vide côté USB : cloisons, passage du jack, logement USB-C et pion du bouchon">
+<img src="images/fusion/05-couvercle-dessous.jpg" width="48%" alt="Couvercle vu de dessous : clips, picots, nervures de la batterie, lèvre">
+</p>
+
+**Les points faibles corrigés, vus dans Fusion 360** (voir l'[étude RDM](rdm/README.md)) :
+
+<p>
+<img src="images/fusion/10-passant-renforce.jpg" width="48%" alt="Passant : barre extérieure de 4 × 3,5 mm et renfort triangulaire contre la paroi">
+<img src="images/fusion/11-pion-baionnette-usb.jpg" width="48%" alt="Pion en baïonnette (2 ailes) et logement de la fiche USB-C">
+</p>
+
+Le clip en coupe (languette accrochée dans la paroi) est montré sur l'image des [points faibles](rdm/points-faibles.png). Autres vues : [couvercle de profil](images/fusion/06-couvercle-profil.jpg), [boîtier vide DS12LR](images/fusion/07-boitier-vide-ds12lr.jpg), [ensemble en version petit interrupteur](images/fusion/12-ensemble-petit-interrupteur.jpg).
+
 ## Où se pose le boîtier, où vont les électrodes
 
 <p>
