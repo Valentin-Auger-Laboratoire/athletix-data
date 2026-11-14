@@ -45,6 +45,8 @@ Conçu par **Valentin Auger** : **un seul boîtier long et fin posé sur le bice
 <img src="hardware/boitier/images/dessous-electrodes.jpg" width="48%" alt="Les 3 électrodes se clipsent sous le capteur, par l'ouverture du fond">
 </p>
 
+![Étude RDM : les 3 points faibles du premier modèle, entourés, et leurs coefficients de sécurité avant et après correction](hardware/boitier/rdm/points-faibles.png)
+
 ## ⌚ Ma montre reliée à l'application (réalisé par Valentin Auger)
 
 Valentin Auger a relié **sa propre montre**, un bracelet connecté d'entrée de gamme **MSGM115** (« YOHO » au démarrage), à Athletix-Data. Ce bracelet ne suit **aucun format Bluetooth standard** pour le cœur : il fallait comprendre comment il parle à son application d'origine.

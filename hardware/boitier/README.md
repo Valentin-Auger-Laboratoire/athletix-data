@@ -37,7 +37,7 @@ Le script vérifie à chaque génération qu'**aucune pièce n'en touche une aut
 
 Avant d'imprimer, Valentin a fait calculer les trois pièces qui travaillent par la RDM des poutres : **clips du couvercle, barre des passants, pion du bouchon**. Sur le premier modèle, **les trois cassaient**. Le modèle a été corrigé : languette du clip de 1,0 mm, barre du passant de 4 × 3,5 mm au lieu de 1,2 × 3, baïonnette à la place du pion fendu. Toutes les pièces ont maintenant leur marge de sécurité. Détail, hypothèses et limites : **[`rdm/`](rdm/README.md)**, et **[page interactive](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/)** pour faire varier le matériau et les efforts.
 
-![Coefficients de sécurité avant et après correction](rdm/rdm-avant-apres.png)
+![Les 3 points faibles du premier modèle, entourés sur le boîtier, avant et après correction](rdm/points-faibles.png)
 
 ## Pluie
 

@@ -4,6 +4,8 @@
 
 🖥️ **[Page interactive](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/)** : mêmes formules, tous les paramètres réglables, premier modèle et modèle corrigé.
 
+![Les 3 points faibles du premier modèle, entourés sur le boîtier, avec les coefficients de sécurité avant et après correction](points-faibles.png)
+
 ![Coefficients de sécurité avant / après](rdm-avant-apres.png)
 
 ## Résultat
