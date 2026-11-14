@@ -39,7 +39,7 @@ La commande est passée. Rien à racheter : tout se fait avec le matériel déj�
 | Dossier / fichier | Rôle |
 |---|---|
 | [`firmware-brassard/`](firmware-brassard/README.md) | **firmware final** : vrai signal, vraie batterie, calculs testés sur ordinateur |
-| [`faux-brassard-ble/`](faux-brassard-ble/README.md) | firmware de test : signal inventé, pour tester l'application sur n'importe quel ESP32 |
+| [`faux-brassard-ble/`](faux-brassard-ble/README.md) | firmware de test : signal inventé, pour tester l'application sur la carte reçue |
 | [`PROTOCOLE-DE-TEST.md`](PROTOCOLE-DE-TEST.md) | les essais à faire à la réception du matériel, dans l'ordre, avec les résultats attendus |
 
 ## Première piste : capteur cardiaque (photopléthysmographe)

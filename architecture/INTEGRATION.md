@@ -78,7 +78,7 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 ## 4. Ce qui marche déjà sans le vrai brassard
 
 1. **Dans l'application :** `BrassardSimule` produit des paquets **au format GATT exact** (mêmes octets), les décode avec le vrai décodeur, et l'écran de séance affiche le % MVC. À la fin, le résumé est envoyé à `save_seance.php`. Tout le chemin est testé, sauf la radio.
-2. **Avec un ESP32 :** `hardware/faux-brassard-ble/` publie le service GATT complet avec un signal simulé (ou le vrai signal du MyoWare si on change une ligne). On peut le tester avec l'application gratuite **nRF Connect** : on doit voir le service `abad0000-…`, s'abonner à la mesure et voir arriver les paquets.
+2. **Avec la carte reçue (Thing Plus ESP32-S3) :** `hardware/faux-brassard-ble/` publie le service GATT complet avec un signal simulé (ou le vrai signal du MyoWare si on change une ligne). On peut le tester avec l'application gratuite **nRF Connect** : on doit voir le service `abad0000-…`, s'abonner à la mesure et voir arriver les paquets.
 
 ## 5. Étapes suivantes
 
@@ -87,12 +87,11 @@ L'application est aujourd'hui en **Flutter Web**. Le Bluetooth dans un navigateu
 | Étape | Qui | État |
 |---|---|---|
 | Choisir web ou Android (§3) | équipe | ✅ **décidé** : web pour la démo en ligne, **Android** (projet `android/`, compilé avec Android Studio) pour l'usage réel avec le brassard |
-| Écrire `BrassardBle` (connexion réelle) | équipe | ✅ écrit : `lib/services/brassard/brassard_ble.dart` (package `flutter_blue_plus`), ⏳ à tester avec le faux brassard puis le vrai |
+| Écrire `BrassardBle` (connexion réelle) | équipe | ✅ écrit : `lib/services/brassard/brassard_ble.dart` (package `flutter_blue_plus`), ⏳ à tester avec le vrai brassard |
 | Écran de choix du brassard et de calibration (O3, O4) | équipe | ✅ `lib/screens/brassard_screen.dart`, `calibration_screen.dart` |
 | Historique des séances | équipe | ✅ route `get_seances.php` et écran « Mes séances » |
 | Nouvelle règle de score du classement | équipe | ✅ proposée et codée dans `get_classement.php` (voir `MCD_MLD.md` §5), à valider |
 | Firmware final avec le vrai MyoWare et la vraie batterie | équipe | ✅ écrit : `hardware/firmware-brassard/`, calculs testés sur ordinateur, ⏳ à flasher |
-| Tester le faux brassard ESP32 avec nRF Connect | Othmen | ⏳ une carte ESP32 (un ESP32 classique suffit) |
 | Brassard réel câblé, mesuré, calibré | équipe | ⏳ matériel (voir `hardware/PROTOCOLE-DE-TEST.md`) |
 
 ### Ajouts à l'API

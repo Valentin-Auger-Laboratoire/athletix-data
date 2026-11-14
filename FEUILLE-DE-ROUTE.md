@@ -17,7 +17,7 @@
 | Simulation Simulink de la chaîne EMG | ✅ ([`hardware/simulation-emg/`](hardware/simulation-emg/README.md)) |
 | Connexion Bluetooth réelle (`BrassardBle`) et ceinture cardio | ✅ écrites, ⏳ à tester avec une carte |
 | Firmware final 1.2 (vrai MyoWare, batterie, natation, **fatigue**, **appairage chiffré**) | ✅ écrit, calculs testés sur ordinateur (42 + 34 + 15 vérifications), **programme entier exécuté sur ordinateur** avec un muscle simulé (38 vérifications), ⏳ à flasher |
-| Firmware de test (faux brassard) | ✅ écrit, ⏳ jamais testé sur une carte |
+| Firmware de test (faux brassard, Othmen) | ✅ écrit |
 | Câblage | ✅ schéma présumé vérifié sur les fiches SparkFun ([`hardware/`](hardware/README.md)), ⏳ non testé |
 | Protocole de test | ✅ ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) |
 | Projet Android | ✅ prêt (Bluetooth, GPS, vibration), APK compilé par GitHub ([release « apk »](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ⏳ à installer sur un téléphone |
@@ -73,7 +73,6 @@
 - [x] **Règle de score du classement validée** (12 novembre 2026) : 10 points par séance mesurée + minutes × intensité moyenne ÷ 50, sur 30 jours, séances simulées exclues ([`MCD_MLD.md`](architecture/MCD_MLD.md) §5).
 - [ ] **Héberger l'API sur le PC portable** (Valentin) : XAMPP + ngrok avec le domaine fixe gratuit, puis mettre l'adresse dans la variable `API_BASE_URL` du dépôt et relancer la compilation de l'APK (marche à suivre : README, Installation §5).
 - [ ] **Essayer l'application sur un téléphone Android** ([APK compilé par GitHub](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk), à installer directement) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
-- [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
 - [ ] **Montre MSGM115 : l'essayer** avec l'APK, sans attendre le brassard ([protocole, étape 10](hardware/PROTOCOLE-DE-TEST.md)) : cœur, tension, sommeil, batterie, comparés à Yoho Sports.
 - [x] **Boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : un seul boîtier à clips (aucune vis), chaque pièce bloquée en X, Y, Z, brassards par-dessus le couvercle, jupe et bouchon USB-C contre la pluie, boucle 3 barres de secours, [notice de montage et de pose](hardware/boitier/notice-boitier.pdf), [étude RDM](hardware/boitier/rdm/README.md) (3 points faibles corrigés). Version **étanche** pour la natation : plus tard.
 - [x] **Diagramme de Gantt** mis à jour ([`gestion-projet/`](gestion-projet/README.md)) : plan de la 1re année et ce qu'il est devenu, 2e année jusqu'à la soutenance (dates de livraison et de soutenance à confirmer).
@@ -85,7 +84,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 
 - [ ] **Inventaire** : tout est là ? (comparer au devis)
 - [ ] ⚠️ **Polarité de la batterie** : avant de la brancher, vérifier que le rouge du connecteur de la batterie arrive bien sur le **+** de la prise JST de la carte. Les fabricants ne câblent pas tous ce connecteur dans le même sens, et une inversion peut détruire la carte.
-- [ ] **Carte seule** par USB-C : téléverser le faux brassard, vérifier le Bluetooth avec nRF Connect.
+- [ ] **Carte seule** (la Thing Plus reçue) par USB-C : téléverser le firmware, vérifier le Bluetooth avec nRF Connect.
 - [ ] **Soudure** de l'interrupteur sur le fil rouge de la batterie (kit WTS100, gaine thermo), test de mise sous tension sur batterie.
 - [ ] **MyoWare sans électrodes** : alimentation 3,3 V, tension de sortie au multimètre (proche de 0 V au repos).
 - [ ] **MyoWare avec électrodes** sur le biceps : la tension monte quand on contracte.
@@ -107,13 +106,10 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 ## 4. Plus tard (améliorations, pas nécessaires au prototype)
 
 - [x] **Vraie mesure de la fatigue** (13 novembre) : fréquence médiane du signal brut, firmware 1.2 + application + serveur. ⏳ À valider avec le vrai MyoWare (étape 8 du protocole).
-- [ ] **Capteur de température de la peau** (chaleur et sclérose en plaques), à ajouter à une future commande.
-- ~~Deux brassards pour comparer le côté gauche et le côté droit~~ : non retenu (13 novembre 2026), le matériel commandé ne suffit pas pour un second brassard.
 - [x] **Bracelet MSGM115 : cœur, tension, sommeil** (13 novembre) : format retrouvé dans l'appli d'origine et codé. Reste à l'**essayer avec le bracelet** sur un téléphone Android (APK) : écran Brassard → bracelet → « Mesurer le cœur », « Estimer la tension », « Synchroniser (sommeil) », et comparer avec l'appli d'origine. Non décodé (pas utile ici) : notifications de SMS, météo, cadrans.
 - [x] Fond de carte sous le tracé du parcours (13 novembre, OpenStreetMap, désactivé par défaut).
 - [x] Appairage Bluetooth sécurisé (13 novembre, `APPAIRAGE_SECURISE`). ⏳ À essayer avec un téléphone (étape 9 du protocole). API en HTTPS : fournie par l'adresse ngrok.
 - [x] Limite du nombre d'essais de mot de passe côté serveur (13 novembre, migration `006`).
-- ~~Version anglaise de l'application~~ : non retenue (décision du 13 novembre 2026).
 
 ### Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
 
@@ -122,8 +118,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 | Force qui change d'un jour à l'autre : recalibrer à chaque séance | ✅ écran de calibration, historique des calibrations |
 | Données de santé protégées | ✅ consentement, résumé seulement (pas de signal brut), export et suppression des données |
 | **Fatigue** : la suivre, proposer une pause avant l'épuisement | ✅ **fréquence médiane** du signal brut (firmware 1.2, en direct et par semaine), semaines moins bonnes, pause conseillée en mode adapté ; ⏳ à valider avec le vrai capteur |
-| **Chaleur** | ✅ météo et avertissement en mode adapté ; ⏳ capteur de température de la peau (§4) |
-| Raideurs et spasmes, asymétrie gauche / droite | non retenu : il faudrait un second brassard, le matériel commandé ne suffit pas |
+| **Chaleur** | ✅ météo et avertissement en mode adapté |
 | Gestes fins et vue parfois difficiles | ✅ grands caractères, alertes par vibration et à voix haute |
 | Suivi avec les soignants | ✅ carnet PDF et tableau CSV |
 
@@ -131,7 +126,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 
 | Qui | Sans le matériel | À la réception |
 |---|---|---|
-| **Valentin** | rapport du jalon 1, boîtier, essai de l'application sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
-| **Othmen** | test du faux brassard avec nRF Connect | connexion Bluetooth réelle avec l'application |
+| **Valentin** | rapport du jalon 1, essai de l'application et de la montre sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
+| **Othmen** | | connexion Bluetooth réelle avec l'application |
 | **Maxence** | | mesures, comparaison avec sa simulation |
 | **Équipe** | | séance complète, vidéo de démonstration |

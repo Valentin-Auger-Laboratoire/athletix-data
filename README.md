@@ -32,7 +32,7 @@ Réalisé par **Valentin Auger**. Poser le brassard et les électrodes, calibrer
 
 Réalisée par **Valentin Auger**. Le [protocole de test](hardware/PROTOCOLE-DE-TEST.md) avec des cases à cocher et des colonnes « Mesuré » vides, à remplir à la main (5 pages, dont la mesure de la fatigue et une étape **montre** faisable dès maintenant, sans le brassard) : **[`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)**. Elle est générée à partir du protocole (`dart run tools/fiche_test.dart`), donc les deux restent identiques.
 
-<img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application avec le faux brassard" width="380">
+<img src="hardware/fiche-de-test-apercu.png" alt="Fiche de test, page 1 : sécurité batterie, carte seule, application" width="380">
 
 ### 📦 Boîtier du brassard
 
@@ -187,9 +187,9 @@ Fichier modifiable et détails : [`gestion-projet/`](gestion-projet/README.md). 
 | Ce que vit la personne | Ce qu'il faudrait ajouter au brassard et à l'application |
 |---|---|
 | **Fatigue** : c'est le symptôme le plus fréquent, et elle arrive vite | suivre la fatigue musculaire (baisse de la fréquence médiane du signal brut, sortie RAW du MyoWare lue à 1 kHz ou plus) et proposer une pause **avant** l'épuisement, pas seulement une alerte d'effort intense |
-| **Sensibilité à la chaleur** : les symptômes s'aggravent quand le corps chauffe | ajouter un capteur de température de la peau, une alerte de pause et des conseils pour se rafraîchir |
+| **Sensibilité à la chaleur** : les symptômes s'aggravent quand le corps chauffe | une alerte de pause et des conseils pour se rafraîchir, selon la météo |
 | **Force qui change d'un jour à l'autre** | refaire la calibration (contraction maximale) au début de chaque séance au lieu d'une référence fixe, avec des seuils réglables plus bas que 75 % |
-| **Raideurs et spasmes**, souvent d'un seul côté | repérer une activité du muscle au repos, comparer le côté gauche et le côté droit avec deux capteurs |
+| **Raideurs et spasmes**, souvent d'un seul côté | repérer une activité du muscle au repos |
 | **Gestes fins et vue parfois difficiles** | grands boutons, texte grand et bien contrasté, alertes par vibration ou par la voix, séances courtes |
 | **Suivi avec les soignants** | un carnet (fatigue notée de 0 à 10, séances, pauses) exportable pour le neurologue ou le kinésithérapeute |
 
@@ -393,9 +393,9 @@ A connected armband that measures muscle activity (electromyography, EMG) and a 
 
 **Meeting with a person living with multiple sclerosis.** During the project, the team talked with a person living with multiple sclerosis, at the suggestion of a retired doctor specialised in the disease, who pushed us towards this need. Her suggestions were not written down at the time; the ideas below were **written afterwards** from what is known about the disease. They are neither her words nor medical advice:
 - **Fatigue** (the most common symptom): track muscle fatigue (median frequency of the raw signal, MyoWare RAW output read at 1 kHz or more) and suggest a break before exhaustion.
-- **Heat sensitivity**: add a skin temperature sensor and a break alert.
+- **Heat sensitivity**: a break alert and cooling advice, based on the weather.
 - **Strength that varies from day to day**: recalibrate the maximum contraction at the start of each session, with adjustable thresholds below 75 %.
-- **Stiffness and spasms, often on one side**: detect muscle activity at rest, compare left and right with two sensors.
+- **Stiffness and spasms, often on one side**: detect muscle activity at rest.
 - **Fine movements and vision**: large buttons, large high-contrast text, vibration or voice alerts, short sessions.
 - **Follow-up with carers**: an exportable log (fatigue 0–10, sessions, breaks) for the neurologist or physiotherapist.
 
