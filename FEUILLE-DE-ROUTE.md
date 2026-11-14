@@ -1,6 +1,6 @@
 # Feuille de route
 
-> Mise à jour : 13 novembre 2026 (après-midi : fatigue, appairage chiffré, fond de carte, limite des essais).
+> Mise à jour : 14 novembre 2026 (boîtier, étude de résistance des matériaux, vues Fusion 360).
 > Le matériel a été demandé en juin 2026 et commandé par l'école en novembre : livraison attendue **mi-décembre 2026 au plus tôt**.
 > En attendant, **tout ce qui ne dépend pas des pièces est fait** : l'application est quasiment finie et testée, le firmware est écrit et ses calculs sont testés sur ordinateur. Quand les pièces arrivent, il reste à souder, flasher, mesurer et comparer à la simulation.
 > Cochez les cases au fur et à mesure (bouton ✏️ de GitHub, puis remplacer `[ ]` par `[x]`).
@@ -46,7 +46,7 @@
 - **Appairage chiffré** : code à 6 chiffres demandé une fois, état de la liaison, « Oublier l'appairage » ([`SECURITE.md`](hardware/firmware-brassard/SECURITE.md)).
 - **Fond de carte OpenStreetMap** sous le parcours (désactivé par défaut, réglage et bouton dans le détail).
 - **Prêt pour le vrai brassard** (13 novembre, soir) : reconnexion automatique pendant une séance, avertissements du brassard affichés (batterie, électrode, interrupteur), rappel de calibration avant la séance, **montre** qui diffuse sa fréquence cardiaque reliée comme une ceinture (aide par marque dans l'écran Brassard). À tester : étapes 6.5 à 6.9 du protocole.
-- **Bracelet podomètre MSGM115** (13 novembre) : format des pas identifié avec nRF Connect (service FEE7, caractéristique FEA1, 80 pas vérifiés) et lecture codée ; le cœur et le bouton musique de ce bracelet passent par un format du fabricant, à décoder plus tard avec le journal Bluetooth d'Android et l'appli d'origine. Puis, le soir même, avec l'appli d'origine récupérée sur un second téléphone : **format propre du bracelet retrouvé (service CC00)** et codé : cœur, tension estimée, historique et sommeil, vibration, heure, profil, rappel d'inactivité (`protocole_yoho.dart`, `montre_yoho.dart`, 16 tests). La musique passe par le Bluetooth du téléphone (clavier), rien à coder. Ensuite : **batterie de la montre et de la ceinture cardio** sur l'accueil, les cartes et la séance (alerte à 15 %), montre simulée dans la démo, mode d'emploi (section 6) et protocole (étape 10) mis à jour.
+- **Montre MSGM115** (13 novembre) : pas lus avec nRF Connect (service FEE7), puis format propre du bracelet retrouvé dans son application d'origine (service CC00) et codé : cœur, tension estimée, historique et sommeil, vibration, heure, profil, rappel d'inactivité, **batterie** de la montre et de la ceinture cardio (alerte à 15 %) ; montre simulée dans la démo ([`BRACELET-YOHO.md`](architecture/BRACELET-YOHO.md)). La musique passe par le Bluetooth du téléphone, rien à coder.
 - **Démo en ligne** sans serveur, avec six semaines de séances fictives ; elle se met à jour sans vider le cache du navigateur.
 
 ### Serveur
@@ -76,7 +76,6 @@
 - [ ] **Montre MSGM115 : l'essayer** avec l'APK, sans attendre le brassard ([protocole, étape 10](hardware/PROTOCOLE-DE-TEST.md)) : cœur, tension, sommeil, batterie, comparés à Yoho Sports.
 - [x] **Boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : un seul boîtier à clips (aucune vis), chaque pièce bloquée en X, Y, Z, brassards par-dessus le couvercle, jupe et bouchon USB-C contre la pluie, boucle 3 barres de secours, [notice de montage et de pose](hardware/boitier/notice-boitier.pdf), [étude RDM](hardware/boitier/rdm/README.md) (3 points faibles corrigés). Version **étanche** pour la natation : plus tard.
 - [x] **Diagramme de Gantt** mis à jour ([`gestion-projet/`](gestion-projet/README.md)) : plan de la 1re année et ce qu'il est devenu, 2e année jusqu'à la soutenance (dates de livraison et de soutenance à confirmer).
-- [ ] **Rapport du jalon 1** (2e année, à rendre le lundi 16 novembre) : ce qui a été fait depuis le jalon 4, pourquoi ces choix, les perspectives (cette feuille de route) et une courte conclusion.
 
 ## 2. À la réception du matériel
 
@@ -103,15 +102,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 - [ ] README et captures mis à jour avec les vraies mesures (câblage réel à la place du câblage présumé, photo du montage sans visage).
 - [ ] Jalons suivants et soutenance : objectif du semestre impair (S3), un **prototype** qui fonctionne. Le projet est terminé quand le brassard réel marche avec l'application.
 
-## 4. Plus tard (améliorations, pas nécessaires au prototype)
-
-- [x] **Vraie mesure de la fatigue** (13 novembre) : fréquence médiane du signal brut, firmware 1.2 + application + serveur. ⏳ À valider avec le vrai MyoWare (étape 8 du protocole).
-- [x] **Bracelet MSGM115 : cœur, tension, sommeil** (13 novembre) : format retrouvé dans l'appli d'origine et codé. Reste à l'**essayer avec le bracelet** sur un téléphone Android (APK) : écran Brassard → bracelet → « Mesurer le cœur », « Estimer la tension », « Synchroniser (sommeil) », et comparer avec l'appli d'origine. Non décodé (pas utile ici) : notifications de SMS, météo, cadrans.
-- [x] Fond de carte sous le tracé du parcours (13 novembre, OpenStreetMap, désactivé par défaut).
-- [x] Appairage Bluetooth sécurisé (13 novembre, `APPAIRAGE_SECURISE`). ⏳ À essayer avec un téléphone (étape 9 du protocole). API en HTTPS : fournie par l'adresse ngrok.
-- [x] Limite du nombre d'essais de mot de passe côté serveur (13 novembre, migration `006`).
-
-### Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
+## Pistes issues de la rencontre avec la patiente atteinte de sclérose en plaques
 
 | Piste ([README](README.md#rencontre-avec-une-patiente-atteinte-de-sclérose-en-plaques)) | Où on en est |
 |---|---|
@@ -126,7 +117,7 @@ Dans cet ordre, en notant chaque résultat (détail dans le [protocole de test](
 
 | Qui | Sans le matériel | À la réception |
 |---|---|---|
-| **Valentin** | rapport du jalon 1, essai de l'application et de la montre sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
+| **Valentin** | essai de l'application et de la montre sur Android | soudure, câblage, firmware final, intégration dans le boîtier |
 | **Othmen** | | connexion Bluetooth réelle avec l'application |
 | **Maxence** | | mesures, comparaison avec sa simulation |
 | **Équipe** | | séance complète, vidéo de démonstration |
