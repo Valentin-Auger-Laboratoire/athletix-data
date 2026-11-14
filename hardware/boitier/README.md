@@ -27,8 +27,9 @@ Captures faites par **Valentin Auger** dans Fusion 360, sur les fichiers STEP du
 **Les points faibles corrigés, vus dans Fusion 360** (voir l'[étude RDM](rdm/README.md)) :
 
 <p>
-<img src="images/fusion/10-passant-renforce.jpg" width="48%" alt="Passant : barre extérieure de 4 × 3,5 mm et renfort triangulaire contre la paroi">
-<img src="images/fusion/11-pion-baionnette-usb.jpg" width="48%" alt="Pion en baïonnette (2 ailes) et logement de la fiche USB-C">
+<img src="images/fusion/10-passant-renforce.jpg" width="100%" alt="Passant : barre extérieure de 4 × 3,5 mm et renfort triangulaire contre la paroi">
+<img src="images/fusion/11-pion-baionnette-usb.jpg" width="62%" alt="Pion en baïonnette (2 ailes) et logement de la fiche USB-C">
+<img src="images/fusion/13-bouchon-baionnette.jpg" width="30%" alt="Bouchon USB-C seul : trou en baïonnette avec ses 2 encoches">
 </p>
 
 Le clip en coupe (languette accrochée dans la paroi) est montré sur l'image des [points faibles](rdm/points-faibles.png). Autres vues : [couvercle de profil](images/fusion/06-couvercle-profil.jpg), [boîtier vide DS12LR](images/fusion/07-boitier-vide-ds12lr.jpg), [ensemble en version petit interrupteur](images/fusion/12-ensemble-petit-interrupteur.jpg).
