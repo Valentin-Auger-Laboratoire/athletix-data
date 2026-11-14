@@ -28,6 +28,7 @@ Conçu par **Valentin Auger** (novembre 2026), modèle paramétrique en Python (
 | Batterie | bac à rebords (X, Y), mousse de 1,5 mm et nervures du couvercle (Z), sans l'écraser |
 | Bac à batterie | 4 colonnes avec ergots, serré par la batterie |
 | Interrupteur | clipsé dans le bout côté coude |
+| Bouchon USB-C | serré dans son logement, retenu par le pion fendu (il ne se perd pas) |
 | Passants | tenus par la paroi sur toute leur longueur, avec un renfort triangulaire |
 
 Le script vérifie à chaque génération qu'**aucune pièce n'en touche une autre** et que tout est plaqué (jeu de 0 mm sur le capteur, la batterie et la carte, couvercle fermé).
@@ -36,7 +37,7 @@ Le script vérifie à chaque génération qu'**aucune pièce n'en touche une aut
 
 **Résiste à la pluie et à la transpiration, pas étanche.** Le bout USB-C est en haut quand on porte le brassard, donc :
 - **jupe du couvercle** (comme le rebord d'une casquette) : l'eau qui coule sur le couvercle tombe à côté du joint ;
-- **bouchon USB-C** en PETG, attaché par une ficelle à l'œillet du boîtier, retiré seulement pour charger ;
+- **bouchon USB-C** en PETG, retiré seulement pour charger. Sa languette s'enfonce sur un **pion à tête fendue en 4** du boîtier (idée de Valentin) : pas de ficelle, le bouchon reste attaché et pivote sur le pion quand on charge ;
 - plus de fenêtre sur le couvercle (l'interrupteur ENV / RAW du Link Shield reste sur RAW), interrupteur en bas.
 
 Pas de douche ni de piscine : il faudrait un joint et des électrodes déportées, qui ne sont pas dans la commande. Pistes pour une version étanche : voir le cahier des charges plus bas.

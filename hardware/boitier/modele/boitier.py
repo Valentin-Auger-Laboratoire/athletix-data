@@ -199,11 +199,10 @@ def boite(p: Plan) -> cq.Workplane:
     else:
         c = c.cut(cq.Workplane("YZ").rect(PETIT_L, PETIT_H).extrude(PAROI * 3).translate((-p.ext_x / 2 - PAROI, 0, zi)))
 
-    # --- Œillet pour la ficelle du bouchon USB-C (bout +X, à côté du logement)
-    yo, zo = 15.0, 12.0
-    oeil = cq.Workplane("XY").box(3.5, 5.0, 6.0, centered=(False, True, True)).edges("|Y").fillet(1.2).translate((p.ext_x / 2 - 0.01, yo, zo))
-    oeil = oeil.cut(cq.Workplane("XZ").circle(1.0).extrude(4, both=True).translate((p.ext_x / 2 + 1.9, yo, zo)))
-    c = c.union(oeil)
+    # --- Pion fendu qui retient le bouchon USB-C (idée de Valentin Auger : pas de ficelle) : on enfonce le trou de la
+    # languette dessus, la tête fendue en 4 se resserre puis se rouvre. La tige est assez longue pour sortir le bouchon
+    # de la prise (2 mm) et le faire pivoter pour charger, sans qu'il se détache.
+    c = c.union(pion_bouchon(p))
 
     # --- Logements des clips du couvercle, creusés dans l'intérieur des parois
     for (cx, _, ang) in clips(p):
@@ -299,10 +298,29 @@ def bac(p: Plan) -> cq.Workplane:
     return b.translate((centre, 0, p.z_bac))
 
 
+PION_TIGE_D, PION_TIGE_L, PION_TETE_D, PION_TETE_L, PION_FENTE = 2.6, 3.6, 3.8, 2.2, 0.7
+
+
+def pion_bouchon(p: Plan) -> cq.Workplane:
+    """Pion à tête fendue en 4 (comme des parts de pizza) sur le bout +X, dans l'axe du trou de la languette."""
+    zt = p.z_carte + CARTE_EP + USB_Z_SUR_CARTE + USB_SURMOULE[1] / 2 + 6.5
+    x0 = p.ext_x / 2 - 0.01
+    tige = cq.Workplane("YZ").circle(PION_TIGE_D / 2).extrude(PION_TIGE_L + 0.01)
+    # tête : cône (entrée facile, bout arrondi) avec une collerette qui accroche derrière la languette
+    tete = (cq.Workplane("XZ").polyline([(0, 0), (0, PION_TETE_D / 2), (0.6, PION_TETE_D / 2), (PION_TETE_L, 1.0), (PION_TETE_L, 0)]).close()
+            .revolve(360, (0, 0, 0), (1, 0, 0)).translate((PION_TIGE_L, 0, 0)))
+    pion = tige.union(tete)
+    fente_l = PION_TETE_L + 1.2
+    for ang in (0, 90):
+        pion = pion.cut(cq.Workplane("XY").box(fente_l, PION_FENTE, PION_TETE_D + 1, centered=(False, True, True))
+                        .rotate((0, 0, 0), (1, 0, 0), ang).translate((PION_TIGE_L + PION_TETE_L - fente_l + 0.01, 0, 0)))
+    return pion.translate((x0, 0, zt))
+
+
 def bouchon_usb(p: Plan) -> cq.Workplane:
     """Bouchon de la prise USB-C, posé dans le logement extérieur (repère : face extérieure du bout +X en x = 0).
     Il remplit le logement (jeu 0,05 mm par côté : il tient serré), entre un peu dans l'ouverture sans toucher la prise,
-    et sa collerette couvre les bords. Languette pour le retirer avant de charger."""
+    et sa collerette couvre les bords. Languette percée : elle s'enfonce sur le pion fendu du boîtier, le bouchon reste attaché quand on charge."""
     zu = p.z_carte + CARTE_EP + USB_Z_SUR_CARTE
     prof = PAROI - USB_PAROI_RESTE
     corps = cq.Workplane("YZ").rect(USB_SURMOULE[0] - 0.1, USB_SURMOULE[1] - 0.1).extrude(prof).edges("|X").fillet(1.95).translate((-prof, 0, zu))
