@@ -1,8 +1,68 @@
-# Boîtier : cahier des charges
+# Boîtier du brassard
+
+Conçu par **Valentin Auger** (novembre 2026), modèle paramétrique en Python (CadQuery). **Un seul boîtier, long et fin, posé sur le biceps.** Chaque pièce est bloquée en X, Y et Z, pour que rien ne bouge quand on court, **sans aucune vis ni insert** : il n'y en a pas dans la commande, tout tient par des clips.
+
+📄 **[Notice de montage et de pose (PDF, 2 pages)](notice-boitier.pdf)**
+
+![Le boîtier : brassards, interrupteur, bouchon USB-C, flèche de pose, intérieur, couvercle, boucle de secours](images/apercu.jpg)
+
+## Où se pose le boîtier, où vont les électrodes
+
+<p>
+<img src="images/pose-sur-le-bras.png" width="48%" alt="Pose sur le bras : bout USB-C vers l'épaule, électrodes sur le milieu du biceps, interrupteur vers le coude">
+<img src="images/dessous-electrodes.jpg" width="48%" alt="Dessous du boîtier : les 3 électrodes se clipsent sous le capteur par l'ouverture du fond">
+</p>
+
+- **Sur le devant du biceps**, dans la longueur du bras. **Flèche gravée et bout USB-C vers l'épaule**, interrupteur vers le coude : le coude se plie sans toucher le boîtier.
+- **Les 3 électrodes sont sous le boîtier** : elles se clipsent sous le capteur par l'ouverture du fond, sans ouvrir le boîtier. **MID et END dans la longueur du bras**, sur la partie la plus bombée du biceps ; REF sur sa pastille. Position exacte selon le MyoWare reçu.
+- **Bras gauche ou droit : même pose.**
+- **Deux brassards réfléchissants du devis** (40 × 5 cm, scratch) passent dans les passants, **par-dessus le couvercle**, et font le tour du bras. Ils plaquent le boîtier, donc les électrodes, sur la peau.
+
+## Ce qui tient chaque pièce
+
+| Pièce | Comment elle est bloquée |
+|---|---|
+| Couvercle | **7 clips** (languettes souples avec un bec) qui s'enclenchent dans des creux de l'intérieur des parois ; ouverture au tournevis plat par l'encoche côté coude |
+| MyoWare + Link Shield | poche à sa taille (X, Y), 4 picots du couvercle sur les coins (Z) |
+| Carte Thing Plus ESP32-S3 | 4 plots, 2 pions dans ses trous (X, Y), 4 doigts sous le bac qui appuient sur les anneaux des trous (Z) |
+| Batterie | bac à rebords (X, Y), mousse de 1,5 mm et nervures du couvercle (Z), sans l'écraser |
+| Bac à batterie | 4 colonnes avec ergots, serré par la batterie |
+| Interrupteur | clipsé dans le bout côté coude |
+| Passants | tenus par la paroi sur toute leur longueur, avec un renfort triangulaire |
+
+Le script vérifie à chaque génération qu'**aucune pièce n'en touche une autre** et que tout est plaqué (jeu de 0 mm sur le capteur, la batterie et la carte, couvercle fermé).
+
+## Pluie
+
+**Résiste à la pluie et à la transpiration, pas étanche.** Le bout USB-C est en haut quand on porte le brassard, donc :
+- **jupe du couvercle** (comme le rebord d'une casquette) : l'eau qui coule sur le couvercle tombe à côté du joint ;
+- **bouchon USB-C** en PETG, attaché par une ficelle à l'œillet du boîtier, retiré seulement pour charger ;
+- plus de fenêtre sur le couvercle (l'interrupteur ENV / RAW du Link Shield reste sur RAW), interrupteur en bas.
+
+Pas de douche ni de piscine : il faudrait un joint et des électrodes déportées, qui ne sont pas dans la commande. Pistes pour une version étanche : voir le cahier des charges plus bas.
+
+## Fichiers
+
+| Dossier | Contenu |
+|---|---|
+| [`fichiers/ds12lr/`](fichiers/ds12lr) | version interrupteur rond DS12LR : 137 × 43 × 27 mm (140,5 × 59 mm avec les passants) |
+| [`fichiers/petit-interrupteur/`](fichiers/petit-interrupteur) | version GR33 / GA55 : 133 × 43 × 27 mm |
+| [`modele/boitier.py`](modele/boitier.py) | le modèle : chaque cote est un chiffre en haut du fichier, `python boitier.py` refait tous les fichiers |
+| [`images/`](images) | rendus et schéma de pose |
+
+Dans chaque version : `boitier`, `couvercle`, `bac-batterie`, `bouchon-usb`, `serre-bande` (boucle 3 barres de secours, si le scratch ne serre pas assez), en **STEP** (Fusion 360, SolidWorks) et **STL** (impression), plus `assemblage-complet.step`. Impression en **PETG** (bobine du devis) : les clips plient d'environ 1,3 %, sans risque en PETG.
+
+**À vérifier au pied à coulisse avant d'imprimer** : hauteur de la pile MyoWare + Link Shield et position de la prise jack, pressions des électrodes dans l'ouverture (30 × 27 mm), trous de la carte, petit interrupteur (15 × 10 × 12 mm supposés), épaisseur du brassard (2 mm supposés). Liste complète dans la [notice](notice-boitier.pdf).
+
+---
+
+# Cahier des charges de départ
 
 Préparé par **Valentin Auger** (novembre 2026) pour modéliser le boîtier sous Fusion 360, avant de recevoir les pièces. Les dimensions viennent des fiches des fabricants et des revendeurs : **à vérifier au pied à coulisse** sur les pièces reçues avant d'imprimer.
 
-![Implantation proposée du boîtier principal, à l'échelle](implantation.png)
+> Première étude (deux modules, vis M2,5). Le boîtier réalisé plus haut la remplace : **un seul boîtier, sans vis**. Le tableau des pièces et les pistes pour une version étanche restent valables.
+
+![Implantation de la première étude, à l'échelle](implantation.png)
 
 ## Deux modules sur le brassard
 

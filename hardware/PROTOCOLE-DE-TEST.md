@@ -81,7 +81,7 @@ Si 4.4 reste bloqué vers 3,3 V : électrodes trop proches ou gain du MyoWare tr
 | 6.1 | Séance de 10 min, puis Terminer | séance enregistrée, visible dans « Mes séances » avec la batterie mise à jour | | |
 | 6.2 | Classement | la séance (non simulée) rapporte des points : 10 + minutes × intensité moyenne ÷ 50 | | |
 | 6.3 | Brassard allumé et connecté en continu | durée avant extinction (objectif : plus de 2 h) | | |
-| 6.4 | Brassard dans le boîtier, porté pendant une séance | tient en place, électrodes toujours collées | | |
+| 6.4 | Brassard monté dans le boîtier selon la [notice](boitier/notice-boitier.pdf), porté pendant une séance de course | rien ne bouge à l'intérieur (secouer le boîtier), couvercle toujours clipsé, brassards droits, électrodes toujours collées | | |
 | 6.5 | Pendant une séance, éteindre le brassard 5 s puis le rallumer (ou s'éloigner) | bandeau « reconnexion… », puis la séance reprend toute seule ; au-delà de 30 s : message « brassard introuvable » | | |
 | 6.6 | Brassard rallumé, choisir un sport sans calibrer | l'application propose « Calibrer avant la séance ? » | | |
 | 6.7 | Batterie sous 10 % (fin du test d'autonomie) | bandeau « batterie faible » et vibration pendant la séance | | |

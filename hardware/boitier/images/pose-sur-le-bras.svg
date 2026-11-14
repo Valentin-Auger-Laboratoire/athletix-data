@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="820" viewBox="0 0 760 820" font-family="DejaVu Sans, Arial" font-size="15">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="32" font-size="20" font-weight="bold">Pose du boîtier sur le bras (vue de face, bras le long du corps)</text>
+<path d="M 180 60 C 155 260.0, 150 420.0, 188 660.0 L 312 660.0 C 350 420.0, 345 260.0, 320 60 Z" fill="#f3e3d3" stroke="#a88" stroke-width="2"/>
+<text x="250" y="48" text-anchor="middle" font-weight="bold">ÉPAULE</text>
+<line x1="188" y1="660.0" x2="312" y2="660.0" stroke="#a88" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="250" y="684.0" text-anchor="middle" font-weight="bold">PLI DU COUDE</text>
+<rect x="158" y="393.0" width="184" height="100.0" fill="#222" opacity="0.82"/>
+<rect x="158" y="415.0" width="184" height="10" fill="#ddd" opacity="0.9"/><rect x="158" y="461.0" width="184" height="10" fill="#ddd" opacity="0.9"/>
+<rect x="158" y="241.0" width="184" height="100.0" fill="#222" opacity="0.82"/>
+<rect x="158" y="263.0" width="184" height="10" fill="#ddd" opacity="0.9"/><rect x="158" y="309.0" width="184" height="10" fill="#ddd" opacity="0.9"/>
+<rect x="207.0" y="230.0" width="86.0" height="274.0" rx="7" fill="#3a7bd5" stroke="#1d4f99" stroke-width="2" opacity="0.93"/>
+<circle cx="238.0" cy="446.4" r="24.0" fill="white" fill-opacity="0.35" stroke="#c8102e" stroke-width="2.5" stroke-dasharray="5 4"/>
+<circle cx="238.0" cy="394.4" r="24.0" fill="white" fill-opacity="0.35" stroke="#c8102e" stroke-width="2.5" stroke-dasharray="5 4"/>
+<circle cx="280.0" cy="420.4" r="24.0" fill="white" fill-opacity="0.35" stroke="#c8102e" stroke-width="2.5" stroke-dasharray="5 4"/>
+<path d="M 250 240.0 l 12 18 h -7 v 22 h -10 v -22 h -7 z" fill="white"/>
+<rect x="230" y="504.0" width="40" height="7" fill="#111"/>
+<rect x="237" y="224.0" width="26" height="6" fill="#c8102e"/>
+<line x1="263" y1="227.0" x2="450" y2="227.0" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="224.0" font-weight="bold">Bout USB-C + bouchon</text><text x="458" y="243.0" fill="#444">vers l'épaule (flèche gravée)</text>
+<line x1="342" y1="310.0" x2="450" y2="310.0" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="307.0" font-weight="bold">2 brassards 40 × 5 cm</text><text x="458" y="326.0" fill="#444">passés par-dessus le couvercle</text>
+<line x1="290" y1="420.4" x2="450" y2="420.4" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="417.4" font-weight="bold">3 électrodes, sous le boîtier</text><text x="458" y="436.4" fill="#444">sur le milieu du biceps (le plus bombé)</text>
+<line x1="262" y1="468.4" x2="450" y2="468.4" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="465.4" font-weight="bold">MID et END</text><text x="458" y="484.4" fill="#444">dans la longueur du bras</text>
+<line x1="270" y1="507.0" x2="450" y2="507.0" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="504.0" font-weight="bold">Interrupteur</text><text x="458" y="523.0" fill="#444">bout côté coude</text>
+<line x1="312" y1="620.0" x2="450" y2="620.0" stroke="#555" stroke-width="1.2"/>
+<text x="458" y="617.0" font-weight="bold">≈ 8 cm de marge</text><text x="458" y="636.0" fill="#444">le coude se plie sans toucher</text>
+<text x="20" y="790" fill="#444">Bras gauche ou droit : même pose. Position exacte des électrodes : selon le MyoWare reçu.</text>
+<text x="20" y="810" fill="#444">Échelle approximative (bras de 30 cm). Réalisé par Valentin Auger.</text>
+</svg>

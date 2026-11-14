@@ -22,7 +22,7 @@
 | Protocole de test | ✅ ([`hardware/PROTOCOLE-DE-TEST.md`](hardware/PROTOCOLE-DE-TEST.md)) |
 | Projet Android | ✅ prêt (Bluetooth, GPS, vibration), APK compilé par GitHub ([release « apk »](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk)), ⏳ à installer sur un téléphone |
 | Règle de score du classement | ✅ validée (12 novembre 2026) et codée |
-| Boîtier | ✅ cahier des charges et implantation à l'échelle ([`hardware/boitier/`](hardware/boitier/README.md)), ⏳ modèle Fusion 360 : **fichier à fournir par Valentin** (export STEP + STL du design « v1 » depuis le cloud Autodesk), ⏳ pas étanche |
+| Boîtier | ✅ boîtier unique à clips, sans vis, deux versions d'interrupteur, STEP + STL et notice de pose ([`hardware/boitier/`](hardware/boitier/README.md)) ; résiste à la pluie, ⏳ pas étanche ; ⏳ cotes à vérifier sur les pièces reçues |
 | Documents pour les essais : mode d'emploi, fiche de test à imprimer | ✅ ([`mode-emploi/`](mode-emploi/mode-emploi.pdf), [`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)), visibles en haut du README |
 | Comparaison automatique mesure / simulation, analyse des risques, Gantt, vidéo | ✅ ([`mesures/`](mesures/README.md), [`gestion-projet/`](gestion-projet/README.md), [`media/`](media/demo-application.mp4)) |
 | Brassard réel câblé, mesuré, calibré | ❌ attend le matériel |
@@ -75,7 +75,7 @@
 - [ ] **Essayer l'application sur un téléphone Android** ([APK compilé par GitHub](https://github.com/Valentin-Auger-Laboratoire/athletix-data/releases/tag/apk), à installer directement) : connexion à l'API sur XAMPP, GPS, pas, vibration, voix, export PDF et CSV, ceinture cardio si quelqu'un en a une.
 - [ ] **Tester le faux brassard** sur un ESP32 classique ([`hardware/faux-brassard-ble/`](hardware/faux-brassard-ble/README.md)) avec nRF Connect, puis avec l'application.
 - [ ] **Montre MSGM115 : l'essayer** avec l'APK, sans attendre le brassard ([protocole, étape 10](hardware/PROTOCOLE-DE-TEST.md)) : cœur, tension, sommeil, batterie, comparés à Yoho Sports.
-- [ ] **Boîtier** ([cahier des charges et implantation à l'échelle](hardware/boitier/README.md)) : **en attente du fichier de Valentin**. Exporter le modèle Fusion 360 en STEP et STL, avec quelques captures, et l'ajouter au dépôt. Pour la natation : prévoir une version **étanche** (joint, passe-câble pour les électrodes) ou la garder pour plus tard.
+- [x] **Boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : un seul boîtier à clips (aucune vis), chaque pièce bloquée en X, Y, Z, brassards par-dessus le couvercle, jupe et bouchon USB-C contre la pluie, boucle 3 barres de secours, [notice de montage et de pose](hardware/boitier/notice-boitier.pdf). Version **étanche** pour la natation : plus tard.
 - [x] **Diagramme de Gantt** mis à jour ([`gestion-projet/`](gestion-projet/README.md)) : plan de la 1re année et ce qu'il est devenu, 2e année jusqu'à la soutenance (dates de livraison et de soutenance à confirmer).
 - [ ] **Rapport du jalon 1** (2e année, à rendre le lundi 16 novembre) : ce qui a été fait depuis le jalon 4, pourquoi ces choix, les perspectives (cette feuille de route) et une courte conclusion.
 

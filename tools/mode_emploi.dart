@@ -76,7 +76,7 @@ Future<void> main() async {
     build: (c) => [
       pw.Text(sur("Mode d'emploi du brassard Athletix-Data"), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
       pw.SizedBox(height: 3),
-      pw.Text(sur('Prototype : brassard EMG (MyoWare 2.0, ESP32-S3) et application Android. Version du 13 novembre 2026.'),
+      pw.Text(sur('Prototype : brassard EMG (MyoWare 2.0, ESP32-S3) et application Android. Version du 14 novembre 2026.'),
           style: const pw.TextStyle(fontSize: 10)),
       pw.SizedBox(height: 8),
       // Sécurité, en premier
@@ -101,14 +101,14 @@ Future<void> main() async {
           flex: 5,
           child: etapes([
             "Peau propre et sèche (pas de crème). Prévoir 3 électrodes à pression neuves : celles du kit, ou des électrodes d'ECG standard (pharmacie, salle de TP).",
-            'Clipser deux électrodes sous le capteur MyoWare : MID et END.',
-            "Coller le capteur sur le biceps, aligné avec le bras : MID au milieu du muscle, sur la partie la plus bombée quand on contracte ; END à côté, côté coude.",
-            "Coller la troisième électrode (REF) sur l'os du coude, avec le câble de référence. Sans câble : pastille REF du capteur.",
-            "Serrer le brassard élastique sans couper la circulation, puis allumer avec l'interrupteur.",
+            "Boîtier fermé : clipser les 3 électrodes sous le capteur, par l'ouverture du fond (MID, END et REF sur sa pastille).",
+            "Poser le boîtier sur le devant du biceps, flèche gravée vers l'épaule : électrodes sur la partie la plus bombée quand on contracte, MID et END dans la longueur du bras.",
+            "Passer les 2 brassards dans les passants, par-dessus le couvercle, et fermer le scratch sans couper la circulation (bras fin : boucle 3 barres).",
+            "Allumer avec l'interrupteur, au bout côté coude. S'il pleut : bouchon USB-C en place (le boîtier n'est pas étanche).",
           ]),
         ),
         pw.SizedBox(width: 10),
-        pw.Expanded(flex: 4, child: pw.Image(img('pose-electrodes.png'))),
+        pw.Expanded(flex: 4, child: pw.Image(img('pose-boitier.png'), height: 190)),
       ]),
       titre('2', 'Relier le brassard et faire la calibration'),
       pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
@@ -121,7 +121,7 @@ Future<void> main() async {
               "La valeur mesurée devient 100 % pour la séance. La refaire à chaque séance : la force change d'un jour à l'autre.",
             ]),
             pw.SizedBox(height: 3),
-            note("« Calibration impossible » : signal trop faible. Vérifier que les électrodes collent bien et que l'interrupteur du Link Shield est sur ENV."),
+            note("« Calibration impossible » : signal trop faible. Vérifier que les électrodes collent bien et que l'interrupteur du Link Shield est sur RAW (firmware 1.2)."),
           ]),
         ),
         pw.SizedBox(width: 8),
