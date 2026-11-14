@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fr" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>Étude RDM du boîtier</title>
+<meta name="description" content="Athletix-Data : résistance des matériaux du boîtier du brassard (clips, passants, pion du bouchon), avant et après correction. Valentin Auger.">
+<meta property="og:title" content="Étude RDM du boîtier · Athletix-Data">
+<meta property="og:description" content="Clips, passants et pion du bouchon calculés par la RDM des poutres, avant et après correction. Valentin Auger.">
+<meta property="og:type" content="website">
+<style>
+:root{--fond:#f6f6f7;--carte:#fff;--texte:#1b1b1f;--doux:#5d5d66;--trait:#d9d9de;--rouge:#c8102e;--vert:#1f8a3b;--orange:#c77700;--bleu:#3a7bd5;--gris:#8a8f99}
+@media (prefers-color-scheme:dark){:root{--fond:#121214;--carte:#1c1c20;--texte:#ececf0;--doux:#a4a4ad;--trait:#33333a;--vert:#43b45f;--orange:#e39a2d;--gris:#9aa0a8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.6rem;margin:.2em 0}
+h2{font-size:1.15rem;margin:0 0 .5em}
+.sous{color:var(--doux);margin:0 0 16px}
+.bascule{display:inline-flex;border:1px solid var(--trait);border-radius:8px;overflow:hidden;margin:8px 0 16px}
+.bascule button{border:0;background:var(--carte);color:var(--texte);padding:8px 16px;font:inherit;cursor:pointer}
+.bascule button.actif{background:var(--rouge);color:#fff}
+.resume{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px}
+.tuile{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:10px 12px}
+.tuile b{display:block;font-size:1.5rem}
+.tuile small{color:var(--doux)}
+.ok{color:var(--vert)}.ko{color:var(--rouge)}.juste{color:var(--orange)}
+section.carte{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:16px;margin-bottom:16px}
+.grille{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;align-items:start}
+@media (max-width:820px){.grille{grid-template-columns:minmax(0,1fr)}}
+label{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:8px 0;font-size:.92rem}
+label input{grid-column:1/-1;width:100%;accent-color:var(--rouge)}
+label output{font-variant-numeric:tabular-nums;color:var(--doux)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:6px}
+td{padding:4px 6px;border-bottom:1px solid var(--trait)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+svg{width:100%;height:auto;display:block}
+.note{color:var(--doux);font-size:.85rem;margin:.6em 0 0}
+.formule{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;background:var(--fond);border-radius:6px;padding:6px 8px;margin:6px 0;overflow-x:auto;white-space:nowrap}
+details summary{cursor:pointer;color:var(--doux)}
+a{color:var(--rouge)}
+</style>
+</head>
+<body>
+<main>
+<h1>Étude RDM du boîtier</h1>
+<p class="sous">Athletix-Data · brassard EMG · étude de <b>Valentin Auger</b>, novembre 2026. Les trois pièces du boîtier qui travaillent, calculées par la résistance des matériaux des poutres, <b>avant</b> et <b>après</b> correction. PETG imprimé, valeurs typiques : à confirmer par un essai.</p>
+
+<div class="bascule" role="group" aria-label="Version du modèle">
+  <button id="bAvant">Premier modèle</button><button id="bApres" class="actif">Modèle corrigé</button>
+</div>
+
+<div class="resume" id="resume"></div>
+
+<section class="carte">
+  <h2>1. Clips du couvercle</h2>
+  <div class="grille">
+    <div>
+      <svg id="svgClip" viewBox="0 0 360 245" aria-label="Languette du clip, déformée à la fermeture"></svg>
+      <p class="note">Le couvercle s'imprime face gravée sur le plateau : les languettes poussent vers le haut et <b>plient en travers des couches</b>, là où le PETG imprimé est le plus faible (adhérence entre couches).</p>
+    </div>
+    <div>
+      <label>Épaisseur de la languette t <output id="oT"></output><input id="t" type="range" min="0.6" max="1.6" step="0.05"></label>
+      <label>Bec (le bec accroche de « bec − 0,3 mm » dans la paroi) <output id="oBec"></output><input id="bec" type="range" min="0.4" max="1.2" step="0.05"></label>
+      <label>Longueur L <output id="oL"></output><input id="L" type="range" min="6" max="12" step="0.5"></label>
+      <div class="formule">ε = 1,5 · t · y / L² &nbsp;·&nbsp; P = 3·E·I·y / L³ &nbsp;·&nbsp; W = P·(μ + tan α)/(1 − μ·tan α)</div>
+      <table id="tClip"></table>
+    </div>
+  </div>
+</section>
+
+<section class="carte">
+  <h2>2. Barre extérieure des passants</h2>
+  <div class="grille">
+    <div>
+      <svg id="svgPassant" viewBox="0 0 360 250" aria-label="Coupe du passant : la bande tourne autour de la barre extérieure"></svg>
+      <p class="note">La bande descend du couvercle, passe dans la fente et repart autour du bras : elle <b>tourne autour de la barre extérieure</b> et tire dessus. Barre encastrée à ses deux bouts, charge répartie sur 51 mm.</p>
+    </div>
+    <div>
+      <label>Largeur de la barre <output id="oBy"></output><input id="by" type="range" min="1" max="6" step="0.1"></label>
+      <label>Épaisseur du passant <output id="oBz"></output><input id="bz" type="range" min="2" max="5" step="0.1"></label>
+      <label>Tension du brassard porté <output id="oTs"></output><input id="Ts" type="range" min="2" max="30" step="1"></label>
+      <label>Tension au serrage brutal <output id="oTm"></output><input id="Tm" type="range" min="10" max="80" step="1"></label>
+      <label>Rayon du bras <output id="oRb"></output><input id="Rb" type="range" min="35" max="75" step="1"></label>
+      <div class="formule">R = 2·T·sin(Δ/2) &nbsp;·&nbsp; M = R·L / 12 &nbsp;·&nbsp; σ = M / (h·b²/6)</div>
+      <table id="tPassant"></table>
+    </div>
+  </div>
+</section>
+
+<section class="carte">
+  <h2>3. Pion du bouchon USB-C</h2>
+  <div class="grille">
+    <div>
+      <svg id="svgPion" viewBox="0 0 360 220" aria-label="Pion du bouchon"></svg>
+    </div>
+    <div>
+      <p id="pionTexte" style="margin-top:0"></p>
+      <label>Effort sur le bouchon (tiré, accroché) <output id="oF"></output><input id="F" type="range" min="2" max="30" step="1"></label>
+      <table id="tPion"></table>
+    </div>
+  </div>
+</section>
+
+<section class="carte">
+  <h2>Matériau et chargement</h2>
+  <div class="grille">
+    <div>
+      <label>Module d'Young E (PETG imprimé) <output id="oE"></output><input id="E" type="range" min="1500" max="2500" step="50"></label>
+      <label>Résistance dans le plan des couches <output id="oSp"></output><input id="Sp" type="range" min="30" max="55" step="1"></label>
+      <label>Résistance en travers des couches <output id="oSt"></output><input id="St" type="range" min="12" max="40" step="1"></label>
+      <label>Allongement admis en travers des couches <output id="oEt"></output><input id="Et" type="range" min="0.5" max="2" step="0.05"></label>
+    </div>
+    <div>
+      <label>Accélération en course (sur le haut du bras) <output id="oAcc"></output><input id="acc" type="range" min="2" max="20" step="1"></label>
+      <label>Masse qui appuie sur le couvercle <output id="oMp"></output><input id="mp" type="range" min="30" max="120" step="1"></label>
+      <p class="note">Hypothèses de départ : PETG E = 2 000 MPa, 45 MPa dans le plan, 25 MPa en travers ; course 10 g (3 à 5 g mesurés sur le haut du bras, ×2) ; brassard 10 N porté, 40 N au serrage brutal ; bouchon tiré à 10 N. Coefficients visés : 1,5 sur l'allongement, 2 sur la contrainte (1,5 pour le serrage brutal).</p>
+      <p class="note">Calcul détaillé et figures : <a href="https://github.com/Valentin-Auger-Laboratoire/athletix-data/tree/main/hardware/boitier/rdm">hardware/boitier/rdm</a> (mêmes formules en Python, vérifiées automatiquement contre cette page).</p>
+    </div>
+  </div>
+</section>
+</main>
+<script src="rdm.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const fr = (x, d = 1) => Number.isFinite(x) ? x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) : '∞';
+  let version = 'apres';
+  let geo = JSON.parse(JSON.stringify(RDM.APRES));
+  const m = { ...RDM.PETG }, ch = { ...RDM.CHARGES };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const etat = (c, mini) => c >= mini ? 'ok' : (c >= 1 ? 'juste' : 'ko');
+  const mot = (c, mini) => c >= mini ? 'tient' : (c >= 1 ? 'trop juste' : 'casse');
+  const couleur = (c, mini) => css(c >= mini ? '--vert' : (c >= 1 ? '--orange' : '--rouge'));
+
+  const curseurs = [
+    ['t', () => geo.clip.t, v => geo.clip.t = v, v => fr(v, 2) + ' mm'],
+    ['bec', () => geo.clip.bec, v => geo.clip.bec = v, v => fr(v, 2) + ' mm'],
+    ['L', () => geo.clip.L, v => geo.clip.L = v, v => fr(v, 1) + ' mm'],
+    ['by', () => geo.passant.barre_y, v => geo.passant.barre_y = v, v => fr(v, 1) + ' mm'],
+    ['bz', () => geo.passant.barre_z, v => geo.passant.barre_z = v, v => fr(v, 1) + ' mm'],
+    ['Ts', () => ch.T_service_N, v => ch.T_service_N = v, v => fr(v, 0) + ' N'],
+    ['Tm', () => ch.T_max_N, v => ch.T_max_N = v, v => fr(v, 0) + ' N'],
+    ['Rb', () => ch.R_bras_mm, v => ch.R_bras_mm = v, v => fr(v, 0) + ' mm (' + fr(2 * Math.PI * v / 10, 0) + ' cm de tour)'],
+    ['F', () => ch.F_bouchon_N, v => ch.F_bouchon_N = v, v => fr(v, 0) + ' N'],
+    ['E', () => m.E, v => m.E = v, v => fr(v, 0) + ' MPa'],
+    ['Sp', () => m.sigma_plan, v => m.sigma_plan = v, v => fr(v, 0) + ' MPa'],
+    ['St', () => m.sigma_travers, v => m.sigma_travers = v, v => fr(v, 0) + ' MPa'],
+    ['Et', () => m.eps_travers, v => m.eps_travers = v, v => fr(v, 2) + ' %'],
+    ['acc', () => ch.acc_g, v => ch.acc_g = v, v => fr(v, 0) + ' g'],
+    ['mp', () => ch.masse_poussee_g, v => ch.masse_poussee_g = v, v => fr(v, 0) + ' g'],
+  ];
+  const sortie = id => $('o' + id.charAt(0).toUpperCase() + id.slice(1));
+  function lireCurseurs() { for (const [id, get, , f] of curseurs) { $(id).value = get(); sortie(id).textContent = f(get()); } }
+  for (const [id, , set, f] of curseurs) $(id).addEventListener('input', e => { set(+e.target.value); sortie(id).textContent = f(+e.target.value); dessiner(); });
+
+  function lignes(t, rows) { t.innerHTML = rows.map(([a, b, cl]) => `<tr><td>${a}</td><td class="${cl || ''}">${b}</td></tr>`).join(''); }
+
+  function svgClip(c) {
+    const s = $('svgClip'), g = geo.clip, k = 18, x0 = 60, y0 = 30, Lp = g.L * k, tp = Math.max(g.t * k, 8), amp = 6;
+    const yd = c.fleche_mm * k * amp;
+    let pts = [], pts2 = [];
+    for (let i = 0; i <= 30; i++) {
+      const z = i / 30, w = yd * (3 * z * z - z ** 3) / 2;   // déformée d'une poutre en porte-à-faux, charge au bout
+      pts.push([x0 + 60 + w, y0 + z * Lp]); pts2.push([x0 + 60 + tp + w, y0 + z * Lp]);
+    }
+    const coul = couleur(c.coef_allongement, 1.5);
+    const poly = pts.concat(pts2.reverse()).map(p => p.join(',')).join(' ');
+    const bx = pts[pts.length - 1][0];
+    s.innerHTML = `
+      <rect x="${x0}" y="${y0 - 20}" width="200" height="20" fill="${css('--bleu')}" opacity=".8"/>
+      <text x="${x0 + 210}" y="${y0 - 6}" font-size="11" fill="${css('--doux')}">couvercle</text>
+      <rect x="${x0 + 60}" y="${y0}" width="${tp}" height="${Lp}" fill="none" stroke="${css('--gris')}" stroke-dasharray="4 3"/>
+      <polygon points="${poly}" fill="${coul}" opacity=".85"/>
+      <polygon points="${bx + tp},${y0 + Lp - 50} ${bx + tp + g.bec * k},${y0 + Lp - 14} ${bx + tp},${y0 + Lp - 8}" fill="${coul}"/>
+      <rect x="${x0 + 60 + tp + 0.3 * k}" y="${y0}" width="14" height="${Lp + 20}" fill="${css('--gris')}" opacity=".35"/>
+      <text x="${x0 + 60 + tp + 0.3 * k + 18}" y="${y0 + 40}" font-size="11" fill="${css('--doux')}">paroi du boîtier</text>
+      <path d="M ${x0 + 45} ${y0} v ${Lp}" stroke="${css('--texte')}"/><path d="M ${x0 + 40} ${y0} h 10 M ${x0 + 40} ${y0 + Lp} h 10" stroke="${css('--texte')}"/><text x="${x0 - 50}" y="${y0 + Lp / 2}" font-size="12" fill="${css('--texte')}">L = ${fr(g.L, 1)} mm</text>
+      <text x="10" y="${y0 + Lp + 32}" font-size="12" fill="${css('--texte')}">flèche ${fr(c.fleche_mm, 2)} mm (dessinée ×${amp})</text>
+      <text x="10" y="${y0 + Lp + 49}" font-size="12" fill="${css('--texte')}">allongement ${fr(c.allongement_pct, 2)} %</text>`;
+  }
+
+  function svgPassant(pa) {
+    const s = $('svgPassant'), g = geo.passant, k = 6, B = RDM.BOITE;
+    const d = RDM.deviationBande(g, ch);
+    const X = y => 20 + (y - B.ext_y / 2 + 6) * k, Y = z => 190 - z * k;
+    const larg = 2.5 + (RDM.BOITE.ext_y && 0) + 4 + g.barre_y;  // renfort + fente + barre (dessin)
+    const xf0 = B.ext_y / 2 + g.fente_centre - 2, xf1 = xf0 + 4;
+    const coul = couleur(pa.coef, 2);
+    const yb = d.yf, tg = d.tangente;
+    const bas = [yb + tg[0] * 22, -2 + tg[1] * 22];
+    s.innerHTML = `
+      <rect x="${X(B.ext_y / 2 - 6)}" y="${Y(B.h_couvercle)}" width="${6 * k}" height="${B.h_couvercle * k}" fill="${css('--bleu')}" opacity=".8"/>
+      <text x="${X(B.ext_y / 2 - 6) + 2}" y="${Y(B.h_couvercle) - 6}" font-size="11" fill="${css('--doux')}">boîtier</text>
+      <rect x="${X(B.ext_y / 2)}" y="${Y(g.barre_z)}" width="${(xf0 - B.ext_y / 2) * k}" height="${g.barre_z * k}" fill="${css('--bleu')}"/>
+      <polygon points="${X(B.ext_y / 2)},${Y(g.barre_z)} ${X(B.ext_y / 2 + 2.5)},${Y(g.barre_z)} ${X(B.ext_y / 2)},${Y(g.barre_z + 2.5)}" fill="${css('--bleu')}"/>
+      <rect x="${X(xf1)}" y="${Y(g.barre_z)}" width="${g.barre_y * k}" height="${g.barre_z * k}" fill="${coul}"/>
+      <polyline points="${X(d.haut[0])},${Y(d.haut[1])} ${X(yb)},${Y(g.barre_z)} ${X(yb)},${Y(-1)} ${X(bas[0])},${Y(bas[1])}" fill="none" stroke="${css('--texte')}" stroke-width="3" opacity=".75"/>
+      <line x1="${X(xf1 + g.barre_y / 2)}" y1="${Y(g.barre_z / 2)}" x2="${X(xf1 + g.barre_y / 2) + d.f[0] * 40}" y2="${Y(g.barre_z / 2) - d.f[1] * 40}" stroke="${css('--rouge')}" stroke-width="2.5" marker-end="url(#fl)"/>
+      <defs><marker id="fl" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="${css('--rouge')}"/></marker></defs>
+      <text x="${X(xf1 + g.barre_y) + 8}" y="${Y(g.barre_z) + 4}" font-size="11" fill="${css('--texte')}">barre ${fr(g.barre_y, 1)} × ${fr(g.barre_z, 1)} mm</text>
+      <text x="${X(d.haut[0]) + 10}" y="${Y(d.haut[1]) + 14}" font-size="11" fill="${css('--doux')}">brassard</text>
+      <text x="170" y="40" font-size="12" fill="${css('--texte')}">la bande tourne de ${fr(pa.deviation_deg, 0)}°</text>
+      <text x="170" y="58" font-size="12" fill="${css('--texte')}">effort R = ${fr(pa.R_N, 1)} N pour T = ${fr(pa.T_N, 0)} N</text>`;
+  }
+
+  function svgPion(p) {
+    const s = $('svgPion'), g = geo.pion, k = 16;
+    const coul = couleur(p.coef, g.type === 'fendu' ? 1.5 : 2);
+    if (g.type === 'fendu') {
+      const r = g.tige_d / 2 * k, R = g.tete_d / 2 * k, cx = 250, cy = 110;
+      s.innerHTML = `
+        <rect x="20" y="${110 - 70}" width="20" height="140" fill="${css('--bleu')}" opacity=".8"/>
+        <rect x="40" y="${110 - r}" width="${3.6 * k}" height="${2 * r}" fill="${coul}"/>
+        <polygon points="${40 + 3.6 * k},${110 - R} ${40 + 3.6 * k + 0.6 * k},${110 - R} ${40 + 5.8 * k},${110 - 16} ${40 + 5.8 * k},${110 + 16} ${40 + 3.6 * k + 0.6 * k},${110 + R} ${40 + 3.6 * k},${110 + R}" fill="${coul}"/>
+        <rect x="${40 + 2.4 * k}" y="${110 - g.fente / 2 * k}" width="${3.4 * k}" height="${g.fente * k}" fill="${css('--carte')}"/>
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="${coul}"/><rect x="${cx - R}" y="${cy - g.fente / 2 * k}" width="${2 * R}" height="${g.fente * k}" fill="${css('--carte')}"/>
+        <rect x="${cx - g.fente / 2 * k}" y="${cy - R}" width="${g.fente * k}" height="${2 * R}" fill="${css('--carte')}"/>
+        <circle cx="${cx}" cy="${cy}" r="${g.trou_d / 2 * k}" fill="none" stroke="${css('--texte')}" stroke-dasharray="4 3"/>
+        <text x="20" y="195" font-size="12" fill="${css('--texte')}">tête Ø ${fr(g.tete_d, 1)} mm dans un trou Ø ${fr(g.trou_d, 1)} mm :</text>
+        <text x="20" y="212" font-size="12" fill="${css('--texte')}">chaque branche plie de ${fr((g.tete_d - g.trou_d) / 2, 1)} mm</text>`;
+    } else {
+      const r = g.tige_d / 2 * k, cx = 255, cy = 105, ar = g.aile_r * k;
+      s.innerHTML = `
+        <rect x="20" y="${105 - 70}" width="20" height="140" fill="${css('--bleu')}" opacity=".8"/>
+        <rect x="40" y="${105 - r}" width="${g.tige_l * k}" height="${2 * r}" fill="${coul}"/>
+        <rect x="${40 + g.tige_l * k}" y="${105 - ar}" width="${g.aile_ep * k}" height="${ar + r}" fill="${coul}"/>
+        <rect x="${40 + 1.2 * k}" y="${105 - 80}" width="${1.2 * k}" height="150" fill="${css('--rouge')}" opacity=".35"/>
+        <text x="${40 + 1.2 * k - 4}" y="${105 + 86}" font-size="11" fill="${css('--doux')}">languette du bouchon</text>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="${coul}"/>
+        <rect x="${cx - g.aile_l / 2 * k}" y="${cy - ar}" width="${g.aile_l * k}" height="${ar}" fill="${coul}"/>
+        <rect x="${cx}" y="${cy - g.aile_l / 2 * k}" width="${ar}" height="${g.aile_l * k}" fill="${coul}"/>
+        <rect x="${cx - g.aile_l / 2 * k - 3}" y="${cy}" width="${g.aile_l * k + 6}" height="${ar + 3}" fill="none" stroke="${css('--texte')}" stroke-dasharray="4 3"/>
+        <rect x="${cx - ar - 3}" y="${cy - g.aile_l / 2 * k - 3}" width="${ar + 3}" height="${g.aile_l * k + 6}" fill="none" stroke="${css('--texte')}" stroke-dasharray="4 3"/>
+        <text x="${cx - 55}" y="${cy + ar + 30}" font-size="11" fill="${css('--doux')}">encoches (pointillés)</text>
+        <text x="20" y="212" font-size="12" fill="${css('--texte')}">s'enfile seulement retourné à 180°</text>`;
+    }
+  }
+
+  function dessiner() {
+    const r = RDM.etude(geo, m, ch);
+    const c = r.clip, ps = r.passant_service, pm = r.passant_max, p = r.pion;
+    const pionMini = geo.pion.type === 'fendu' ? 1.5 : 2;
+    const tuiles = [
+      ['Clips : allongement', c.coef_allongement, 1.5], ['Clips : tenue du couvercle', c.coef_tenue, 2],
+      [`Passant, brassard porté (${fr(ch.T_service_N, 0)} N)`, ps.coef, 2], [`Passant, serrage brutal (${fr(ch.T_max_N, 0)} N)`, pm.coef, 1.5],
+      ['Pion du bouchon', p.coef, pionMini]];
+    $('resume').innerHTML = tuiles.map(([n, v, mini]) => `<div class="tuile"><small>${n}</small><b class="${etat(v, mini)}">${fr(v, 2)}</b><small>coefficient de sécurité · ${mot(v, mini)} (visé ≥ ${fr(mini, 1)})</small></div>`).join('');
+    lignes($('tClip'), [
+      ['Flèche à la fermeture', fr(c.fleche_mm, 2) + ' mm'],
+      ['Allongement (admis ' + fr(m.eps_travers, 2) + ' % en travers des couches)', fr(c.allongement_pct, 2) + ' %', etat(c.coef_allongement, 1.5)],
+      ['Effort qui plie une languette', fr(c.effort_flexion_N, 1) + ' N'],
+      ['Pour fermer (7 clips, rampe du bec)', fr(c.fermeture_N, 0) + ' N'],
+      ['Pour arracher le couvercle (face à 45°)', fr(c.ouverture_N, 0) + ' N'],
+      ['À tenir en course (' + fr(ch.masse_poussee_g, 0) + ' g × ' + fr(ch.acc_g, 0) + ' g + mousse)', fr(c.besoin_N, 1) + ' N'],
+    ]);
+    lignes($('tPassant'), [
+      ['Angle dont la bande tourne', fr(ps.deviation_deg, 0) + '°'],
+      ['Brassard porté : effort / contrainte', fr(ps.R_N, 1) + ' N · ' + fr(ps.contrainte_MPa, 1) + ' MPa', etat(ps.coef, 2)],
+      ['Serrage brutal : effort / contrainte', fr(pm.R_N, 1) + ' N · ' + fr(pm.contrainte_MPa, 1) + ' MPa', etat(pm.coef, 1.5)],
+      ['Flèche de la barre au serrage brutal', fr(pm.fleche_mm, 2) + ' mm'],
+      ['Admis dans le plan des couches', fr(m.sigma_plan, 0) + ' MPa'],
+    ]);
+    if (geo.pion.type === 'fendu') {
+      $('pionTexte').innerHTML = '<b>Premier modèle : pion à tête fendue en 4</b> (Ø 2,6 mm). À l\'enfoncement, chaque branche plie : l\'allongement dépasse largement ce que le PETG supporte, il <b>casse dès la première fois</b>.';
+      lignes($('tPion'), [['Allongement d\'une branche (admis ' + fr(m.eps_plan, 1) + ' %)', fr(p.allongement_pct, 1) + ' %', etat(p.coef, 1.5)]]);
+    } else {
+      $('pionTexte').innerHTML = '<b>Modèle corrigé : baïonnette à détrompeur.</b> Tige Ø 3 mm et 2 ailes rigides : <b>rien ne plie</b>. Le bouchon ne s\'enfile que retourné à 180°, et le couvercle posé empêche de le retourner : il ne se perd plus, mais pivote pour charger.';
+      lignes($('tPion'), [
+        ['Tige : contrainte (dans le plan des couches)', fr(p.tige_MPa, 1) + ' MPa', etat(p.coef_tige, 2)],
+        ['Aile du haut : contrainte (en travers des couches)', fr(p.aile_MPa, 1) + ' MPa', etat(p.coef_aile, 2)],
+      ]);
+    }
+    svgClip(c); svgPassant(ps); svgPion(p);
+  }
+  function choisir(v) {
+    version = v; geo = JSON.parse(JSON.stringify(v === 'avant' ? RDM.AVANT : RDM.APRES));
+    $('bAvant').classList.toggle('actif', v === 'avant'); $('bApres').classList.toggle('actif', v === 'apres');
+    lireCurseurs(); dessiner();
+  }
+  $('bAvant').onclick = () => choisir('avant'); $('bApres').onclick = () => choisir('apres');
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', dessiner);
+  choisir('apres');
+})();
+</script>
+</body>
+</html>

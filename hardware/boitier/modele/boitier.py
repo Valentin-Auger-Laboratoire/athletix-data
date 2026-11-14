@@ -58,7 +58,9 @@ PETIT_L, PETIT_H, PETIT_PROF = 15.0, 10.0, 12.0   # À MESURER sur le GR33 / GA5
 COUV_EP, LEVRE_H, LEVRE_EP = 2.0, 2.0, 1.2
 # Clips du couvercle : languette de 9 mm × 1,2 mm, bec de 0,9 mm (0,6 mm accroché dans la paroi).
 # Allongement maxi à l'enclenchement ≈ 1,5·e·f/L² ≈ 1,3 % : bon en PETG, juste en PLA.
-CLIP_L, CLIP_LARG, CLIP_BEC, CLIP_FENTE = 9.0, 8.0, 0.9, 0.8
+# Après l'étude de RDM (../rdm/) : languette affinée à 1,0 mm et bec réduit à 0,65 mm (0,35 mm accroché dans la paroi),
+# car la languette plie EN TRAVERS des couches d'impression : allongement 1,33 % → 0,65 % (admis ≈ 1 %).
+CLIP_L, CLIP_LARG, CLIP_BEC, CLIP_FENTE, CLIP_EP = 9.0, 8.0, 0.65, 0.8, 1.0
 # Pions et doigts de la carte (trous de la Thing Plus : Ø 2,5 environ, À VÉRIFIER)
 PION_D, PION_DEPASSE, DOIGT_D = 2.0, 1.0, 3.6
 PICOT_D = 3.0
@@ -70,7 +72,10 @@ PICOT_D = 3.0
 # boîtier (et donc les électrodes) sur la peau, et les passants l'empêchent de glisser le long du boîtier.
 # Épaisseur supposée 2 mm (plus au niveau du scratch) : fente de 4 mm pour y glisser le bout avec le scratch.
 BANDE_L, BANDE_EP = 50.0, 2.0
-PATTE_LONG, PATTE_EP, FENTE_EP = 8.0, 3.0, BANDE_EP + 2.0
+# Après l'étude de RDM : la barre extérieure du passant (celle autour de laquelle la bande tourne) passe de 1,2 × 3 mm
+# à 4 × 3,5 mm : contrainte divisée par 9 (elle cassait déjà avec le brassard simplement porté, 10 N).
+PATTE_RENFORT, FENTE_EP, PATTE_BARRE, PATTE_EP = 2.5, BANDE_EP + 2.0, 4.0, 3.5
+PATTE_LONG = PATTE_RENFORT + FENTE_EP + PATTE_BARRE
 # Logement de la fiche USB-C côté extérieur (surmoulage du cordon ≈ 12 × 6,5 mm) : la paroi n'y fait plus que 0,6 mm,
 # sinon la fiche ne rentre pas assez loin dans la prise de la carte.
 USB_SURMOULE, USB_PAROI_RESTE = (13.0, 8.0), 0.6
@@ -125,7 +130,7 @@ def placer(p: Plan, piece: cq.Workplane, cx: float, ang: float) -> cq.Workplane:
 
 def languette() -> cq.Workplane:
     """Languette du couvercle (repère : dessous du couvercle en z = 0, paroi intérieure en y = 0)."""
-    L, e, b = CLIP_L, LEVRE_EP, CLIP_BEC
+    L, e, b = CLIP_L, CLIP_EP, CLIP_BEC
     bras = cq.Workplane("XY").box(CLIP_LARG, e, L, centered=(True, False, False)).translate((0, -JEU - e, -L))
     bec = (cq.Workplane("YZ").polyline([(-JEU, -L + 0.3), (-JEU + b, -L + 2.3), (-JEU + b, -L + 2.8), (-JEU, -L + 3.7)]).close()
            .extrude(CLIP_LARG).translate((-CLIP_LARG / 2, 0, 0)))
@@ -134,7 +139,8 @@ def languette() -> cq.Workplane:
 
 def fentes_languette() -> cq.Workplane:
     """Deux fentes dans la lèvre, de chaque côté de la languette, pour qu'elle plie."""
-    f = cq.Workplane("XY")
+    # la lèvre est aussi retirée derrière la languette : la languette garde la même épaisseur jusqu'au couvercle
+    f = cq.Workplane("XY").box(CLIP_LARG + 0.01, LEVRE_EP + 0.2, LEVRE_H + 0.2, centered=(True, True, False)).translate((0, -JEU - LEVRE_EP / 2, -LEVRE_H - 0.1))
     for s in (-1, 1):
         f = f.union(cq.Workplane("XY").box(CLIP_FENTE, 4, LEVRE_H + 0.2, centered=(True, True, False))
                     .translate((s * (CLIP_LARG / 2 + CLIP_FENTE / 2), -JEU - LEVRE_EP / 2, -LEVRE_H - 0.1)))
@@ -199,9 +205,8 @@ def boite(p: Plan) -> cq.Workplane:
     else:
         c = c.cut(cq.Workplane("YZ").rect(PETIT_L, PETIT_H).extrude(PAROI * 3).translate((-p.ext_x / 2 - PAROI, 0, zi)))
 
-    # --- Pion fendu qui retient le bouchon USB-C (idée de Valentin Auger : pas de ficelle) : on enfonce le trou de la
-    # languette dessus, la tête fendue en 4 se resserre puis se rouvre. La tige est assez longue pour sortir le bouchon
-    # de la prise (2 mm) et le faire pivoter pour charger, sans qu'il se détache.
+    # --- Pion qui retient le bouchon USB-C (idée de Valentin Auger : pas de ficelle). Baïonnette à détrompeur (voir
+    # PION_TIGE_D). La tige laisse sortir le bouchon de la prise (1,8 mm) et le faire pivoter pour charger.
     c = c.union(pion_bouchon(p))
 
     # --- Logements des clips du couvercle, creusés dans l'intérieur des parois
@@ -219,7 +224,8 @@ def boite(p: Plan) -> cq.Workplane:
         for s in (-1, 1):
             yp = s * (p.ext_y / 2 + PATTE_LONG / 2 - 0.01)
             pat = cq.Workplane("XY").box(BANDE_L + 7, PATTE_LONG + 0.02, PATTE_EP, centered=(True, True, False)).translate((xp, yp, 0)).edges("|Z").fillet(2)
-            fen_b = cq.Workplane("XY").box(BANDE_L + 1, FENTE_EP, PATTE_EP + 2, centered=(True, True, False)).translate((xp, yp + s * 0.8, -1)).edges("|Z").fillet(FENTE_EP / 2 - 0.01)
+            yfente = s * (p.ext_y / 2 + PATTE_RENFORT + FENTE_EP / 2)
+            fen_b = cq.Workplane("XY").box(BANDE_L + 1, FENTE_EP, PATTE_EP + 2, centered=(True, True, False)).translate((xp, yfente, -1)).edges("|Z").fillet(FENTE_EP / 2 - 0.01)
             # renfort (congé triangulaire) entre le passant et la paroi, sur toute la longueur
             g = (cq.Workplane("YZ").polyline([(0, 0), (s * 2.5, 0), (0, 2.5)]).close().extrude(BANDE_L + 3)
                  .translate((xp - (BANDE_L + 3) / 2, s * (p.ext_y / 2 - 0.01), PATTE_EP - 0.01)))
@@ -298,37 +304,55 @@ def bac(p: Plan) -> cq.Workplane:
     return b.translate((centre, 0, p.z_bac))
 
 
-PION_TIGE_D, PION_TIGE_L, PION_TETE_D, PION_TETE_L, PION_FENTE = 2.6, 3.6, 3.8, 2.2, 0.7
+# Après l'étude de RDM : le pion à tête fendue en 4 (Ø 2,6 mm) aurait plié à 4,9 % à l'enfoncement (admis ≈ 2 %) : il
+# cassait. Remplacé par une baïonnette à détrompeur : tige Ø 3 mm et 2 ailes rigides (en haut et côté +Y), qui ne
+# passent dans les 2 encoches de la languette que bouchon retourné à 180°. Rien ne plie. Couvercle posé, la jupe
+# empêche de retourner le bouchon : il ne peut plus se détacher, mais il pivote pour charger.
+PION_TIGE_D, PION_TIGE_L, AILE_R, AILE_L, AILE_EP, TROU_JEU = 3.0, 3.6, 3.0, 2.0, 2.0, 0.2
+LANG_L, LANG_EP = 10.0, 1.2
+
+
+def z_pion(p: Plan) -> float:
+    return p.z_carte + CARTE_EP + USB_Z_SUR_CARTE + USB_SURMOULE[1] / 2 + 4.8
 
 
 def pion_bouchon(p: Plan) -> cq.Workplane:
-    """Pion à tête fendue en 4 (comme des parts de pizza) sur le bout +X, dans l'axe du trou de la languette."""
-    zt = p.z_carte + CARTE_EP + USB_Z_SUR_CARTE + USB_SURMOULE[1] / 2 + 6.5
-    x0 = p.ext_x / 2 - 0.01
-    tige = cq.Workplane("YZ").circle(PION_TIGE_D / 2).extrude(PION_TIGE_L + 0.01)
-    # tête : cône (entrée facile, bout arrondi) avec une collerette qui accroche derrière la languette
-    tete = (cq.Workplane("XZ").polyline([(0, 0), (0, PION_TETE_D / 2), (0.6, PION_TETE_D / 2), (PION_TETE_L, 1.0), (PION_TETE_L, 0)]).close()
-            .revolve(360, (0, 0, 0), (1, 0, 0)).translate((PION_TIGE_L, 0, 0)))
-    pion = tige.union(tete)
-    fente_l = PION_TETE_L + 1.2
-    for ang in (0, 90):
-        pion = pion.cut(cq.Workplane("XY").box(fente_l, PION_FENTE, PION_TETE_D + 1, centered=(False, True, True))
-                        .rotate((0, 0, 0), (1, 0, 0), ang).translate((PION_TIGE_L + PION_TETE_L - fente_l + 0.01, 0, 0)))
+    """Tige + 2 ailes (vers le haut et vers +Y) sur le bout +X, dans l'axe du trou de la languette."""
+    x0, zt = p.ext_x / 2 - 0.01, z_pion(p)
+    pion = cq.Workplane("YZ").circle(PION_TIGE_D / 2).extrude(PION_TIGE_L + AILE_EP + 0.01)
+    for ang in (0, -90):   # 0 : aile vers le haut (+Z) ; −90 : aile vers +Y
+        aile = (cq.Workplane("YZ").center(0, AILE_R / 2).rect(AILE_L, AILE_R).extrude(AILE_EP).edges("|X").fillet(0.6)
+                .translate((PION_TIGE_L, 0, 0)).rotate((0, 0, 0), (1, 0, 0), ang))
+        pion = pion.union(aile)
     return pion.translate((x0, 0, zt))
+
+
+def trou_languette(p: Plan, x0: float) -> cq.Workplane:
+    """Trou rond + 2 encoches (vers le bas et vers −Y) : en face des ailes seulement bouchon retourné."""
+    zt = z_pion(p)
+    t = cq.Workplane("YZ").circle(PION_TIGE_D / 2 + TROU_JEU).extrude(LANG_EP + 2)
+    for ang in (0, -90):
+        t = t.union(cq.Workplane("YZ").center(0, -(AILE_R + TROU_JEU) / 2).rect(AILE_L + 2 * TROU_JEU, AILE_R + TROU_JEU).extrude(LANG_EP + 2)
+                    .rotate((0, 0, 0), (1, 0, 0), ang))
+    return t.translate((x0 - 1, 0, zt))
 
 
 def bouchon_usb(p: Plan) -> cq.Workplane:
     """Bouchon de la prise USB-C, posé dans le logement extérieur (repère : face extérieure du bout +X en x = 0).
     Il remplit le logement (jeu 0,05 mm par côté : il tient serré), entre un peu dans l'ouverture sans toucher la prise,
-    et sa collerette couvre les bords. Languette percée : elle s'enfonce sur le pion fendu du boîtier, le bouchon reste attaché quand on charge."""
+    et sa collerette couvre les bords. Languette percée en baïonnette : on l'enfile sur le pion du boîtier bouchon retourné, puis on le redescend."""
     zu = p.z_carte + CARTE_EP + USB_Z_SUR_CARTE
     prof = PAROI - USB_PAROI_RESTE
     corps = cq.Workplane("YZ").rect(USB_SURMOULE[0] - 0.1, USB_SURMOULE[1] - 0.1).extrude(prof).edges("|X").fillet(1.95).translate((-prof, 0, zu))
     nez = cq.Workplane("YZ").rect(USB_L - 0.2, USB_H - 0.2).extrude(USB_PAROI_RESTE - 0.2).edges("|X").fillet(1.1).translate((-prof - USB_PAROI_RESTE + 0.2, 0, zu))
     coll = cq.Workplane("YZ").rect(USB_SURMOULE[0] + 4, USB_SURMOULE[1] + 4).extrude(1.2).edges("|X").fillet(3).translate((0, 0, zu))
-    lang = cq.Workplane("YZ").center(0, USB_SURMOULE[1] / 2 + 5).rect(6, 8).extrude(1.2).edges("|X").fillet(2.9).translate((0, 0, zu))
-    lang = lang.cut(cq.Workplane("YZ").circle(1.5).extrude(3).translate((-1, 0, zu + USB_SURMOULE[1] / 2 + 6.5)))
-    return corps.union(nez).union(coll).union(lang).translate((p.ext_x / 2, 0, 0))
+    zt = z_pion(p)
+    haut = zt + PION_TIGE_D / 2 + TROU_JEU + 2.0
+    bas = zu + USB_SURMOULE[1] / 2
+    lang = (cq.Workplane("YZ").center(0, (haut + bas) / 2 - zu).rect(LANG_L, haut - bas).extrude(LANG_EP).edges("|X").fillet(2.0)
+            .translate((0, 0, zu)))
+    bouchon = corps.union(nez).union(coll).union(lang).translate((p.ext_x / 2, 0, 0))
+    return bouchon.cut(trou_languette(p, p.ext_x / 2))
 
 
 def serre_bande() -> cq.Workplane:
@@ -352,7 +376,7 @@ def serre_bande() -> cq.Workplane:
 def bandes(p: Plan) -> cq.Workplane:
     """Pour l'image seulement : trajet des deux bandes (fente → dessus du couvercle → fente d'en face → tour du bras)."""
     import math
-    yf = p.ext_y / 2 + PATTE_LONG / 2 + 0.8          # milieu de la fente
+    yf = p.ext_y / 2 + PATTE_RENFORT + FENTE_EP / 2   # milieu de la fente
     ht = p.h + COUV_EP + BANDE_EP / 2
     pts = [(-yf, -1.0), (-yf, PATTE_EP + 1), (-p.ext_y / 2 - 0.5, ht - 2), (-p.ext_y / 2 + 3, ht), (p.ext_y / 2 - 3, ht),
            (p.ext_y / 2 + 0.5, ht - 2), (yf, PATTE_EP + 1), (yf, -1.0)]

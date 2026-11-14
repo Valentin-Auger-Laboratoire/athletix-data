@@ -100,3 +100,22 @@ jobs:
       - run: pip install -r mesures/requirements.txt
       - run: python -m unittest discover -s tests/mesures -v
 
+
+  boitier:
+    name: Étude RDM du boîtier (Python + page interactive)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install matplotlib
+      - name: Calculs, cotes du modèle et coefficients de sécurité
+        working-directory: hardware/boitier/rdm
+        run: |
+          python rdm.py
+          python test_rdm.py
+          git diff --exit-code resultats.json
+      - name: La page interactive calcule comme rdm.py
+        working-directory: hardware/boitier/rdm
+        run: node test_rdm.js

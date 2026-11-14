@@ -1,0 +1,99 @@
+{
+  "materiau": {
+    "E": 2000.0,
+    "sigma_plan": 45.0,
+    "sigma_travers": 25.0,
+    "eps_plan": 2.0,
+    "eps_travers": 1.0,
+    "mu": 0.3
+  },
+  "charges": {
+    "acc_g": 10.0,
+    "masse_poussee_g": 62.0,
+    "mousse_N": 2.0,
+    "T_service_N": 10.0,
+    "T_max_N": 40.0,
+    "R_bras_mm": 50.0,
+    "F_bouchon_N": 10.0
+  },
+  "coef_mini": {
+    "allongement": 1.5,
+    "contrainte": 2.0
+  },
+  "avant": {
+    "clip": {
+      "fleche_mm": 0.6000000000000001,
+      "allongement_pct": 1.3333333333333335,
+      "allongement_admis_pct": 1.0,
+      "coef_allongement": 0.7499999999999999,
+      "effort_flexion_N": 5.688888888888888,
+      "fermeture_N": 34.52793834296723,
+      "ouverture_N": 73.95555555555553,
+      "besoin_N": 8.0822,
+      "coef_tenue": 9.150423839493644
+    },
+    "passant_service": {
+      "T_N": 10.0,
+      "deviation_deg": 49.83028361034689,
+      "R_N": 8.425510142674836,
+      "contrainte_MPa": 52.480791170728,
+      "fleche_mm": 2.8139890725623578,
+      "admis_MPa": 45.0,
+      "coef": 0.8574565854696846
+    },
+    "passant_max": {
+      "T_N": 40.0,
+      "deviation_deg": 49.83028361034689,
+      "R_N": 33.702040570699346,
+      "contrainte_MPa": 209.923164682912,
+      "fleche_mm": 11.255956290249431,
+      "admis_MPa": 45.0,
+      "coef": 0.21436414636742115
+    },
+    "pion": {
+      "type": "fendu",
+      "allongement_pct": 4.930795847750864,
+      "admis_pct": 2.0,
+      "coef": 0.40561403508771937
+    }
+  },
+  "apres": {
+    "clip": {
+      "fleche_mm": 0.35000000000000003,
+      "allongement_pct": 0.6481481481481483,
+      "allongement_admis_pct": 1.0,
+      "coef_allongement": 1.5428571428571427,
+      "effort_flexion_N": 1.9204389574759948,
+      "fermeture_N": 9.309607134578922,
+      "ouverture_N": 24.965706447187927,
+      "besoin_N": 8.0822,
+      "coef_tenue": 3.0889740970512887
+    },
+    "passant_service": {
+      "T_N": 10.0,
+      "deviation_deg": 50.814435200427525,
+      "R_N": 8.580978478967493,
+      "contrainte_MPa": 5.716469704482549,
+      "fleche_mm": 0.06639294169167978,
+      "admis_MPa": 45.0,
+      "coef": 7.871991338415284
+    },
+    "passant_max": {
+      "T_N": 40.0,
+      "deviation_deg": 50.814435200427525,
+      "R_N": 34.32391391586997,
+      "contrainte_MPa": 22.865878817930195,
+      "fleche_mm": 0.2655717667667191,
+      "admis_MPa": 45.0,
+      "coef": 1.967997834603821
+    },
+    "pion": {
+      "type": "baionnette",
+      "tige_MPa": 13.581221810508403,
+      "coef_tige": 3.313398501832985,
+      "aile_MPa": 11.25,
+      "coef_aile": 2.2222222222222223,
+      "coef": 2.2222222222222223
+    }
+  }
+}

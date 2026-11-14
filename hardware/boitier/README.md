@@ -2,7 +2,7 @@
 
 Conçu par **Valentin Auger** (novembre 2026), modèle paramétrique en Python (CadQuery). **Un seul boîtier, long et fin, posé sur le biceps.** Chaque pièce est bloquée en X, Y et Z, pour que rien ne bouge quand on court, **sans aucune vis ni insert** : il n'y en a pas dans la commande, tout tient par des clips.
 
-📄 **[Notice de montage et de pose (PDF, 2 pages)](notice-boitier.pdf)**
+📄 **[Notice de montage et de pose (PDF, 2 pages)](notice-boitier.pdf)** · 🧮 **[Étude de résistance des matériaux](rdm/README.md)** ([page interactive](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/))
 
 ![Le boîtier : brassards, interrupteur, bouchon USB-C, flèche de pose, intérieur, couvercle, boucle de secours](images/apercu.jpg)
 
@@ -28,16 +28,22 @@ Conçu par **Valentin Auger** (novembre 2026), modèle paramétrique en Python (
 | Batterie | bac à rebords (X, Y), mousse de 1,5 mm et nervures du couvercle (Z), sans l'écraser |
 | Bac à batterie | 4 colonnes avec ergots, serré par la batterie |
 | Interrupteur | clipsé dans le bout côté coude |
-| Bouchon USB-C | serré dans son logement, retenu par le pion fendu (il ne se perd pas) |
-| Passants | tenus par la paroi sur toute leur longueur, avec un renfort triangulaire |
+| Bouchon USB-C | serré dans son logement, retenu par le pion en baïonnette (il ne se perd pas) |
+| Passants | tenus par la paroi sur toute leur longueur, avec un renfort triangulaire ; barre extérieure de 4 × 3,5 mm |
 
 Le script vérifie à chaque génération qu'**aucune pièce n'en touche une autre** et que tout est plaqué (jeu de 0 mm sur le capteur, la batterie et la carte, couvercle fermé).
+
+## Résistance
+
+Avant d'imprimer, Valentin a fait calculer les trois pièces qui travaillent par la RDM des poutres : **clips du couvercle, barre des passants, pion du bouchon**. Sur le premier modèle, **les trois cassaient**. Le modèle a été corrigé : languette du clip de 1,0 mm, barre du passant de 4 × 3,5 mm au lieu de 1,2 × 3, baïonnette à la place du pion fendu. Toutes les pièces ont maintenant leur marge de sécurité. Détail, hypothèses et limites : **[`rdm/`](rdm/README.md)**, et **[page interactive](https://valentin-auger-laboratoire.github.io/athletix-data/boitier-rdm/)** pour faire varier le matériau et les efforts.
+
+![Coefficients de sécurité avant et après correction](rdm/rdm-avant-apres.png)
 
 ## Pluie
 
 **Résiste à la pluie et à la transpiration, pas étanche.** Le bout USB-C est en haut quand on porte le brassard, donc :
 - **jupe du couvercle** (comme le rebord d'une casquette) : l'eau qui coule sur le couvercle tombe à côté du joint ;
-- **bouchon USB-C** en PETG, retiré seulement pour charger. Sa languette s'enfonce sur un **pion à tête fendue en 4** du boîtier (idée de Valentin) : pas de ficelle, le bouchon reste attaché et pivote sur le pion quand on charge ;
+- **bouchon USB-C** en PETG, retiré seulement pour charger. Il est retenu par un **pion du boîtier, sans ficelle** (idée de Valentin). Ce pion est une **baïonnette à détrompeur** : 2 ailes rigides qui ne passent dans les encoches de la languette que bouchon retourné, et le couvercle empêche de le retourner. Il ne se perd pas et pivote pour charger. L'étude RDM a montré qu'une tête fendue en 4 aurait cassé ;
 - plus de fenêtre sur le couvercle (l'interrupteur ENV / RAW du Link Shield reste sur RAW), interrupteur en bas.
 
 Pas de douche ni de piscine : il faudrait un joint et des électrodes déportées, qui ne sont pas dans la commande. Pistes pour une version étanche : voir le cahier des charges plus bas.
@@ -46,9 +52,11 @@ Pas de douche ni de piscine : il faudrait un joint et des électrodes déportée
 
 | Dossier | Contenu |
 |---|---|
-| [`fichiers/ds12lr/`](fichiers/ds12lr) | version interrupteur rond DS12LR : 137 × 43 × 27 mm (140,5 × 59 mm avec les passants) |
+| [`fichiers/ds12lr/`](fichiers/ds12lr) | version interrupteur rond DS12LR : 137 × 43 × 27 mm (143 × 64 mm avec les passants) |
 | [`fichiers/petit-interrupteur/`](fichiers/petit-interrupteur) | version GR33 / GA55 : 133 × 43 × 27 mm |
 | [`modele/boitier.py`](modele/boitier.py) | le modèle : chaque cote est un chiffre en haut du fichier, `python boitier.py` refait tous les fichiers |
+| [`modele/notice.py`](modele/notice.py) | refait la notice PDF |
+| [`rdm/`](rdm/README.md) | l'étude de résistance des matériaux et ses tests |
 | [`images/`](images) | rendus et schéma de pose |
 
 Dans chaque version : `boitier`, `couvercle`, `bac-batterie`, `bouchon-usb`, `serre-bande` (boucle 3 barres de secours, si le scratch ne serre pas assez), en **STEP** (Fusion 360, SolidWorks) et **STL** (impression), plus `assemblage-complet.step`. Impression en **PETG** (bobine du devis) : les clips plient d'environ 1,3 %, sans risque en PETG.
