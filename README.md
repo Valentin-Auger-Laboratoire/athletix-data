@@ -47,11 +47,25 @@ Conçu par **Valentin Auger** : **un seul boîtier long et fin posé sur le bice
 
 ![Étude RDM : les 3 points faibles du premier modèle, entourés, et leurs coefficients de sécurité avant et après correction](hardware/boitier/rdm/points-faibles.png)
 
-**Vues sous Fusion 360 par Valentin Auger** ([toutes les vues](hardware/boitier/README.md#vues-sous-fusion-360-valentin-auger)) :
+**Vues sous Fusion 360 par Valentin Auger** (13 vues, détail dans [`hardware/boitier/`](hardware/boitier/README.md#vues-sous-fusion-360-valentin-auger)) :
 
 <p>
-<img src="hardware/boitier/images/fusion/01-ensemble-ds12lr.jpg" width="48%" alt="Boîtier sous Fusion 360 : ensemble, couvercle écarté">
-<img src="hardware/boitier/images/fusion/10-passant-renforce.jpg" width="48%" alt="Passant renforcé sous Fusion 360">
+<img src="hardware/boitier/images/fusion/01-ensemble-ds12lr.jpg" width="49%" alt="Ensemble, couvercle écarté (version DS12LR)">
+<img src="hardware/boitier/images/fusion/02-interieur-petit-interrupteur.jpg" width="49%" alt="Intérieur : interrupteur, capteur, batterie, clips, bouchon USB-C">
+</p>
+<p>
+<img src="hardware/boitier/images/fusion/03-bout-interrupteur-ds12lr.jpg" width="32%" alt="Bout côté coude : l'interrupteur rond">
+<img src="hardware/boitier/images/fusion/09-boitier-vide-cote-interrupteur.jpg" width="33%" alt="Boîtier vide : poche du capteur, plots, creux des clips">
+<img src="hardware/boitier/images/fusion/08-boitier-vide-cote-usb.jpg" width="33%" alt="Boîtier vide côté USB : cloisons, logement USB-C, pion du bouchon">
+</p>
+<p>
+<img src="hardware/boitier/images/fusion/04-dessous-ds12lr.jpg" width="22%" alt="Dessous : fenêtre des électrodes et passants">
+<img src="hardware/boitier/images/fusion/05-couvercle-dessous.jpg" width="44%" alt="Couvercle vu de dessous : clips, picots, nervures">
+<img src="hardware/boitier/images/fusion/13-bouchon-baionnette.jpg" width="20%" alt="Bouchon USB-C : trou en baïonnette">
+</p>
+<p>
+<img src="hardware/boitier/images/fusion/10-passant-renforce.jpg" width="49%" alt="Passant renforcé (point faible corrigé)">
+<img src="hardware/boitier/images/fusion/11-pion-baionnette-usb.jpg" width="49%" alt="Pion en baïonnette du bouchon (point faible corrigé)">
 </p>
 
 ## ⌚ Ma montre reliée à l'application (réalisé par Valentin Auger)

@@ -60,7 +60,7 @@
 - **Analyse des risques** ([`gestion-projet/analyse-des-risques.md`](gestion-projet/analyse-des-risques.md)) : gravité × apparition × détection, et actions prioritaires (pas d'essai dans l'eau sans boîtier étanche, PC portable débranché du secteur pendant une capture USB, polarité de la batterie).
 - **Mode d'emploi** de 2 pages ([`mode-emploi/mode-emploi.pdf`](mode-emploi/mode-emploi.pdf)) : pose des électrodes, calibration, séance, natation, carnet pour les soignants, problèmes fréquents. À imprimer pour les essais.
 - **Fiche de test à imprimer** ([`hardware/fiche-de-test.pdf`](hardware/fiche-de-test.pdf)), générée à partir du protocole.
-- **Cahier des charges du boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : dimensions des pièces, implantation à l'échelle, ouvertures, fixation, pistes pour une version étanche.
+- **Boîtier** ([`hardware/boitier/`](hardware/boitier/README.md)) : modèle sans vis en 2 versions, notice de pose, étude RDM, vues Fusion 360 ; au départ, cahier des charges : dimensions des pièces, implantation à l'échelle, ouvertures, fixation, pistes pour une version étanche.
 - **Diagramme de Gantt** mis à jour et **vidéo de démonstration** de l'application ([`media/`](media/demo-application.mp4)).
 
 ### Brassard
